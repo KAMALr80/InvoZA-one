@@ -3,49 +3,60 @@
 @section('content')
     {{-- ADMIN + HR ONLY --}}
     @if (!in_array(auth()->user()->role, ['admin', 'hr']))
-        <div style="background:#fff; padding:30px; border-radius:8px;">
-            <h2 style="color:#dc2626;">Unauthorized</h2>
-            <p>You do not have permission to edit employee details.</p>
+        <div
+            style="background:#1f2937; padding:30px; border-radius:12px; color:#f9fafb; box-shadow:0 6px 20px rgba(0,0,0,0.25); text-align:center;">
+            <h2 style="color:#ef4444; font-size:24px; margin-bottom:10px;">🚫 Unauthorized</h2>
+            <p style="color:#9ca3af; font-size:16px; margin-bottom:15px;">You do not have permission to edit employee
+                details.</p>
 
-            <a href="{{ route('employees.index') }}" style="color:#2563eb;">← Back to Employees</a>
+            <a href="{{ route('employees.index') }}"
+                style="color:#3b82f6; font-weight:600; text-decoration:none; transition:0.3s;"
+                onmouseover="this.style.color='#1e40af'" onmouseout="this.style.color='#3b82f6'">
+                ← Back to Employees
+            </a>
         </div>
     @else
-        <div style="max-width:520px; background:#fff; padding:30px; border-radius:8px;">
-
-            <h2 style="margin-bottom:20px;">Edit Employee</h2>
+        <div
+            style="max-width:520px; background:#111827; padding:30px; border-radius:12px; color:#f9fafb; box-shadow:0 6px 20px rgba(0,0,0,0.25);">
+            <h2 style="margin-bottom:20px; font-size:26px; font-weight:bold; color:#facc15;">✏️ Edit Employee</h2>
 
             <form method="POST" action="{{ route('employees.update', $employee->id) }}">
                 @csrf
                 @method('PUT')
 
-                <label>Name</label>
-                <input type="text" name="name" value="{{ $employee->name }}"
-                    style="width:100%; padding:8px; margin-bottom:15px;" required>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Name</label>
+                <input type="text" name="name" value="{{ $employee->name }}" required
+                    style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
-                <label>Email</label>
-                <input type="email" name="email" value="{{ $employee->email }}"
-                    style="width:100%; padding:8px; margin-bottom:15px;" required>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Email</label>
+                <input type="email" name="email" value="{{ $employee->email }}" required
+                    style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
-                <label>Phone</label>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Phone</label>
                 <input type="text" name="phone" value="{{ $employee->phone }}"
-                    style="width:100%; padding:8px; margin-bottom:15px;">
+                    style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
-                <label>Department</label>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Department</label>
                 <input type="text" name="department" value="{{ $employee->department }}"
-                    style="width:100%; padding:8px; margin-bottom:15px;">
+                    style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
-                <label>Joining Date</label>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Joining Date</label>
                 <input type="date" name="joining_date" value="{{ $employee->joining_date }}"
-                    style="width:100%; padding:8px; margin-bottom:20px;">
+                    style="width:100%; padding:10px; margin-bottom:20px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
                 <button type="submit"
-                    style="background:#111827; color:#fff; padding:10px 16px; border:none; border-radius:6px;">
-                    Update
+                    style="background:linear-gradient(90deg,#2563eb,#1e40af); color:#fff; padding:12px 18px; border:none; border-radius:8px; font-weight:600; cursor:pointer; transition:0.3s;"
+                    onmouseover="this.style.background='linear-gradient(90deg,#1e40af,#2563eb)'"
+                    onmouseout="this.style.background='linear-gradient(90deg,#2563eb,#1e40af)'">
+                    ✅ Update
                 </button>
 
-                <a href="{{ route('employees.index') }}" style="margin-left:10px; color:#374151;">Cancel</a>
+                <a href="{{ route('employees.index') }}"
+                    style="margin-left:12px; color:#9ca3af; font-weight:600; text-decoration:none; transition:0.3s;"
+                    onmouseover="this.style.color='#6b7280'" onmouseout="this.style.color='#9ca3af'">
+                    ❌ Cancel
+                </a>
             </form>
-
         </div>
     @endif
 @endsection

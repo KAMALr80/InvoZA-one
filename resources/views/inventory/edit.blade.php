@@ -2,38 +2,46 @@
 
 @section('content')
     @if (auth()->user()->role !== 'admin')
-        <div style="background:#fff; padding:30px; border-radius:8px;">
-            <h2 style="color:#dc2626;">Unauthorized</h2>
-            <p>You do not have permission to edit products.</p>
-            <a href="{{ route('inventory.index') }}">← Back</a>
+        <div
+            style="background:#1f2937; padding:30px; border-radius:12px; color:#f9fafb; box-shadow:0 6px 20px rgba(0,0,0,0.25); text-align:center;">
+            <h2 style="color:#ef4444; font-size:24px; margin-bottom:10px;">🚫 Unauthorized</h2>
+            <p style="color:#9ca3af; font-size:16px; margin-bottom:15px;">You do not have permission to edit products.</p>
+            <a href="{{ route('inventory.index') }}"
+                style="color:#3b82f6; font-weight:600; text-decoration:none; transition:0.3s;"
+                onmouseover="this.style.color='#1e40af'" onmouseout="this.style.color='#3b82f6'">
+                ← Back
+            </a>
         </div>
     @else
-        <div style="max-width:520px; background:#fff; padding:30px; border-radius:8px;">
-            <h2>Edit Product</h2>
+        <div
+            style="max-width:520px; background:#111827; padding:30px; border-radius:12px; color:#f9fafb; box-shadow:0 6px 20px rgba(0,0,0,0.25);">
+            <h2 style="margin-bottom:20px; font-size:26px; font-weight:bold; color:#facc15;">✏️ Edit Product</h2>
 
             <form method="POST" action="{{ route('inventory.update', $product->id) }}">
                 @csrf
                 @method('PUT')
 
-                <label>Name</label>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Name</label>
                 <input type="text" name="name" value="{{ $product->name }}"
-                    style="width:100%; padding:8px; margin-bottom:15px;">
+                    style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
-                <label>Quantity</label>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Quantity</label>
                 <input type="number" name="quantity" value="{{ $product->quantity }}"
-                    style="width:100%; padding:8px; margin-bottom:15px;">
+                    style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
-                <label>Price</label>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Price</label>
                 <input type="text" name="price" value="{{ $product->price }}"
-                    style="width:100%; padding:8px; margin-bottom:15px;">
+                    style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
-                <label>Category</label>
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Category</label>
                 <input type="text" name="category" value="{{ $product->category }}"
-                    style="width:100%; padding:8px; margin-bottom:20px;">
+                    style="width:100%; padding:10px; margin-bottom:20px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
                 <button type="submit"
-                    style="background:#111827; color:#fff; padding:10px 16px; border:none; border-radius:6px;">
-                    Update
+                    style="background:linear-gradient(90deg,#2563eb,#1e40af); color:#fff; padding:12px 18px; border:none; border-radius:8px; font-weight:600; cursor:pointer; transition:0.3s;"
+                    onmouseover="this.style.background='linear-gradient(90deg,#1e40af,#2563eb)'"
+                    onmouseout="this.style.background='linear-gradient(90deg,#2563eb,#1e40af)'">
+                    ✅ Update
                 </button>
             </form>
         </div>
