@@ -15,22 +15,50 @@ class StaffApprovalController extends Controller
 
         return view('admin.staff-approvals', compact('staff'));
     }
-public function approve($id)
+
+      private function generateEmployeeCode()
+    {
+        $lastEmployee = Employee::orderBy('id', 'desc')->first();
+
+        if ($lastEmployee && $lastEmployee->employee_code) {
+            // EMP0007 → 7
+            $lastNumber = (int) substr($lastEmployee->employee_code, 3);
+            $nextNumber = $lastNumber + 1;
+        } else {
+            $nextNumber = 1;
+        }
+
+        return 'EMP' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+    }
+public function approve($userId)
 {
-    $user = User::findOrFail($id);
+    $user = User::findOrFail($userId);
 
-    $lastEmployee = Employee::latest('id')->first();
-    $nextNumber = $lastEmployee ? $lastEmployee->id + 1 : 1;
+    // Already approved safety
+    if ($user->status === 'approved') {
+        return redirect()->back()->with('info', 'Already approved');
+    }
 
-    $employeeCode = 'EMP' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+    // Duplicate employee check
+    $exists = Employee::where('email', $user->email)->exists();
 
+    if ($exists) {
+        return redirect()->back()->with('error', 'Employee with this email already exists.');
+    }
+
+    // Create employee
     Employee::create([
-        'user_id'       => $user->id,
-        'name'          => $user->name,
-        'email'         => $user->email,
-        'employee_code' => $employeeCode, // ✅ REQUIRED
+        'user_id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+        'employee_code' => $this->generateEmployeeCode(),
     ]);
 
-    return back()->with('success', 'Staff approved successfully');
+    // ✅ MOST IMPORTANT LINE
+    $user->status = 'approved';
+    $user->save();
+
+    return redirect()->back()->with('success', 'Employee approved successfully');
 }
+
 }
