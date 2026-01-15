@@ -60,36 +60,50 @@ class AttendanceController extends Controller
         );
 
         return back()->with('success', 'Check-in successful at '.$now->format('h:i A'));
+    }public function checkOut()
+{
+    $employee = Employee::where('user_id', Auth::id())->firstOrFail();
+
+    $attendance = Attendance::where('employee_id', $employee->id)
+        ->where('attendance_date', today())
+        ->firstOrFail();
+
+    if (!$attendance->check_in) {
+        return back()->with('error', 'Check-in not found');
     }
 
-    public function checkOut()
-    {
-        $employee = Employee::where('user_id', Auth::id())->firstOrFail();
+    $checkIn  = Carbon::parse($attendance->check_in);
+    $checkOut = now();
 
-        $attendance = Attendance::where('employee_id', $employee->id)
-            ->where('attendance_date', today())
-            ->firstOrFail();
+    // ✅ TOTAL SECONDS (MOST ACCURATE)
+    $totalSeconds = $checkIn->diffInSeconds($checkOut);
 
-        $checkIn  = Carbon::parse($attendance->check_in);
-        $checkOut = now();
+    $hours   = floor($totalSeconds / 3600);
+    $minutes = floor(($totalSeconds % 3600) / 60);
+    $seconds = $totalSeconds % 60;
 
-        $minutes = $checkIn->diffInMinutes($checkOut);
+    // ✅ FORMAT: HH:MM:SS
+    $workingHours = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
 
-        $remarks = $attendance->remarks;
-
-        if ($minutes < 240) {
-            $remarks = 'Half Day (worked less than 4 hours)';
-        }
-
-        $attendance->update([
-            'check_out'        => $checkOut->format('H:i:s'),
-            'working_minutes' => $minutes,
-            'status'           => 'Present', // ✅ NEVER Half Day here
-            'remarks'          => $remarks,
-        ]);
-
-        return back()->with('success', 'Check-out successful at '.$checkOut->format('h:i A'));
+    // 📝 Remarks
+    $remarks = null;
+    if ($hours < 4) {
+        $remarks = 'Half Day (worked less than 4 hours)';
     }
+
+    $attendance->update([
+        'check_out'     => $checkOut->format('H:i:s'),
+        'working_hours' => $workingHours,
+        'status'        => 'Present',
+        'remarks'       => $remarks,
+    ]);
+
+    return back()->with(
+        'success',
+        'Check-out successful at ' . $checkOut->format('h:i A')
+    );
+}
+
 
     /* ================= ADMIN ================= */
 

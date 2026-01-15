@@ -15,15 +15,21 @@
             @csrf
             <input type="date" name="from_date" required style="padding:8px;border:1px solid #ccc;border-radius:4px;">
             <input type="date" name="to_date" required style="padding:8px;border:1px solid #ccc;border-radius:4px;">
-            <select name="type" style="padding:8px;border:1px solid #ccc;border-radius:4px;">
-                <option>Casual</option>
-                <option>Sick</option>
-                <option>Paid</option>
+            <select name="type" style="padding:8px;border:1px solid #ccc;border-radius:4px;" required>
+                <option value="">-- Select Leave Type --</option>
+                <option value="Paid">Paid Leave</option>
+                <option value="Unpaid">Unpaid Leave</option>
+                <option value="Sick">Sick Leave</option>
+                <option value="Half Day">Half Day</option>
             </select>
+
             <input type="text" name="reason" placeholder="Reason"
                 style="padding:8px;border:1px solid #ccc;border-radius:4px;flex:1;">
-            <button type="submit"
-                style="padding:10px 20px;background:#007bff;color:#fff;border:none;border-radius:4px;cursor:pointer;">Apply</button>
+            <button type="submit" onclick="this.disabled=true; this.innerText='Applying...'; this.form.submit();"
+                style="padding:10px 20px;background:#007bff;color:#fff;border:none;border-radius:4px;">
+                Apply
+            </button>
+
         </form>
 
         <h3 style="color:#444;margin-bottom:15px;text-align:center;">📜 My Leaves</h3>
@@ -46,6 +52,12 @@
                         <td style="padding:10px;border:1px solid #ddd;">{{ $l->status }}</td>
                     </tr>
                 @endforeach
+                @if (session('error'))
+                    <p style="color:#dc2626;font-weight:bold;text-align:center;">
+                        {{ session('error') }}
+                    </p>
+                @endif
+
             </tbody>
         </table>
 

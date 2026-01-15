@@ -25,10 +25,6 @@
                 <input type="text" name="name" value="{{ $product->name }}"
                     style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
-                <label style="display:block; margin-bottom:6px; font-weight:600;">Quantity</label>
-                <input type="number" name="quantity" value="{{ $product->quantity }}"
-                    style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
-
                 <label style="display:block; margin-bottom:6px; font-weight:600;">Price</label>
                 <input type="text" name="price" value="{{ $product->price }}"
                     style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">

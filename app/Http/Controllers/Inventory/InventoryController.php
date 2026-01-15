@@ -18,7 +18,7 @@ class InventoryController extends Controller
               ->orWhere('category', 'like', "%$search%");
         })
         ->latest()
-        ->paginate(10)
+        ->paginate(15)
         ->withQueryString(); // search pagination ke sath maintain rahe
 
     return view('inventory.index', compact('products'));
@@ -57,14 +57,18 @@ class InventoryController extends Controller
         return view('inventory.edit', compact('product'));
     }
 
-    public function update(Request $request, $id)
-    {
-        $product = Product::findOrFail($id);
+   public function update(Request $request, $id)
+{
+    $product = Product::findOrFail($id);
 
-        $product->update($request->all());
+    $product->update([
+        'name'     => $request->name,
+        'price'    => $request->price,
+        'category' => $request->category,
+    ]);
 
-        return redirect('/inventory')->with('success', 'Product updated');
-    }
+    return redirect('/inventory')->with('success', 'Product updated');
+}
 
     public function destroy($id)
     {

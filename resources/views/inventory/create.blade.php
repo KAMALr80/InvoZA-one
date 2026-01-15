@@ -46,3 +46,41 @@
         </div>
     @endif
 @endsection
+<style>
+    /* Pagination container */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    /* All pagination buttons */
+    .pagination li a,
+    .pagination li span {
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+        line-height: 1.2;
+        min-width: 32px;
+        height: 32px;
+        text-align: center;
+    }
+
+    /* Arrow (‹ ›) size fix */
+    .pagination svg {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    /* Active page */
+    .pagination .active span {
+        background-color: #111827;
+        color: #fff;
+        border-radius: 6px;
+    }
+
+    /* Hover effect */
+    .pagination li a:hover {
+        background: #e5e7eb;
+        border-radius: 6px;
+    }
+</style>

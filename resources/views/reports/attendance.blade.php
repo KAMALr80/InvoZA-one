@@ -125,7 +125,8 @@
             <h2>🕒 Attendance Report</h2>
 
             <div>
-                <a href="{{ route('reports.attendance.excel', ['from' => $from, 'to' => $to]) }}" class="btn-excel">⬇ Excel</a>
+                <a href="{{ route('reports.attendance.excel', ['from' => $from, 'to' => $to]) }}" class="btn-excel">⬇
+                    Excel</a>
 
                 <a href="{{ route('reports.attendance.pdf', ['from' => $from, 'to' => $to]) }}" class="btn-pdf">⬇ PDF</a>
             </div>
@@ -147,6 +148,7 @@
                     <th>Check In</th>
                     <th>Check Out</th>
                     <th>Status</th>
+                    <th style="padding:10px;">Working Hours</th>
                 </tr>
             </thead>
             <tbody>
@@ -165,6 +167,7 @@
                                 <span class="status-leave">Leave</span>
                             @endif
                         </td>
+                                                <td style="padding:10px;">{{ $row->working_hours ?? '-' }}</td>
                     </tr>
                 @empty
                     <tr>

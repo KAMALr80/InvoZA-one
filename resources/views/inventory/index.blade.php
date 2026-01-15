@@ -1,7 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-
+    <style>
+        .w-5.h-5 {
+            width: 20px;
+        }
+    </style>
     @if (auth()->user()->role === 'staff')
         <div
             style="background:#1f2937; padding:30px; border-radius:12px; color:#f9fafb; box-shadow:0 6px 20px rgba(0,0,0,0.25); text-align:center;">

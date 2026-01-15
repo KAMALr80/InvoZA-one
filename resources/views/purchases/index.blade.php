@@ -1,90 +1,181 @@
 @extends('layouts.app')
 
 @section('content')
-    <div
-        style="background:#1f2937; padding:30px; border-radius:12px; width:100%; box-sizing:border-box; color:#f9fafb; font-family:'Segoe UI', Arial, sans-serif; box-shadow:0 6px 20px rgba(0,0,0,0.25);">
+    <div style="max-width:1300px;margin:auto;">
 
-        <h2 style="margin-bottom:20px; font-size:26px; font-weight:bold; color:#facc15;">🛒 Purchases</h2>
+        {{-- PAGE HEADER --}}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;">
+            <div>
+                <h2 style="margin:0;font-size:28px;font-weight:800;color:#111827;">
+                    🛒 Purchase Management
+                </h2>
+                <p style="margin-top:6px;color:#6b7280;">
+                    Manage purchases, stock & history
+                </p>
+            </div>
 
+            <a href="{{ route('purchases.create') }}"
+                style="background:#2563eb;color:#fff;
+                   padding:10px 18px;border-radius:10px;
+                   text-decoration:none;font-weight:600;">
+                ➕ Add Purchase
+            </a>
+        </div>
+
+        {{-- FLASH MESSAGES --}}
         @if (session('success'))
-            <p style="color:#22c55e; margin-bottom:15px; font-weight:bold;">
+            <div
+                style="background:#dcfce7;color:#166534;padding:12px 16px;
+                    border-radius:8px;margin-bottom:18px;">
                 {{ session('success') }}
-            </p>
+            </div>
         @endif
 
         @if (session('error'))
-            <p style="color:#ef4444; margin-bottom:15px; font-weight:bold;">
+            <div
+                style="background:#fee2e2;color:#991b1b;padding:12px 16px;
+                    border-radius:8px;margin-bottom:18px;">
                 {{ session('error') }}
-            </p>
+            </div>
         @endif
 
-        {{-- Purchase Form --}}
-        <form method="POST" action="{{ url('/purchases') }}"
-            style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:15px; margin-bottom:30px; background:#111827; padding:20px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.3);">
-            @csrf
+        {{-- SUMMARY CARDS --}}
+        <div
+            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+                gap:20px;margin-bottom:35px;">
 
-            <select name="product_id" required
-                style="padding:10px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
-                <option value="">Select Product</option>
-                @foreach ($products as $p)
-                    <option value="{{ $p->id }}">
-                        {{ $p->name }} (Stock: {{ $p->quantity }})
-                    </option>
-                @endforeach
-            </select>
+            <div style="padding:22px;border-radius:16px;background:#f0f9ff;">
+                <div style="color:#0369a1;font-size:14px;">Total Products</div>
+                <div style="font-size:34px;font-weight:800;color:#0369a1;">
+                    {{ $totalProducts }}
+                </div>
+            </div>
 
-            <input type="number" name="quantity" placeholder="Qty" required
-                style="padding:10px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
+            <div style="padding:22px;border-radius:16px;background:#ecfdf5;">
+                <div style="color:#047857;font-size:14px;">Total Purchase Amount</div>
+                <div style="font-size:30px;font-weight:800;color:#047857;">
+                    ₹ {{ number_format($totalPurchaseAmount, 2) }}
+                </div>
+            </div>
 
-            <input type="text" name="price" placeholder="Price" required
-                style="padding:10px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
+            <div style="padding:22px;border-radius:16px;background:#fee2e2;">
+                <div style="color:#991b1b;font-size:14px;">Low Stock Items</div>
+                <div style="font-size:30px;font-weight:800;color:#991b1b;">
+                    {{ $lowStockProducts->count() }}
+                </div>
+            </div>
+        </div>
 
-            <input type="date" name="purchase_date" required
-                style="padding:10px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
+        {{-- LOW STOCK PRODUCTS --}}
+        <div
+            style="background:#fff;padding:24px;border-radius:18px;
+                box-shadow:0 10px 25px rgba(0,0,0,.08);margin-bottom:40px;">
 
-            <button type="submit"
-                style="background:linear-gradient(90deg,#2563eb,#1e40af); color:#fff; border:none; padding:12px 18px; border-radius:8px; font-weight:600; cursor:pointer; transition:0.3s;"
-                onmouseover="this.style.background='linear-gradient(90deg,#1e40af,#2563eb)'"
-                onmouseout="this.style.background='linear-gradient(90deg,#2563eb,#1e40af)'">
-                ➕ Add Purchase
-            </button>
-        </form>
+            <h3 style="margin-bottom:15px;color:#dc2626;font-weight:700;">
+                ⚠️ Low Stock Products
+            </h3>
 
-        {{-- Purchases Table --}}
-        <table
-            style="width:100%; border-collapse:collapse; background:#111827; border-radius:10px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-            <thead>
-                <tr style="background:#374151; color:#facc15; text-align:left; font-size:15px;">
-                    <th style="padding:12px;">Product</th>
-                    <th style="padding:12px;">Qty</th>
-                    <th style="padding:12px;">Price</th>
-                    <th style="padding:12px;">Total</th>
-                    <th style="padding:12px;">Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($purchases as $p)
-                    <tr style="border-bottom:1px solid #4b5563; transition:0.3s;"
-                        onmouseover="this.style.background='#1e293b'" onmouseout="this.style.background='#111827'">
-                        <td style="padding:12px;">{{ $p->product->name }}</td>
-                        <td style="padding:12px;">{{ $p->quantity }}</td>
-                        <td style="padding:12px;">₹ {{ $p->price }}</td>
-                        <td style="padding:12px; font-weight:bold; color:#22c55e;">₹ {{ $p->total }}</td>
-                        <td style="padding:12px;">{{ $p->purchase_date }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="5" style="padding:12px; text-align:center; color:#9ca3af;">
-                            No purchase records found
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+            @if ($lowStockProducts->count())
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#fee2e2;">
+                            <th style="padding:10px;text-align:left;">Product</th>
+                            <th style="padding:10px;">Current Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($lowStockProducts as $p)
+                            <tr style="border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:10px;">{{ $p->name }}</td>
+                                <td style="padding:10px;color:#dc2626;font-weight:800;">
+                                    {{ $p->quantity }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <p style="color:#16a34a;font-weight:600;">
+                    ✔ All products sufficiently stocked
+                </p>
+            @endif
+        </div>
 
-        {{-- PAGINATION --}}
-        <div style="margin-top:25px; text-align:center;">
-            {{ $purchases->links() }}
+        {{-- PURCHASE HISTORY --}}
+        <div
+            style="background:#fff;padding:24px;border-radius:18px;
+                box-shadow:0 10px 25px rgba(0,0,0,.08);">
+
+            <h3 style="margin-bottom:15px;font-weight:700;">
+                📜 Purchase History
+            </h3>
+
+            @if ($purchases->count())
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f3f4f6;">
+                            <th style="padding:10px;">Date</th>
+                            <th style="padding:10px;">Product</th>
+                            <th style="padding:10px;">Qty</th>
+                            <th style="padding:10px;">Price</th>
+                            <th style="padding:10px;">Total</th>
+                            <th style="padding:10px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($purchases as $purchase)
+                            <tr style="border-bottom:1px solid #e5e7eb;">
+                                <td style="padding:10px;">
+                                    {{ \Carbon\Carbon::parse($purchase->purchase_date)->format('d M Y') }}
+                                </td>
+
+                                <td style="padding:10px;font-weight:600;">
+                                    {{ $purchase->product->name ?? '-' }}
+                                </td>
+
+                                <td style="padding:10px;">
+                                    {{ $purchase->quantity }}
+                                </td>
+
+                                <td style="padding:10px;">
+                                    ₹ {{ number_format($purchase->price, 2) }}
+                                </td>
+
+                                <td style="padding:10px;font-weight:700;">
+                                    ₹ {{ number_format($purchase->total, 2) }}
+                                </td>
+
+                                <td style="padding:10px;">
+                                    <a href="{{ route('purchases.edit', $purchase->id) }}"
+                                        style="color:#2563eb;font-weight:600;text-decoration:none;">
+                                        ✏️ Edit
+                                    </a>
+
+                                    <form method="POST" action="{{ route('purchases.destroy', $purchase->id) }}"
+                                        style="display:inline;"
+                                        onsubmit="return confirm('Delete this purchase? Stock will be restored!')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            style="background:none;border:none;color:#dc2626;
+                                               font-weight:600;cursor:pointer;">
+                                            🗑 Delete
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+                <div style="margin-top:18px;">
+                    {{ $purchases->links() }}
+                </div>
+            @else
+                <p style="color:#16a34a;font-weight:600;">
+                    ✔ No purchase records found
+                </p>
+            @endif
         </div>
 
     </div>

@@ -30,6 +30,12 @@
                 <input type="email" name="email" required
                     style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
 
+
+                <label style="display:block; margin-bottom:6px; font-weight:600;">Password</label>
+                <input type="password" name="password" required
+                    style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">
+
+
                 <label style="display:block; margin-bottom:6px; font-weight:600;">Phone</label>
                 <input type="text" name="phone"
                     style="width:100%; padding:10px; margin-bottom:15px; border-radius:6px; border:1px solid #374151; background:#1f2937; color:#f9fafb;">

@@ -2,26 +2,33 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class Purchase extends Model
+class SaleItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'sale_id',
         'product_id',
         'quantity',
         'price',
-        'total',
-        'purchase_date',
+        'total'
     ];
 
-    /**
-     * 🔗 Relation: Purchase belongs to Product
-     */
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function sale()
+    {
+        return $this->belongsTo(Sale::class);
+    }
+    public function sales()
+{
+    return $this->hasMany(Sale::class);
+}
+
 }

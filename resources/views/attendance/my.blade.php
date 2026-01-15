@@ -57,6 +57,8 @@
                     <th style="padding:10px;">Check In</th>
                     <th style="padding:10px;">Check Out</th>
                     <th style="padding:10px;">Status</th>
+                    <th style="padding:10px;">Working Hours</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -72,6 +74,10 @@
                                 {{ $row->status }}
                             </span>
                         </td>
+                        <td style="padding:10px; font-weight:600; color:#2563eb;">
+                            {{ $row->working_hours ?? '-' }}
+                        </td>
+
                     </tr>
                 @empty
                     <tr>

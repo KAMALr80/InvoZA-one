@@ -8,15 +8,27 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('sales', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->integer('quantity');
-            $table->decimal('price', 10, 2);
-            $table->decimal('total', 10, 2);
-            $table->date('sale_date');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('sales')) {
+            Schema::create('sales', function (Blueprint $table) {
+                $table->id();
+
+                // Customer (nullable for walk-in)
+                $table->foreignId('customer_id')
+                      ->nullable()
+                      ->constrained('customers')
+                      ->nullOnDelete();
+
+                $table->string('invoice_no')->unique();
+                $table->date('sale_date');
+
+                $table->decimal('sub_total', 10, 2);
+                $table->decimal('discount', 10, 2)->default(0);
+                $table->decimal('tax', 10, 2)->default(0);
+                $table->decimal('grand_total', 10, 2);
+
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void

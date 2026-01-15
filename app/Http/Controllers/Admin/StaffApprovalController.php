@@ -39,26 +39,27 @@ public function approve($userId)
         return redirect()->back()->with('info', 'Already approved');
     }
 
-    // Duplicate employee check
-    $exists = Employee::where('email', $user->email)->exists();
+    // 🔒 Check if employee already exists
+    $employee = Employee::where('email', $user->email)->first();
 
-    if ($exists) {
-        return redirect()->back()->with('error', 'Employee with this email already exists.');
+    // ✅ Create employee ONLY if not exists
+    if (!$employee) {
+        Employee::create([
+            'user_id'        => $user->id,
+            'name'           => $user->name,
+            'email'          => $user->email,
+            'employee_code'  => $this->generateEmployeeCode(),
+        ]);
     }
 
-    // Create employee
-    Employee::create([
-        'user_id' => $user->id,
-        'name' => $user->name,
-        'email' => $user->email,
-        'employee_code' => $this->generateEmployeeCode(),
+    // ✅ Approve user
+    $user->update([
+        'status' => 'approved',
+        'role'   => 'staff'
     ]);
-
-    // ✅ MOST IMPORTANT LINE
-    $user->status = 'approved';
-    $user->save();
 
     return redirect()->back()->with('success', 'Employee approved successfully');
 }
+
 
 }

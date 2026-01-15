@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class EmployeeController extends Controller
 {
@@ -33,45 +33,53 @@ class EmployeeController extends Controller
 
     public function create()
     {
-        // Users list (for mapping employee ↔ user)
-        $users = User::whereDoesntHave('employee')->get();
-
-        return view('employees.create', compact('users'));
+        return view('employees.create');
     }
 
     /* ================= STORE ================= */
 
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name'      => 'required',
+            'email'     => 'required|email|unique:users,email',
+            'password'  => 'required|min:6',
+        ]);
 
-public function store(Request $request)
-{
-    $request->validate([
-        'name'  => 'required',
-        'email' => 'required|email|unique:employees',
-    ]);
+        /* ===== CREATE USER ===== */
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            'role'     => 'staff',
+            'status'   => 1,
+        ]);
 
-    $code = 'EMP' . str_pad(Employee::count() + 1, 4, '0', STR_PAD_LEFT);
+        /* ===== EMPLOYEE CODE ===== */
+        $code = 'EMP' . str_pad(Employee::count() + 1, 4, '0', STR_PAD_LEFT);
 
-    Employee::create([
-        'user_id'        => Auth::id(),   // ✅ AUTO LINK
-        'employee_code'  => $code,
-        'name'           => $request->name,
-        'email'          => $request->email,
-        'phone'          => $request->phone,
-        'department'     => $request->department,
-        'joining_date'   => $request->joining_date,
-        'status'         => 1,
-    ]);
+        /* ===== CREATE EMPLOYEE ===== */
+        Employee::create([
+            'user_id'       => $user->id,
+            'employee_code' => $code,
+            'name'          => $request->name,
+            'email'         => $request->email,
+            'phone'         => $request->phone,
+            'department'    => $request->department,
+            'joining_date'  => $request->joining_date,
+            'status'        => 1,
+        ]);
 
-    return redirect('/employees')->with('success', 'Employee added');
-}
+        return redirect()->route('employees.index')
+            ->with('success', 'Employee created successfully');
+    }
+
     /* ================= EDIT ================= */
 
     public function edit($id)
     {
         $employee = Employee::findOrFail($id);
-        $users = User::all();
-
-        return view('employees.edit', compact('employee','users'));
+        return view('employees.edit', compact('employee'));
     }
 
     /* ================= UPDATE ================= */
@@ -79,24 +87,38 @@ public function store(Request $request)
     public function update(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
+        $user = User::findOrFail($employee->user_id);
 
         $request->validate([
-            'name'  => 'required',
-            'email' => 'required|email|unique:employees,email,' . $id,
-            'user_id' => 'nullable|exists:users,id',
+            'name'     => 'required',
+            'email'    => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|min:6',
         ]);
 
+        /* ===== UPDATE USER ===== */
+        $userData = [
+            'name'  => $request->name,
+            'email' => $request->email,
+        ];
+
+        // 🔐 password only if filled
+        if ($request->filled('password')) {
+            $userData['password'] = Hash::make($request->password);
+        }
+
+        $user->update($userData);
+
+        /* ===== UPDATE EMPLOYEE ===== */
         $employee->update([
-            'user_id'       => $request->user_id,
-            'name'          => $request->name,
-            'email'         => $request->email,
-            'phone'         => $request->phone,
-            'department'    => $request->department,
-            'joining_date'  => $request->joining_date,
+            'name'         => $request->name,
+            'email'        => $request->email,
+            'phone'        => $request->phone,
+            'department'   => $request->department,
+            'joining_date' => $request->joining_date,
         ]);
 
         return redirect()->route('employees.index')
-            ->with('success', 'Employee updated');
+            ->with('success', 'Employee updated successfully');
     }
 
     /* ================= DELETE ================= */
@@ -104,6 +126,10 @@ public function store(Request $request)
     public function destroy($id)
     {
         $employee = Employee::findOrFail($id);
+
+        // Optional: also delete user
+        User::where('id', $employee->user_id)->delete();
+
         $employee->delete();
 
         return redirect()->route('employees.index')

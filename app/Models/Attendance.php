@@ -4,24 +4,27 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Attendance extends Model
 {
     use HasFactory;
 
     /**
-     * Mass assignable fields
+     * ================= MASS ASSIGNABLE =================
      */
     protected $fillable = [
         'employee_id',
         'attendance_date',
         'check_in',
         'check_out',
+        'working_hours',   // ✅ FIXED (no typo)
+        'remarks',
         'status',
     ];
 
     /**
-     * Casts
+     * ================= CASTS =================
      */
     protected $casts = [
         'attendance_date' => 'date',
@@ -37,6 +40,40 @@ class Attendance extends Model
     public function employee()
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    /**
+     * ================= ACCESSORS =================
+     */
+
+    /**
+     * Get working hours in HH:MM:SS format
+     * - Uses DB value if present
+     * - Auto-calculates for old records
+     */
+    public function getWorkingHoursAttribute($value)
+    {
+        // If already stored in DB, return it
+        if (!empty($value)) {
+            return $value;
+        }
+
+        // Calculate only if check-in & check-out exist
+        if ($this->check_in && $this->check_out) {
+
+            $checkIn  = Carbon::parse($this->check_in);
+            $checkOut = Carbon::parse($this->check_out);
+
+            $totalSeconds = $checkIn->diffInSeconds($checkOut);
+
+            $hours   = floor($totalSeconds / 3600);
+            $minutes = floor(($totalSeconds % 3600) / 60);
+            $seconds = $totalSeconds % 60;
+
+            return sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
+        }
+
+        return null;
     }
 
     /**

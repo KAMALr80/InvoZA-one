@@ -7,11 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    use HasFactory;
-
-    /**
-     * Mass assignable fields
-     */
     protected $fillable = [
         'user_id',
         'employee_code',
@@ -50,4 +45,8 @@ class Employee extends Model
             ->where('attendance_date', today())
             ->first();
     }
+    public function leaves()
+{
+    return $this->hasMany(Leave::class);
+}
 }

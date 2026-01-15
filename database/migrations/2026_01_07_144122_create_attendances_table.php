@@ -9,32 +9,26 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('attendances', function (Blueprint $table) {
-            $table->id();
+            $table->bigIncrements('id');
 
-            // Link with employee
             $table->unsignedBigInteger('employee_id');
 
-            // Date of attendance
             $table->date('attendance_date');
-
-            // Option A: Check-in / Check-out
             $table->time('check_in')->nullable();
             $table->time('check_out')->nullable();
 
-            // Status
             $table->enum('status', ['Present', 'Absent', 'Leave'])
                   ->default('Present');
 
             $table->timestamps();
 
-            // Foreign key
+            $table->unique(['employee_id', 'attendance_date']);
+
+            // FK added AFTER column + index
             $table->foreign('employee_id')
                   ->references('id')
                   ->on('employees')
                   ->onDelete('cascade');
-
-            // One attendance per day per employee
-            $table->unique(['employee_id', 'attendance_date']);
         });
     }
 
