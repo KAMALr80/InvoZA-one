@@ -19,6 +19,7 @@ return new class extends Migration
     $table->text('address')->nullable();
     $table->string('gst_no')->nullable();
     $table->timestamps();
+    $table->softDeletes(); 
 });
     }
 

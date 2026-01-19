@@ -218,3 +218,43 @@ Route::post('/customers/store-ajax', [CustomerController::class, 'storeAjax'])
 
     Route::get('/sales/{sale}/view', [SalesController::class, 'view'])
     ->name('sales.view');
+
+
+    use App\Http\Controllers\AiController;
+
+Route::get('/ai/sales-prediction', [AiController::class, 'salesPrediction'])
+    ->middleware('auth');
+
+
+    use App\Http\Controllers\AiAssistantController;
+
+Route::post('/ai/ask', [AiAssistantController::class, 'ask'])
+    ->middleware('auth');
+
+
+
+
+use App\Http\Controllers\Payments\PaymentController;
+
+Route::get('/payments/create/{sale}', [PaymentController::class, 'create'])
+    ->name('payments.create');
+
+Route::post('/payments/store', [PaymentController::class, 'store'])
+    ->name('payments.store');
+
+
+
+
+
+/* AJAX CUSTOMER SEARCH */
+Route::get('/customers/ajax-search', [CustomerController::class, 'ajaxSearch'])
+    ->name('customers.ajax.search');
+
+/* AJAX CUSTOMER STORE (MODAL) */
+Route::post('/customers/store-ajax', [CustomerController::class, 'storeAjax'])
+    ->name('customers.store.ajax');
+
+
+  use App\Http\Controllers\Products\ProductController;
+
+Route::resource('products', inventoryController::class);

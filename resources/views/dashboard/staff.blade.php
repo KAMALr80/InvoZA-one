@@ -1,5 +1,12 @@
 @extends('layouts.app')
-
+<style>
+    <div style="
+background:#fff;
+padding:22px;
+border-radius:18px;
+box-shadow:0 10px 25px rgba(0,0,0,.08);
+transition:.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+</style>
 @section('content')
 
     <div style="max-width:1200px;margin:auto;">

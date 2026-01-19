@@ -731,13 +731,15 @@
                 timer = setTimeout(() => {
 
                     tbody.innerHTML = `
-<tr>
-    <td colspan="5" style="text-align:center;padding:40px;">
-        <span class="search-loading">Searching customers</span>
-    </td>
-</tr>`;
+        <tr>
+            <td colspan="5" style="text-align:center;padding:40px;">
+                <span class="search-loading">Searching customers</span>
+            </td>
+        </tr>`;
 
-                    pagination.style.display = 'none';
+                    if (pagination) {
+                        pagination.style.display = 'none';
+                    }
 
                     fetch(
                             `{{ route('customers.ajax.search') }}?search=${encodeURIComponent(query)}`
@@ -749,56 +751,80 @@
 
                             if (data.length === 0) {
                                 tbody.innerHTML = `
-                            <tr>
-                                <td colspan="5" style="text-align:center;padding:40px;color:#6b7280;">
-                                    😕 No customers found for "${escapeHtml(query)}"
-                                </td>
-                            </tr>`;
+                    <tr>
+                        <td colspan="5" style="text-align:center;padding:40px;color:#6b7280;">
+                            😕 No customers found for "${query}"
+                        </td>
+                    </tr>`;
                                 return;
                             }
 
                             data.forEach(c => {
                                 tbody.innerHTML += `
-                        <tr>
-                            <td>
-                                <div class="customer-info">
-                                    <div class="customer-avatar">${escapeHtml(c.name.charAt(0))}</div>
-                                    <div>
-                                        <div class="customer-name">${escapeHtml(c.name)}</div>
-                                        <div style="font-size:12px;color:#94a3b8;">ID: ${c.id}</div>
-                                    </div>
+                    <tr>
+                        <td>
+                            <div class="customer-info">
+                                <div class="customer-avatar">${c.name.charAt(0)}</div>
+                                <div>
+                                    <div class="customer-name">${c.name}</div>
+                                    <div style="font-size:12px;color:#94a3b8;">ID: ${c.id}</div>
                                 </div>
-                            </td>
-                            <td><div class="mobile-cell">${escapeHtml(c.mobile)}</div></td>
-                            <td>
-                                ${c.email
-                                    ? `<a href="mailto:${escapeHtml(c.email)}" class="email-cell">${escapeHtml(c.email)}</a>`
-                                    : `<span style="color:#9ca3af;">Not provided</span>`}
-                            </td>
-                            <td>
-                                ${c.gst_no
-                                    ? `<span class="gst-badge">${escapeHtml(c.gst_no)}</span>`
-                                    : `<span style="color:#9ca3af;">N/A</span>`}
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="/customers/${c.id}/edit" class="action-btn edit-btn">✏️</a>
-                                </div>
-                            </td>
-                        </tr>`;
+                            </div>
+                        </td>
+                        <td>${c.mobile}</td>
+                        <td>${c.email ?? 'Not provided'}</td>
+                        <td>${c.gst_no ?? 'N/A'}</td>
+                       <td>
+    <div class="action-buttons">
+
+        <!-- 👁️ VIEW SALES -->
+        <a href="/customers/${c.id}/sales"
+           class="action-btn view-btn"
+           title="View Sales">
+            👁️
+        </a>
+
+        <!-- ✏️ EDIT -->
+        <a href="/customers/${c.id}/edit"
+           class="action-btn edit-btn"
+           title="Edit Customer">
+            ✏️
+        </a>
+
+        <!-- 🗑️ DELETE -->
+        <form action="/customers/${c.id}"
+              method="POST"
+              style="display:inline;"
+              onsubmit="return confirm('Are you sure you want to delete this customer?')">
+
+            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="_method" value="DELETE">
+
+            <button type="submit"
+                    class="action-btn delete-btn"
+                    title="Delete Customer">
+                🗑️
+            </button>
+        </form>
+
+    </div>
+</td>
+
+                    </tr>`;
                             });
                         })
                         .catch(() => {
                             tbody.innerHTML = `
-                        <tr>
-                            <td colspan="5" style="text-align:center;padding:40px;color:red;">
-                                ⚠️ Error loading data
-                            </td>
-                        </tr>`;
+                <tr>
+                    <td colspan="5" style="text-align:center;color:red;padding:40px;">
+                        ⚠️ Error loading data
+                    </td>
+                </tr>`;
                         });
 
                 }, 400);
             });
+
         });
     </script>
 @endsection

@@ -11,7 +11,6 @@ use App\Models\Attendance;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
-
 class DashboardController extends Controller
 {
     public function index()
@@ -41,41 +40,73 @@ class DashboardController extends Controller
                 ->where('status', 'Present')
                 ->count();
 
-            // Absent = total - present (BEST PRACTICE)
             $absentToday = max($totalEmployees - $presentToday, 0);
 
-            /* ===== SALES CHART (LAST 7 DAYS) ===== */
-            $sales = Sale::select(
-                    DB::raw('DATE(sale_date) as date'),
-                    DB::raw('SUM(grand_total) as total')
-                )
-                ->whereDate('sale_date', '>=', Carbon::now()->subDays(6))
-                ->groupBy('date')
-                ->orderBy('date')
-                ->get();
-
-            $salesLabels = $sales->pluck('date')->map(function ($d) {
-                return Carbon::parse($d)->format('d M');
-            });
-
-            $salesData = $sales->pluck('total');
 
             /* ===== LOW STOCK ===== */
             $lowStockProducts = Product::where('quantity', '<=', 5)->get();
 
-            return view('dashboard.admin', compact(
-                'totalProducts',
-                'totalRevenue',
-                'todaySales',
-                'totalTransactions',
-                'averageSale',
-                'totalEmployees',
-                'presentToday',
-                'absentToday',
-                'salesLabels',   // ✅ NOW PASSED
-                'salesData',     // ✅ NOW PASSED
-                'lowStockProducts'
-            ));
+            /* =====================================================
+               🤖 AI SALES PREDICTION
+            ===================================================== */
+            $aiSales = Sale::select('sale_date', 'grand_total')
+                ->orderBy('sale_date')
+                ->get()
+                ->toJson();
+
+            $aiCommand = 'py -3 ai/sales_prediction.py ' . escapeshellarg($aiSales);
+            $aiOutput  = shell_exec($aiCommand);
+
+            $aiPrediction = json_decode($aiOutput, true) ?? [
+                'next_30_days_total' => 0,
+                'daily_prediction_avg' => 0
+            ];
+
+            /* =====================================================
+               📈 AI + PAST SALES COMBINED GRAPH DATA (NEW)
+            ===================================================== */
+
+            // Past 14 days sales
+            $pastSales = Sale::select(
+                    DB::raw('DATE(sale_date) as date'),
+                    DB::raw('SUM(grand_total) as total')
+                )
+                ->whereDate('sale_date', '>=', Carbon::now()->subDays(13))
+                ->groupBy('date')
+                ->orderBy('date')
+                ->get();
+
+            $pastLabels = $pastSales->pluck('date')->map(fn ($d) =>
+                Carbon::parse($d)->format('d M')
+            );
+
+            $pastData = $pastSales->pluck('total');
+
+            // AI future 30 days (daily average based)
+            $futureLabels = collect(range(1, 30))->map(fn ($d) =>
+                Carbon::now()->addDays($d)->format('d M')
+            );
+
+            $futureDaily = $aiPrediction['daily_prediction_avg'] ?? 0;
+            $futureData  = collect(range(1, 30))->map(fn () => $futureDaily);
+
+           return view('dashboard.admin', compact(
+    'totalProducts',
+    'totalRevenue',
+    'todaySales',
+    'totalTransactions',
+    'averageSale',
+    'totalEmployees',
+    'presentToday',
+    'absentToday',
+    'lowStockProducts',
+    'aiPrediction',
+    'pastLabels',
+    'pastData',
+    'futureLabels',
+    'futureData'
+));
+
         }
 
         /* =======================

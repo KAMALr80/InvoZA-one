@@ -10,7 +10,8 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
+
+use NumberFormatter;
 
 class SalesController extends Controller
 {
@@ -261,15 +262,32 @@ class SalesController extends Controller
         }
     }
 
-    /* =========================================================
-       INVOICE PDF
-    ========================================================= */
-    public function invoice(Sale $sale)
+ /* =========================================================
+   INVOICE PDF (FIXED + AMOUNT IN WORDS)
+========================================================= */
+ public function invoice(Sale $sale)
     {
         $sale->load(['customer', 'items.product']);
-        return Pdf::loadView('sales.invoice', compact('sale'))
-            ->stream('invoice-' . $sale->invoice_no . '.pdf');
+
+        /**
+         * Amount in Words
+         * intl ho to words
+         * intl na ho to fallback
+         */
+        if (class_exists('\NumberFormatter')) {
+            $formatter = new \NumberFormatter('en_IN', \NumberFormatter::SPELLOUT);
+            $amountInWords = ucfirst($formatter->format($sale->grand_total)) . ' only';
+        } else {
+            // ❌ intl not available → never crash
+            $amountInWords = number_format($sale->grand_total, 2) . ' only';
+        }
+
+        return Pdf::loadView('sales.invoice', [
+            'sale' => $sale,
+            'amountInWords' => $amountInWords
+        ])->stream('Invoice-' . $sale->invoice_no . '.pdf');
     }
+
 
     /* =========================================================
        DESTROY SALE (ADDED)

@@ -44,12 +44,12 @@
                 ">
                     Create New Invoice</h1>
                 <p style="color: #64748b; margin: 5px 0 0; font-size: 15px;">
-                    Create and manage sales invoices efficiently
+                    Step 1: Select customer → Step 2: Add products
                 </p>
             </div>
         </div>
 
-        <form method="POST" action="{{ route('sales.store') }}" onsubmit="handleSubmit(this)">
+        <form method="POST" action="{{ route('sales.store') }}" onsubmit="return handleSubmit(this)">
             @csrf
             <input type="hidden" name="invoice_token" value="{{ Str::uuid() }}">
 
@@ -85,12 +85,12 @@
                         justify-content: center;
                         font-size: 14px;
                     ">1</span>
-                    Customer & Products
+                    Step 1: Select Customer (Required)
                 </h3>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                     {{-- Customer Selection --}}
-                    <div>
+                    <div style="position: relative;">
                         <label
                             style="
                             display: block;
@@ -98,28 +98,50 @@
                             font-weight: 600;
                             margin-bottom: 8px;
                             font-size: 14px;
-                        ">Select
-                            Customer</label>
+                        ">
+                            Select Customer
+                            <span style="color: #ef4444; font-weight: bold;">*</span>
+                            <span id="customerStatus"
+                                style="font-size: 12px; color: #dc2626; margin-left: 8px; font-weight: normal;"></span>
+                        </label>
                         <div style="display: flex; gap: 12px;">
-                            <select id="customerSelect" name="customer_id"
-                                style="
-                                flex: 1;
-                                padding: 12px 16px;
-                                border-radius: 12px;
-                                border: 1.5px solid #d1d5db;
-                                background: white;
-                                font-size: 15px;
-                                color: #374151;
-                                transition: all 0.2s;
-                                outline: none;
-                                cursor: pointer;
-                            "
-                                onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#d1d5db'">
-                                <option value="" style="color: #9ca3af;">Choose Customer...</option>
-                                @foreach ($customers as $c)
-                                    <option value="{{ $c->id }}" style="color: #374151;">{{ $c->name }}</option>
-                                @endforeach
-                            </select>
+                            <div style="position: relative; flex: 1;">
+                                <input type="text" id="customerSearch"
+                                    placeholder="Type customer name or mobile to search..." autocomplete="off"
+                                    style="
+                                        width: 100%;
+                                        padding: 12px 16px;
+                                        border-radius: 10px;
+                                        border: 1.5px solid #d1d5db;
+                                        background: white;
+                                        font-size: 15px;
+                                        color: #374151;
+                                        transition: all 0.2s;
+                                        outline: none;
+                                    "
+                                    onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                                    onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none'">
+
+                                <input type="hidden" name="customer_id" id="customer_id">
+
+                                <div id="customerResults"
+                                    style="
+                                        display: none;
+                                        position: absolute;
+                                        top: calc(100% + 8px);
+                                        left: 0;
+                                        width: 100%;
+                                        background: white;
+                                        border: 1.5px solid #e5e7eb;
+                                        border-radius: 12px;
+                                        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+                                        max-height: 300px;
+                                        overflow-y: auto;
+                                        z-index: 1000;
+                                    ">
+                                </div>
+                            </div>
+
                             <button type="button" onclick="openCustomerModal()"
                                 style="
                                 background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -140,8 +162,18 @@
                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(16, 185, 129, 0.3)'"
                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.25)'">
                                 <span style="font-size: 16px;">+</span>
-                                Add Customer
+                                Add New
                             </button>
+                        </div>
+                        <div id="selectedCustomerInfo" style="margin-top: 8px; display: none;">
+                            <div
+                                style="display: inline-flex; align-items: center; gap: 8px; background: #dbeafe; padding: 8px 12px; border-radius: 8px;">
+                                <span style="color: #1e40af; font-size: 14px;">✅ Customer selected:</span>
+                                <span id="selectedCustomerName" style="font-weight: 600; color: #1e293b;"></span>
+                                <button type="button" onclick="clearCustomerSelection()"
+                                    style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 12px; margin-left: 8px;">✕
+                                    Clear</button>
+                            </div>
                         </div>
                     </div>
 
@@ -154,23 +186,26 @@
                             font-weight: 600;
                             margin-bottom: 8px;
                             font-size: 14px;
-                        ">Search
-                            Products</label>
+                        ">
+                            Step 2: Search Products
+                            <span id="productStatus"
+                                style="font-size: 12px; color: #dc2626; margin-left: 8px; font-weight: normal;"></span>
+                        </label>
                         <div style="position: relative;">
-                            <input type="text" id="productSearch" disabled placeholder="Type product name to search..."
+                            <input type="text" id="productSearch" disabled placeholder="First select a customer above..."
                                 style="
                                     width: 100%;
                                     padding: 12px 16px;
                                     padding-right: 40px;
                                     border-radius: 12px;
-                                    border: 1.5px solid #d1d5db;
-                                    background: white;
+                                    border: 1.5px solid #e5e7eb;
+                                    background: #f3f4f6;
                                     font-size: 15px;
-                                    color: #374151;
+                                    color: #9ca3af;
                                     transition: all 0.2s;
                                     outline: none;
-                                "
-                                onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#d1d5db'">
+                                    cursor: not-allowed;
+                                ">
                             <span
                                 style="
                                 position: absolute;
@@ -195,6 +230,9 @@
                                 z-index: 1000;
                             ">
                             </div>
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">
+                            <span id="productSearchHint">Select a customer first to enable product search</span>
                         </div>
                     </div>
                 </div>
@@ -234,6 +272,8 @@
                         font-size: 14px;
                     ">2</span>
                     Invoice Items
+                    <span id="itemsStatus"
+                        style="font-size: 14px; color: #dc2626; margin-left: 8px; font-weight: normal;"></span>
                 </h3>
 
                 <div style="overflow-x: auto; border-radius: 12px; border: 1px solid #e5e7eb;">
@@ -329,7 +369,7 @@
                                     ">
                                         <span style="font-size: 48px;">📦</span>
                                         <p style="margin: 0; font-size: 15px;">
-                                            Search and add products to start creating your invoice
+                                            Select a customer first, then search and add products
                                         </p>
                                     </div>
                                 </td>
@@ -812,22 +852,75 @@
         }
 
         /* Custom scrollbar */
-        #productResults::-webkit-scrollbar {
+        #productResults::-webkit-scrollbar,
+        #customerResults::-webkit-scrollbar {
             width: 6px;
         }
 
-        #productResults::-webkit-scrollbar-track {
+        #productResults::-webkit-scrollbar-track,
+        #customerResults::-webkit-scrollbar-track {
             background: #f1f5f9;
             border-radius: 10px;
         }
 
-        #productResults::-webkit-scrollbar-thumb {
+        #productResults::-webkit-scrollbar-thumb,
+        #customerResults::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 10px;
         }
 
-        #productResults::-webkit-scrollbar-thumb:hover {
+        #productResults::-webkit-scrollbar-thumb:hover,
+        #customerResults::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-5px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(5px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
         }
     </style>
 
@@ -835,24 +928,276 @@
     <script>
         let products = @json($products);
         let isSavingCustomer = false;
+        let customerTimer = null;
+        let isCustomerSelected = false;
 
-        const customerSelect = document.getElementById('customerSelect');
+        const customerSearch = document.getElementById('customerSearch');
+        const customerResults = document.getElementById('customerResults');
+        const customerIdInput = document.getElementById('customer_id');
+        const customerStatus = document.getElementById('customerStatus');
+        const selectedCustomerInfo = document.getElementById('selectedCustomerInfo');
+        const selectedCustomerName = document.getElementById('selectedCustomerName');
+
         const productSearch = document.getElementById('productSearch');
         const productResults = document.getElementById('productResults');
+        const productStatus = document.getElementById('productStatus');
+        const productSearchHint = document.getElementById('productSearchHint');
+
         const itemsTable = document.getElementById('itemsTable');
         const emptyState = document.getElementById('emptyState');
+        const itemsStatus = document.getElementById('itemsStatus');
         const saveCustomerBtn = document.getElementById('saveCustomerBtn');
 
-        // Enable product search when customer is selected
-        customerSelect.addEventListener('change', () => {
-            productSearch.disabled = customerSelect.value === "";
-            if (!productSearch.disabled) {
-                productSearch.focus();
-            }
+        // Focus on customer search when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            customerSearch.focus();
+            updateUIState();
         });
 
-        // Product search functionality
+        // ========== CUSTOMER SEARCH FUNCTIONALITY ==========
+        customerSearch.addEventListener('input', function() {
+            const query = this.value.trim();
+
+            clearTimeout(customerTimer);
+
+            if (query.length < 2) {
+                customerResults.style.display = 'none';
+                return;
+            }
+
+            // Show loading state
+            customerResults.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #64748b;">
+                    <div style="
+                        display: inline-block;
+                        width: 20px;
+                        height: 20px;
+                        border: 2px solid #e5e7eb;
+                        border-top-color: #3b82f6;
+                        border-radius: 50%;
+                        animation: spin 0.8s linear infinite;
+                        margin-right: 10px;
+                    "></div>
+                    Searching customers...
+                </div>
+            `;
+            customerResults.style.display = 'block';
+
+            customerTimer = setTimeout(() => {
+                fetch(`{{ route('customers.ajax.search') }}?search=${encodeURIComponent(query)}`)
+                    .then(res => res.json())
+                    .then(customers => {
+                        customerResults.innerHTML = '';
+
+                        if (customers.length === 0) {
+                            customerResults.innerHTML = `
+                                <div style="
+                                    padding: 30px 20px;
+                                    text-align: center;
+                                    color: #64748b;
+                                    font-style: italic;
+                                ">
+                                    <div style="font-size: 40px; margin-bottom: 10px;">👤</div>
+                                    No customers found
+                                    <div style="font-size: 13px; margin-top: 8px; color: #94a3b8;">
+                                        Try different keywords or add a new customer
+                                    </div>
+                                </div>
+                            `;
+                            customerResults.style.display = 'block';
+                            return;
+                        }
+
+                        // Display found customers
+                        customers.forEach((customer, index) => {
+                            const item = document.createElement('div');
+                            item.style.cssText = `
+                                padding: 14px 16px;
+                                cursor: pointer;
+                                border-bottom: ${index === customers.length - 1 ? 'none' : '1px solid #f1f5f9'};
+                                transition: all 0.2s;
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                            `;
+
+                            item.innerHTML = `
+                                <div style="flex: 1;">
+                                    <div style="
+                                        font-weight: 600;
+                                        color: #374151;
+                                        margin-bottom: 4px;
+                                        font-size: 15px;
+                                    ">
+                                        ${customer.name}
+                                    </div>
+                                    <div style="
+                                        display: flex;
+                                        gap: 12px;
+                                        font-size: 13px;
+                                        color: #64748b;
+                                    ">
+                                        <span>📱 ${customer.mobile || 'No phone'}</span>
+                                        ${customer.email ? `<span>✉️ ${customer.email}</span>` : ''}
+                                    </div>
+                                </div>
+                                <div style="
+                                    background: #3b82f6;
+                                    color: white;
+                                    padding: 6px 12px;
+                                    border-radius: 8px;
+                                    font-weight: 600;
+                                    font-size: 13px;
+                                    white-space: nowrap;
+                                ">
+                                    Select
+                                </div>
+                            `;
+
+                            item.onmouseover = () => {
+                                item.style.background = '#f8fafc';
+                            };
+
+                            item.onmouseout = () => {
+                                item.style.background = 'white';
+                            };
+
+                            item.onclick = () => selectCustomer(customer);
+
+                            customerResults.appendChild(item);
+                        });
+
+                        customerResults.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        customerResults.innerHTML = `
+                            <div style="
+                                padding: 20px;
+                                text-align: center;
+                                color: #ef4444;
+                            ">
+                                <div style="font-size: 40px; margin-bottom: 10px;">⚠️</div>
+                                Search failed. Please try again.
+                            </div>
+                        `;
+                        customerResults.style.display = 'block';
+                    });
+            }, 500);
+        });
+
+        function selectCustomer(customer) {
+            // Set customer data
+            customerSearch.value = customer.name;
+            customerIdInput.value = customer.id;
+            selectedCustomerName.textContent = customer.name + (customer.mobile ? ` (${customer.mobile})` : '');
+
+            // Hide search results
+            customerResults.style.display = 'none';
+
+            // Update state
+            isCustomerSelected = true;
+
+            // Enable product search
+            enableProductSearch();
+
+            // Show selected customer info
+            selectedCustomerInfo.style.display = 'block';
+
+            // Clear customer status
+            customerStatus.textContent = '';
+
+            // Show success feedback
+            customerSearch.style.borderColor = '#10b981';
+
+            // Focus on product search
+            setTimeout(() => {
+                productSearch.focus();
+            }, 100);
+
+            // Show toast
+            showToast(`Customer "${customer.name}" selected. Now you can add products.`, 'success');
+
+            // Update UI state
+            updateUIState();
+        }
+
+        function clearCustomerSelection() {
+            // Clear customer data
+            customerSearch.value = '';
+            customerIdInput.value = '';
+            isCustomerSelected = false;
+
+            // Hide selected customer info
+            selectedCustomerInfo.style.display = 'none';
+
+            // Disable product search
+            disableProductSearch();
+
+            // Clear all products from table
+            clearAllProducts();
+
+            // Focus back on customer search
+            customerSearch.focus();
+
+            // Show message
+            customerStatus.textContent = 'Please select a customer first';
+            customerStatus.style.color = '#dc2626';
+
+            // Update UI state
+            updateUIState();
+
+            showToast('Customer selection cleared', 'info');
+        }
+
+        function enableProductSearch() {
+            productSearch.disabled = false;
+            productSearch.placeholder = "Type product name to search...";
+            productSearch.style.background = 'white';
+            productSearch.style.color = '#374151';
+            productSearch.style.cursor = 'text';
+            productSearchHint.textContent = 'Start typing to search products';
+            productSearchHint.style.color = '#059669';
+            productStatus.textContent = '';
+        }
+
+        function disableProductSearch() {
+            productSearch.disabled = true;
+            productSearch.value = '';
+            productSearch.placeholder = "First select a customer above...";
+            productSearch.style.background = '#f3f4f6';
+            productSearch.style.color = '#9ca3af';
+            productSearch.style.cursor = 'not-allowed';
+            productSearchHint.textContent = 'Select a customer first to enable product search';
+            productSearchHint.style.color = '#6b7280';
+            productStatus.textContent = 'Customer required';
+        }
+
+        function clearAllProducts() {
+            // Remove all product rows
+            document.querySelectorAll('#itemsTable tr[data-pid]').forEach(row => {
+                row.remove();
+            });
+
+            // Show empty state
+            if (emptyState) emptyState.style.display = '';
+
+            // Reset totals
+            calculate();
+
+            // Update items status
+            itemsStatus.textContent = 'Add products after selecting customer';
+        }
+
+        // ========== PRODUCT SEARCH FUNCTIONALITY ==========
         productSearch.addEventListener('input', function() {
+            if (!isCustomerSelected) {
+                showToast('Please select a customer first', 'error');
+                customerSearch.focus();
+                this.value = '';
+                return;
+            }
+
             let val = this.value.toLowerCase().trim();
             productResults.innerHTML = '';
 
@@ -920,15 +1265,14 @@
             productResults.style.display = 'block';
         });
 
-        // Close search results when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!productSearch.contains(e.target) && !productResults.contains(e.target)) {
-                productResults.style.display = 'none';
-            }
-        });
-
         // Add product to table
         function addProduct(p) {
+            if (!isCustomerSelected) {
+                showToast('Please select a customer first', 'error');
+                customerSearch.focus();
+                return;
+            }
+
             productResults.style.display = 'none';
             productSearch.value = '';
 
@@ -1059,6 +1403,7 @@
             }
 
             calculate();
+            updateUIState();
         }
 
         // Remove product from table
@@ -1073,7 +1418,29 @@
                         emptyState.style.display = '';
                     }
                     calculate();
+                    updateUIState();
                 }, 300);
+            }
+        }
+
+        // Update UI state based on current status
+        function updateUIState() {
+            const hasProducts = document.querySelectorAll('#itemsTable tr[data-pid]').length > 0;
+
+            if (!isCustomerSelected) {
+                customerStatus.textContent = 'Required';
+                customerStatus.style.color = '#dc2626';
+                itemsStatus.textContent = 'Select customer first';
+                itemsStatus.style.color = '#dc2626';
+            } else if (!hasProducts) {
+                customerStatus.textContent = '✅ Selected';
+                customerStatus.style.color = '#059669';
+                itemsStatus.textContent = 'No products added yet';
+                itemsStatus.style.color = '#f59e0b';
+            } else {
+                customerStatus.textContent = '✅ Selected';
+                customerStatus.style.color = '#059669';
+                itemsStatus.textContent = '';
             }
         }
 
@@ -1099,6 +1466,24 @@
 
         // Form submission handler
         function handleSubmit(form) {
+            if (!isCustomerSelected) {
+                showToast('Please select a customer first', 'error');
+                customerSearch.focus();
+                customerSearch.classList.add('shake');
+                setTimeout(() => customerSearch.classList.remove('shake'), 500);
+                return false;
+            }
+
+            // Check if any products added
+            const hasProducts = document.querySelectorAll('#itemsTable tr[data-pid]').length > 0;
+            if (!hasProducts) {
+                showToast('Please add at least one product', 'error');
+                productSearch.focus();
+                productSearch.classList.add('shake');
+                setTimeout(() => productSearch.classList.remove('shake'), 500);
+                return false;
+            }
+
             const btn = document.getElementById('saveBtn');
             const originalText = btn.innerHTML;
 
@@ -1118,18 +1503,18 @@
                 Processing...
             `;
 
-            // Add spin animation
-            const style = document.createElement('style');
-            style.innerHTML = `
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            `;
-            document.head.appendChild(style);
-
             return true;
         }
+
+        // Close search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!customerSearch.contains(e.target) && !customerResults.contains(e.target)) {
+                customerResults.style.display = 'none';
+            }
+            if (!productSearch.contains(e.target) && !productResults.contains(e.target)) {
+                productResults.style.display = 'none';
+            }
+        });
 
         // Customer modal functions
         function openCustomerModal() {
@@ -1158,12 +1543,12 @@
 
             // Validation
             if (!name) {
-                alert('Customer name is required');
+                showToast('Customer name is required', 'error');
                 document.getElementById('c_name').focus();
                 return;
             }
             if (!mobile) {
-                alert('Mobile number is required');
+                showToast('Mobile number is required', 'error');
                 document.getElementById('c_mobile').focus();
                 return;
             }
@@ -1184,16 +1569,6 @@
             `;
             saveCustomerBtn.disabled = true;
 
-            // Add spin animation for button
-            const spinStyle = document.createElement('style');
-            spinStyle.innerHTML = `
-                @keyframes buttonSpin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            `;
-            document.head.appendChild(spinStyle);
-
             fetch("{{ route('customers.store.ajax') }}", {
                     method: "POST",
                     headers: {
@@ -1210,38 +1585,16 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.customer) {
-                        // Add option if not exists
-                        let existingOption = null;
-                        for (let option of customerSelect.options) {
-                            if (option.value == data.customer.id) {
-                                existingOption = option;
-                                break;
-                            }
-                        }
-
-                        if (!existingOption) {
-                            const option = document.createElement('option');
-                            option.value = data.customer.id;
-                            option.text = data.customer.name;
-                            customerSelect.appendChild(option);
-                        }
-
-                        // Select the new customer
-                        customerSelect.value = data.customer.id;
-                        productSearch.disabled = false;
-
-                        // Close modal and show success
+                        // Close modal
                         closeCustomerModal();
 
-                        // Show success toast
-                        showToast('Customer added successfully!', 'success');
+                        // Select the newly created customer
+                        selectCustomer(data.customer);
 
-                        // Focus on product search
-                        setTimeout(() => {
-                            productSearch.focus();
-                        }, 300);
+                        // Show success message
+                        showToast('Customer added and selected! Now add products.', 'success');
                     } else {
-                        alert(data.message || 'Error saving customer');
+                        showToast(data.message || 'Error saving customer', 'error');
                     }
                 })
                 .catch(error => {
@@ -1252,7 +1605,6 @@
                     isSavingCustomer = false;
                     saveCustomerBtn.innerHTML = originalText;
                     saveCustomerBtn.disabled = false;
-                    document.head.removeChild(spinStyle);
                 });
         }
 
@@ -1263,7 +1615,7 @@
                 position: fixed;
                 top: 30px;
                 right: 30px;
-                background: ${type === 'success' ? '#10b981' : '#ef4444'};
+                background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
                 color: white;
                 padding: 16px 24px;
                 border-radius: 12px;
@@ -1274,42 +1626,25 @@
                 display: flex;
                 align-items: center;
                 gap: 12px;
+                min-width: 300px;
+                max-width: 400px;
             `;
             toast.innerHTML = `
-                <span style="font-size: 20px;">${type === 'success' ? '✓' : '⚠'}</span>
-                <span>${message}</span>
+                <span style="font-size: 20px;">${type === 'success' ? '✓' : type === 'error' ? '⚠' : 'ℹ'}</span>
+                <span style="flex: 1;">${message}</span>
             `;
 
-            // Add animations
-            const toastStyle = document.createElement('style');
-            toastStyle.innerHTML = `
-                @keyframes slideInRight {
-                    from {
-                        opacity: 0;
-                        transform: translateX(30px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateX(0);
-                    }
-                }
-                @keyframes fadeOut {
-                    from {
-                        opacity: 1;
-                    }
-                    to {
-                        opacity: 0;
-                    }
-                }
-            `;
-            document.head.appendChild(toastStyle);
+            // Remove existing toasts
+            document.querySelectorAll('.toast-notification').forEach(el => el.remove());
+            toast.className = 'toast-notification';
 
             document.body.appendChild(toast);
 
             // Remove after 3 seconds
             setTimeout(() => {
-                toast.remove();
-                document.head.removeChild(toastStyle);
+                if (toast.parentNode) {
+                    toast.remove();
+                }
             }, 3000);
         }
 
@@ -1334,6 +1669,28 @@
                 to {
                     opacity: 0;
                     transform: translateX(10px);
+                }
+            }
+            @keyframes buttonSpin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+            @keyframes slideInRight {
+                from {
+                    opacity: 0;
+                    transform: translateX(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                }
+                to {
+                    opacity: 0;
                 }
             }
         `;
