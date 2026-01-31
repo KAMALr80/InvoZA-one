@@ -7,37 +7,82 @@ use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Mail\EmployeeEmail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class EmployeeController extends Controller
 {
-    /* ================= LIST ================= */
+    /* ================= SEND EMAIL ================= */
+  public function sendEmail(Request $request, Employee $employee)
+    {
+        $request->validate([
+            'subject' => 'required|string|max:255',
+            'body' => 'required|string',
+        ]);
 
+        try {
+            // Use Auth facade instead of auth() helper
+            $sender = Auth::user();
+
+            // Send email using Laravel Mail
+            Mail::to($employee->email)->send(new EmployeeEmail(
+                $request->subject,
+                $request->body,
+                $sender
+            ));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully!'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Email sending failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email. Please try again.'
+            ], 500);
+        }
+    }
+
+    /* ================= LIST ================= */
     public function index(Request $request)
     {
-        $search = $request->search;
+        $search  = $request->input('search');        // search text
+        $perPage = $request->input('per_page', 10);  // show entries (default 10)
 
-        $employees = Employee::when($search, function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%")
-                  ->orWhere('employee_code', 'like', "%$search%")
-                  ->orWhere('department', 'like', "%$search%");
+        $employees = Employee::query()
+            ->when($search, function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('employee_code', 'like', "%{$search}%")
+                        ->orWhere('department', 'like', "%{$search}%");
+                });
             })
             ->latest()
-            ->paginate(10)
+            ->paginate($perPage)
             ->withQueryString();
 
-        return view('employees.index', compact('employees'));
+        return view('employees.index', compact('employees', 'search', 'perPage'));
+    }
+
+    /* ================= SHOW ================= */
+    public function show($id)
+    {
+        $employee = Employee::with('user')->findOrFail($id);
+        return view('employees.show', compact('employee'));
     }
 
     /* ================= CREATE ================= */
-
     public function create()
     {
         return view('employees.create');
     }
 
     /* ================= STORE ================= */
-
     public function store(Request $request)
     {
         $request->validate([
@@ -75,7 +120,6 @@ class EmployeeController extends Controller
     }
 
     /* ================= EDIT ================= */
-
     public function edit($id)
     {
         $employee = Employee::findOrFail($id);
@@ -83,7 +127,6 @@ class EmployeeController extends Controller
     }
 
     /* ================= UPDATE ================= */
-
     public function update(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
@@ -122,7 +165,6 @@ class EmployeeController extends Controller
     }
 
     /* ================= DELETE ================= */
-
     public function destroy($id)
     {
         $employee = Employee::findOrFail($id);

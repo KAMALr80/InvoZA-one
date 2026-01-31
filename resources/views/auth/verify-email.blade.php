@@ -1,31 +1,82 @@
 <x-guest-layout>
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
+    <div
+        style="
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:linear-gradient(135deg,#e0f2fe,#f8fafc);
+            font-family:Segoe UI, sans-serif;
+        ">
 
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600 dark:text-green-400">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+        <div
+            style="
+                width:420px;
+                background:#ffffff;
+                padding:30px;
+                border-radius:12px;
+                box-shadow:0 20px 40px rgba(0,0,0,0.1);
+                text-align:center;
+            ">
+
+            <h2 style="font-size:22px;margin-bottom:12px;">
+                📧 Verify Your Email
+            </h2>
+
+            <p style="font-size:13px;color:#6b7280;margin-bottom:20px;">
+                We’ve sent a verification link to your email address.
+                Please verify your email before continuing.
+            </p>
+
+            @if (session('status') == 'verification-link-sent')
+                <div
+                    style="
+                        margin-bottom:15px;
+                        font-size:13px;
+                        color:#065f46;
+                        background:#d1fae5;
+                        padding:10px;
+                        border-radius:6px;
+                    ">
+                    ✅ A new verification link has been sent to your email.
+                </div>
+            @endif
+
+            <!-- Resend -->
+            <form method="POST" action="{{ route('verification.send') }}">
+                @csrf
+                <button type="submit"
+                    style="
+                        width:100%;
+                        padding:10px;
+                        background:#2563eb;
+                        color:#ffffff;
+                        border:none;
+                        border-radius:6px;
+                        font-size:15px;
+                        cursor:pointer;
+                        margin-bottom:15px;
+                    ">
+                    🔁 Resend Verification Email
+                </button>
+            </form>
+
+            <!-- Logout -->
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit"
+                    style="
+                        background:none;
+                        border:none;
+                        font-size:13px;
+                        color:#6b7280;
+                        cursor:pointer;
+                        text-decoration:underline;
+                    ">
+                    Log Out
+                </button>
+            </form>
+
         </div>
-    @endif
-
-    <div class="mt-4 flex items-center justify-between">
-        <form method="POST" action="{{ route('verification.send') }}">
-            @csrf
-
-            <div>
-                <x-primary-button>
-                    {{ __('Resend Verification Email') }}
-                </x-primary-button>
-            </div>
-        </form>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-
-            <button type="submit" class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
-                {{ __('Log Out') }}
-            </button>
-        </form>
     </div>
 </x-guest-layout>

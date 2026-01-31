@@ -57,3 +57,43 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });
+
+
+
+use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\Auth\RegisterOtpController;
+
+/*
+|--------------------------------------------------------------------------
+| Login
+|--------------------------------------------------------------------------
+*/
+
+
+/*
+|--------------------------------------------------------------------------
+| Login OTP
+|--------------------------------------------------------------------------
+*/
+Route::get('/otp', [OtpController::class, 'show'])
+    ->name('otp.verify');
+
+Route::post('/otp', [OtpController::class, 'verify'])
+    ->name('otp.verify.post');
+
+Route::post('/otp/resend', [OtpController::class, 'resend'])
+    ->name('otp.resend');
+
+/*
+|--------------------------------------------------------------------------
+| Register OTP
+|--------------------------------------------------------------------------
+*/
+Route::get('/register-otp', [RegisterOtpController::class, 'show'])
+    ->name('register.otp');
+
+Route::post('/register-otp', [RegisterOtpController::class, 'verify'])
+    ->name('register.otp.verify');
+
+Route::post('/register-otp/resend', [RegisterOtpController::class, 'resend'])
+    ->name('register.otp.resend');

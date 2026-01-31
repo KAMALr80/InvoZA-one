@@ -19,86 +19,180 @@
             border: 1px solid #e5e7eb;
         ">
 
-        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 30px;">
-            <div
-                style="
-                width: 60px;
-                height: 60px;
-                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-                border-radius: 16px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
-            ">
-                <span style="font-size: 28px; color: white;">🧾</span>
-            </div>
-            <div>
-                <h1
+        {{-- INVOICE HEADER WITH CUSTOMER CLEAR BUTTON --}}
+        <div
+            style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+                <div
                     style="
-                    font-size: 32px;
-                    font-weight: 800;
-                    margin: 0;
-                    color: #1e293b;
-                    letter-spacing: -0.5px;
-                ">
-                    Create New Invoice</h1>
-                <p style="color: #64748b; margin: 5px 0 0; font-size: 15px;">
-                    Step 1: Select customer → Step 2: Add products
-                </p>
+                        width: 60px;
+                        height: 60px;
+                        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                        border-radius: 16px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+                    ">
+                    <span style="font-size: 28px; color: white;">🧾</span>
+                </div>
+                <div>
+                    <h1
+                        style="
+                            font-size: 32px;
+                            font-weight: 800;
+                            margin: 0;
+                            color: #1e293b;
+                            letter-spacing: -0.5px;
+                        ">
+                        Create New Invoice</h1>
+                    <p style="color: #64748b; margin: 5px 0 0; font-size: 15px;">
+                        Step 1: Select customer → Step 2: Add products
+                    </p>
+                </div>
+            </div>
+
+            {{-- CLEAR CUSTOMER BUTTON (TOP RIGHT) --}}
+            <div id="clearCustomerContainer" style="display: none;">
+                <button type="button" onclick="clearCustomerSelection()"
+                    style="
+                        background: #fef2f2;
+                        color: #dc2626;
+                        border: 1.5px solid #fecaca;
+                        padding: 10px 20px;
+                        border-radius: 12px;
+                        font-weight: 600;
+                        font-size: 14px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        transition: all 0.2s;
+                        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.1);
+                    "
+                    onmouseover="
+                        this.style.background='#fee2e2';
+                        this.style.borderColor='#fca5a5';
+                        this.style.transform='translateY(-2px)';
+                        this.style.boxShadow='0 6px 16px rgba(220, 38, 38, 0.15)';
+                    "
+                    onmouseout="
+                        this.style.background='#fef2f2';
+                        this.style.borderColor='#fecaca';
+                        this.style.transform='translateY(0)';
+                        this.style.boxShadow='0 4px 12px rgba(220, 38, 38, 0.1)';
+                    ">
+                    <span style="font-size: 16px;">✕</span>
+                    Clear Customer
+                </button>
             </div>
         </div>
 
         <form method="POST" action="{{ route('sales.store') }}" onsubmit="return handleSubmit(this)">
             @csrf
+            <input type="text" id="barcodeInput" autocomplete="off"
+                style="
+                    position: absolute;
+                    opacity: 0;
+                    height: 0;
+                    width: 0;
+                    pointer-events: none;
+                ">
+
             <input type="hidden" name="invoice_token" value="{{ Str::uuid() }}">
 
             {{-- CUSTOMER + SEARCH SECTION --}}
             <div
                 style="
-                background: white;
-                padding: 25px;
-                border-radius: 16px;
-                margin-bottom: 30px;
-                border: 1px solid #e5e7eb;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            ">
+                    background: white;
+                    padding: 25px;
+                    border-radius: 16px;
+                    margin-bottom: 30px;
+                    border: 1px solid #e5e7eb;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+                ">
                 <h3
                     style="
-                    font-size: 18px;
-                    font-weight: 700;
-                    color: #374151;
-                    margin: 0 0 20px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                ">
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: #374151;
+                        margin: 0 0 20px;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    ">
                     <span
                         style="
-                        display: inline-flex;
-                        width: 24px;
-                        height: 24px;
-                        background: #3b82f6;
-                        color: white;
-                        border-radius: 6px;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 14px;
-                    ">1</span>
+                            display: inline-flex;
+                            width: 24px;
+                            height: 24px;
+                            background: #3b82f6;
+                            color: white;
+                            border-radius: 6px;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 14px;
+                        ">1</span>
                     Step 1: Select Customer (Required)
                 </h3>
+
+                {{-- SELECTED CUSTOMER INFO DISPLAY --}}
+                <div id="selectedCustomerInfo"
+                    style="
+                    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                    border: 1.5px solid #0ea5e9;
+                    border-radius: 12px;
+                    padding: 16px 20px;
+                    margin-bottom: 20px;
+                    display: none;
+                    animation: fadeIn 0.3s ease-out;
+                ">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div
+                                style="
+                                width: 44px;
+                                height: 44px;
+                                background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+                                border-radius: 10px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">
+                                <span style="font-size: 22px; color: white;">👤</span>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #0c4a6e; font-weight: 600; margin-bottom: 4px;">
+                                    CUSTOMER SELECTED
+                                </div>
+                                <div id="selectedCustomerName" style="font-weight: 700; color: #1e293b; font-size: 16px;">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; font-size: 13px; color: #475569;">
+                            <div id="selectedCustomerMobile" style="display: flex; align-items: center; gap: 4px;">
+                                <span>📱</span>
+                                <span id="selectedCustomerMobileText">Loading...</span>
+                            </div>
+                            <div id="selectedCustomerEmail" style="display: flex; align-items: center; gap: 4px;">
+                                <span>✉️</span>
+                                <span id="selectedCustomerEmailText">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
                     {{-- Customer Selection --}}
                     <div style="position: relative;">
                         <label
                             style="
-                            display: block;
-                            color: #374151;
-                            font-weight: 600;
-                            margin-bottom: 8px;
-                            font-size: 14px;
-                        ">
+                                display: block;
+                                color: #374151;
+                                font-weight: 600;
+                                margin-bottom: 8px;
+                                font-size: 14px;
+                            ">
                             Select Customer
                             <span style="color: #ef4444; font-weight: bold;">*</span>
                             <span id="customerStatus"
@@ -109,7 +203,7 @@
                                 <input type="text" id="customerSearch"
                                     placeholder="Type customer name or mobile to search..." autocomplete="off"
                                     style="
-                                        width: 100%;
+                                        width: 90%;
                                         padding: 12px 16px;
                                         border-radius: 10px;
                                         border: 1.5px solid #d1d5db;
@@ -144,36 +238,26 @@
 
                             <button type="button" onclick="openCustomerModal()"
                                 style="
-                                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                                color: white;
-                                border: none;
-                                padding: 0 24px;
-                                border-radius: 12px;
-                                font-weight: 600;
-                                font-size: 14px;
-                                cursor: pointer;
-                                display: flex;
-                                align-items: center;
-                                gap: 8px;
-                                white-space: nowrap;
-                                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-                                transition: all 0.2s;
-                            "
+                                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                                    color: white;
+                                    border: none;
+                                    padding: 0 24px;
+                                    border-radius: 12px;
+                                    font-weight: 600;
+                                    font-size: 14px;
+                                    cursor: pointer;
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 8px;
+                                    white-space: nowrap;
+                                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+                                    transition: all 0.2s;
+                                "
                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(16, 185, 129, 0.3)'"
                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.25)'">
                                 <span style="font-size: 16px;">+</span>
                                 Add New
                             </button>
-                        </div>
-                        <div id="selectedCustomerInfo" style="margin-top: 8px; display: none;">
-                            <div
-                                style="display: inline-flex; align-items: center; gap: 8px; background: #dbeafe; padding: 8px 12px; border-radius: 8px;">
-                                <span style="color: #1e40af; font-size: 14px;">✅ Customer selected:</span>
-                                <span id="selectedCustomerName" style="font-weight: 600; color: #1e293b;"></span>
-                                <button type="button" onclick="clearCustomerSelection()"
-                                    style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 12px; margin-left: 8px;">✕
-                                    Clear</button>
-                            </div>
                         </div>
                     </div>
 
@@ -181,20 +265,21 @@
                     <div>
                         <label
                             style="
-                            display: block;
-                            color: #374151;
-                            font-weight: 600;
-                            margin-bottom: 8px;
-                            font-size: 14px;
-                        ">
+                                display: block;
+                                color: #374151;
+                                font-weight: 600;
+                                margin-bottom: 8px;
+                                font-size: 14px;
+                            ">
                             Step 2: Search Products
                             <span id="productStatus"
                                 style="font-size: 12px; color: #dc2626; margin-left: 8px; font-weight: normal;"></span>
                         </label>
                         <div style="position: relative;">
                             <input type="text" id="productSearch" disabled placeholder="First select a customer above..."
+                                onkeydown="return event.key !== 'Enter'"
                                 style="
-                                    width: 100%;
+                                    width: 92%;
                                     padding: 12px 16px;
                                     padding-right: 40px;
                                     border-radius: 12px;
@@ -208,27 +293,27 @@
                                 ">
                             <span
                                 style="
-                                position: absolute;
-                                right: 16px;
-                                top: 50%;
-                                transform: translateY(-50%);
-                                color: #9ca3af;
-                                font-size: 18px;
-                            ">🔍</span>
+                                    position: absolute;
+                                    right: 16px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    color: #9ca3af;
+                                    font-size: 18px;
+                                ">🔍</span>
                             <div id="productResults"
                                 style="
-                                display: none;
-                                position: absolute;
-                                top: calc(100% + 8px);
-                                width: 100%;
-                                background: white;
-                                border: 1.5px solid #e5e7eb;
-                                border-radius: 12px;
-                                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-                                max-height: 300px;
-                                overflow-y: auto;
-                                z-index: 1000;
-                            ">
+                                    display: none;
+                                    position: absolute;
+                                    top: calc(100% + 8px);
+                                    width: 100%;
+                                    background: white;
+                                    border: 1.5px solid #e5e7eb;
+                                    border-radius: 12px;
+                                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+                                    max-height: 300px;
+                                    overflow-y: auto;
+                                    z-index: 1000;
+                                ">
                             </div>
                         </div>
                         <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">
@@ -238,39 +323,40 @@
                 </div>
             </div>
 
-            {{-- ITEMS TABLE --}}
+            {{-- Rest of the code remains the same... --}}
+            {{-- ITEMS TABLE SECTION --}}
             <div
                 style="
-                background: white;
-                padding: 25px;
-                border-radius: 16px;
-                margin-bottom: 30px;
-                border: 1px solid #e5e7eb;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-                overflow: hidden;
-            ">
+                    background: white;
+                    padding: 25px;
+                    border-radius: 16px;
+                    margin-bottom: 30px;
+                    border: 1px solid #e5e7eb;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+                    overflow: hidden;
+                ">
                 <h3
                     style="
-                    font-size: 18px;
-                    font-weight: 700;
-                    color: #374151;
-                    margin: 0 0 20px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                ">
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: #374151;
+                        margin: 0 0 20px;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    ">
                     <span
                         style="
-                        display: inline-flex;
-                        width: 24px;
-                        height: 24px;
-                        background: #f59e0b;
-                        color: white;
-                        border-radius: 6px;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 14px;
-                    ">2</span>
+                            display: inline-flex;
+                            width: 24px;
+                            height: 24px;
+                            background: #f59e0b;
+                            color: white;
+                            border-radius: 6px;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 14px;
+                        ">2</span>
                     Invoice Items
                     <span id="itemsStatus"
                         style="font-size: 14px; color: #dc2626; margin-left: 8px; font-weight: normal;"></span>
@@ -281,92 +367,88 @@
                         <thead>
                             <tr
                                 style="
-                                background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-                                color: #1e40af;
-                                border-bottom: 2px solid #dbeafe;
-                            ">
+                                    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+                                    color: #1e40af;
+                                    border-bottom: 2px solid #dbeafe;
+                                ">
                                 <th
                                     style="
-                                    padding: 16px 20px;
-                                    text-align: left;
-                                    font-weight: 700;
-                                    font-size: 14px;
-                                    text-transform: uppercase;
-                                    letter-spacing: 0.5px;
-                                    color: #374151;
-                                ">
+                                        padding: 16px 20px;
+                                        text-align: left;
+                                        font-weight: 700;
+                                        font-size: 14px;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.5px;
+                                        color: #374151;
+                                    ">
                                     Product</th>
                                 <th
                                     style="
-                                    padding: 16px 20px;
-                                    text-align: left;
-                                    font-weight: 700;
-                                    font-size: 14px;
-                                    text-transform: uppercase;
-                                    letter-spacing: 0.5px;
-                                    color: #374151;
-                                    width: 150px;
-                                ">
+                                        padding: 16px 20px;
+                                        text-align: left;
+                                        font-weight: 700;
+                                        font-size: 14px;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.5px;
+                                        color: #374151;
+                                    ">
                                     Price (₹)</th>
                                 <th
                                     style="
-                                    padding: 16px 20px;
-                                    text-align: left;
-                                    font-weight: 700;
-                                    font-size: 14px;
-                                    text-transform: uppercase;
-                                    letter-spacing: 0.5px;
-                                    color: #374151;
-                                    width: 120px;
-                                ">
+                                        padding: 16px 20px;
+                                        text-align: left;
+                                        font-weight: 700;
+                                        font-size: 14px;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.5px;
+                                        color: #374151;
+                                    ">
                                     Quantity</th>
                                 <th
                                     style="
-                                    padding: 16px 20px;
-                                    text-align: left;
-                                    font-weight: 700;
-                                    font-size: 14px;
-                                    text-transform: uppercase;
-                                    letter-spacing: 0.5px;
-                                    color: #374151;
-                                    width: 150px;
-                                ">
+                                        padding: 16px 20px;
+                                        text-align: left;
+                                        font-weight: 700;
+                                        font-size: 14px;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.5px;
+                                        color: #374151;
+                                    ">
                                     Total (₹)</th>
                                 <th
                                     style="
-                                    padding: 16px 20px;
-                                    text-align: left;
-                                    font-weight: 700;
-                                    font-size: 14px;
-                                    text-transform: uppercase;
-                                    letter-spacing: 0.5px;
-                                    color: #374151;
-                                    width: 100px;
-                                ">
+                                        padding: 16px 20px;
+                                        text-align: left;
+                                        font-weight: 700;
+                                        font-size: 14px;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.5px;
+                                        color: #374151;
+                                    ">
                                     Actions</th>
                             </tr>
                         </thead>
                         <tbody id="itemsTable"
                             style="
-                            background: #fafafa;
-                            border-bottom: 1px solid #e5e7eb;
-                        ">
+                                background: #fafafa;
+                                border-bottom: 1px solid #e5e7eb;
+                            ">
                             <tr id="emptyState"
                                 style="
-                                background: #f8fafc;
-                                text-align: center;
-                                color: #64748b;
-                                font-style: italic;
-                            ">
+                                    background: #f8fafc;
+                                    text-align: center;
+                                    color: #64748b;
+                                    font-style: italic;
+                                ">
                                 <td colspan="5" style="padding: 60px 20px;">
                                     <div
                                         style="
-                                        display: flex;
-                                        flex-direction: column;
-                                        align-items: center;
-                                        gap: 12px;
-                                        color: #94a3b8;
-                                    ">
+                                            display: flex;
+                                            flex-direction: column;
+                                            align-items: center;
+                                            gap: 12px;
+                                            color: #94a3b8;
+                                        ">
                                         <span style="font-size: 48px;">📦</span>
                                         <p style="margin: 0; font-size: 15px;">
                                             Select a customer first, then search and add products
@@ -382,193 +464,189 @@
             {{-- TOTALS SECTION --}}
             <div
                 style="
-                background: white;
-                padding: 25px;
-                border-radius: 16px;
-                margin-bottom: 30px;
-                border: 1px solid #e5e7eb;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            ">
+                    background: white;
+                    padding: 25px;
+                    border-radius: 16px;
+                    margin-bottom: 30px;
+                    border: 1px solid #e5e7eb;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+                ">
                 <h3
                     style="
-                    font-size: 18px;
-                    font-weight: 700;
-                    color: #374151;
-                    margin: 0 0 20px;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                ">
+                        font-size: 18px;
+                        font-weight: 700;
+                        color: #374151;
+                        margin: 0 0 20px;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    ">
                     <span
                         style="
-                        display: inline-flex;
-                        width: 24px;
-                        height: 24px;
-                        background: #10b981;
-                        color: white;
-                        border-radius: 6px;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 14px;
-                    ">3</span>
+                            display: inline-flex;
+                            width: 24px;
+                            height: 24px;
+                            background: #10b981;
+                            color: white;
+                            border-radius: 6px;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 14px;
+                        ">3</span>
                     Invoice Summary
                 </h3>
 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
-                    {{-- Sub Total --}}
                     <div>
                         <label
                             style="
-                            display: block;
-                            color: #64748b;
-                            font-weight: 600;
-                            margin-bottom: 8px;
-                            font-size: 14px;
-                        ">Sub
+                                display: block;
+                                color: #64748b;
+                                font-weight: 600;
+                                margin-bottom: 8px;
+                                font-size: 14px;
+                            ">Sub
                             Total</label>
                         <div style="position: relative;">
                             <span
                                 style="
-                                position: absolute;
-                                left: 16px;
-                                top: 50%;
-                                transform: translateY(-50%);
-                                color: #374151;
-                                font-weight: 600;
-                                font-size: 18px;
-                            ">₹</span>
+                                    position: absolute;
+                                    left: 16px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    color: #374151;
+                                    font-weight: 600;
+                                    font-size: 18px;
+                                ">₹</span>
                             <input id="sub_total" name="sub_total" readonly value="0.00"
                                 style="
-                                width: 100%;
-                                padding: 14px 16px 14px 42px;
-                                border-radius: 12px;
-                                border: 1.5px solid #e5e7eb;
-                                background: #f8fafc;
-                                font-size: 18px;
-                                font-weight: 700;
-                                color: #374151;
-                                text-align: right;
-                                outline: none;
-                            ">
+                                    width: 70%;
+                                    padding: 14px 16px 14px 42px;
+                                    border-radius: 12px;
+                                    border: 1.5px solid #e5e7eb;
+                                    background: #f8fafc;
+                                    font-size: 18px;
+                                    font-weight: 700;
+                                    color: #374151;
+                                    text-align: right;
+                                    outline: none;
+                                ">
                         </div>
                     </div>
 
-                    {{-- Discount --}}
                     <div>
                         <label
                             style="
-                            display: block;
-                            color: #64748b;
-                            font-weight: 600;
-                            margin-bottom: 8px;
-                            font-size: 14px;
-                        ">Discount
+                                display: block;
+                                color: #64748b;
+                                font-weight: 600;
+                                margin-bottom: 8px;
+                                font-size: 14px;
+                            ">Discount
                             (₹)</label>
                         <div style="position: relative;">
                             <span
                                 style="
-                                position: absolute;
-                                left: 16px;
-                                top: 50%;
-                                transform: translateY(-50%);
-                                color: #374151;
-                                font-weight: 600;
-                                font-size: 18px;
-                            ">₹</span>
+                                    position: absolute;
+                                    left: 16px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    color: #374151;
+                                    font-weight: 600;
+                                    font-size: 18px;
+                                ">₹</span>
                             <input id="discount" name="discount" value="0" oninput="calculate()"
                                 style="
-                                width: 100%;
-                                padding: 14px 16px 14px 42px;
-                                border-radius: 12px;
-                                border: 1.5px solid #e5e7eb;
-                                background: white;
-                                font-size: 16px;
-                                color: #374151;
-                                text-align: right;
-                                outline: none;
-                                transition: all 0.2s;
-                            "
+                                    width: 70%;
+                                    padding: 14px 16px 14px 42px;
+                                    border-radius: 12px;
+                                    border: 1.5px solid #e5e7eb;
+                                    background: white;
+                                    font-size: 16px;
+                                    color: #374151;
+                                    text-align: right;
+                                    outline: none;
+                                    transition: all 0.2s;
+                                "
                                 onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
                                 onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                         </div>
                     </div>
 
-                    {{-- Tax --}}
                     <div>
                         <label
                             style="
-                            display: block;
-                            color: #64748b;
-                            font-weight: 600;
-                            margin-bottom: 8px;
-                            font-size: 14px;
-                        ">Tax
+                                display: block;
+                                color: #64748b;
+                                font-weight: 600;
+                                margin-bottom: 8px;
+                                font-size: 14px;
+                            ">Tax
                             (%)</label>
                         <div style="position: relative;">
                             <span
                                 style="
-                                position: absolute;
-                                left: 16px;
-                                top: 50%;
-                                transform: translateY(-50%);
-                                color: #374151;
-                                font-weight: 600;
-                                font-size: 18px;
-                            ">%</span>
+                                    position: absolute;
+                                    left: 16px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    color: #374151;
+                                    font-weight: 600;
+                                    font-size: 18px;
+                                ">%</span>
                             <input id="tax" name="tax" value="0" oninput="calculate()"
                                 style="
-                                width: 100%;
-                                padding: 14px 16px 14px 42px;
-                                border-radius: 12px;
-                                border: 1.5px solid #e5e7eb;
-                                background: white;
-                                font-size: 16px;
-                                color: #374151;
-                                text-align: right;
-                                outline: none;
-                                transition: all 0.2s;
-                            "
+                                    width: 70%;
+                                    padding: 14px 16px 14px 42px;
+                                    border-radius: 12px;
+                                    border: 1.5px solid #e5e7eb;
+                                    background: white;
+                                    font-size: 16px;
+                                    color: #374151;
+                                    text-align: right;
+                                    outline: none;
+                                    transition: all 0.2s;
+                                "
                                 onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
                                 onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                         </div>
                     </div>
 
-                    {{-- Grand Total --}}
                     <div>
                         <label
                             style="
-                            display: block;
-                            color: #1e293b;
-                            font-weight: 700;
-                            margin-bottom: 8px;
-                            font-size: 14px;
-                        ">Grand
+                                display: block;
+                                color: #1e293b;
+                                font-weight: 700;
+                                margin-bottom: 8px;
+                                font-size: 14px;
+                            ">Grand
                             Total</label>
                         <div style="position: relative;">
                             <span
                                 style="
-                                position: absolute;
-                                left: 16px;
-                                top: 50%;
-                                transform: translateY(-50%);
-                                color: #1e293b;
-                                font-weight: 700;
-                                font-size: 18px;
-                            ">₹</span>
+                                    position: absolute;
+                                    left: 16px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    color: #1e293b;
+                                    font-weight: 700;
+                                    font-size: 18px;
+                                ">₹</span>
                             <input id="grand_total" name="grand_total" readonly value="0.00"
                                 style="
-                                width: 100%;
-                                padding: 14px 16px 14px 42px;
-                                border-radius: 12px;
-                                border: 2px solid #1e293b;
-                                background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-                                font-size: 20px;
-                                font-weight: 800;
-                                color: #1e293b;
-                                text-align: right;
-                                outline: none;
-                                box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
-                            ">
+                                    width: 70%;
+                                    padding: 14px 16px 14px 42px;
+                                    border-radius: 12px;
+                                    border: 2px solid #1e293b;
+                                    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+                                    font-size: 20px;
+                                    font-weight: 800;
+                                    color: #1e293b;
+                                    text-align: right;
+                                    outline: none;
+                                    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+                                ">
                         </div>
                     </div>
                 </div>
@@ -578,91 +656,91 @@
             <div style="text-align: right;">
                 <button type="submit" id="saveBtn"
                     style="
-                    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-                    color: white;
-                    border: none;
-                    padding: 18px 40px;
-                    border-radius: 14px;
-                    font-weight: 700;
-                    font-size: 16px;
-                    cursor: pointer;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 12px;
-                    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                "
+                        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                        color: white;
+                        border: none;
+                        padding: 18px 40px;
+                        border-radius: 14px;
+                        font-weight: 700;
+                        font-size: 16px;
+                        cursor: pointer;
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 12px;
+                        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    "
                     onmouseover="
-                    this.style.transform='translateY(-3px)';
-                    this.style.boxShadow='0 12px 25px rgba(0, 0, 0, 0.25)';
-                "
+                        this.style.transform='translateY(-3px)';
+                        this.style.boxShadow='0 12px 25px rgba(0, 0, 0, 0.25)';
+                    "
                     onmouseout="
-                    this.style.transform='translateY(0)';
-                    this.style.boxShadow='0 8px 20px rgba(0, 0, 0, 0.2)';
-                ">
+                        this.style.transform='translateY(0)';
+                        this.style.boxShadow='0 8px 20px rgba(0, 0, 0, 0.2)';
+                    ">
                     <span
                         style="
-                        background: rgba(255, 255, 255, 0.2);
-                        width: 36px;
-                        height: 36px;
-                        border-radius: 10px;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 18px;
-                    ">💾</span>
+                            background: rgba(255, 255, 255, 0.2);
+                            width: 36px;
+                            height: 36px;
+                            border-radius: 10px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 18px;
+                        ">💾</span>
                     Save & Generate Invoice
                 </button>
             </div>
         </form>
     </div>
 
-    {{-- ================= CUSTOMER MODAL ================= --}}
+    {{-- CUSTOMER MODAL (same as before) --}}
     <div id="customerModal"
         style="
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    ">
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        ">
         <div
             style="
-            background: white;
-            width: 100%;
-            max-width: 500px;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            animation: modalSlideIn 0.3s ease-out;
-            border: 1px solid #e5e7eb;
-        ">
+                background: white;
+                width: 100%;
+                max-width: 500px;
+                padding: 30px;
+                border-radius: 20px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                animation: modalSlideIn 0.3s ease-out;
+                border: 1px solid #e5e7eb;
+            ">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px;">
                 <div
                     style="
-                    width: 48px;
-                    height: 48px;
-                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                    border-radius: 12px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                ">
+                        width: 48px;
+                        height: 48px;
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        border-radius: 12px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    ">
                     <span style="font-size: 24px; color: white;">👤</span>
                 </div>
                 <div>
                     <h3
                         style="
-                        font-size: 22px;
-                        font-weight: 700;
-                        color: #1e293b;
-                        margin: 0;
-                        letter-spacing: -0.5px;
-                    ">
+                            font-size: 22px;
+                            font-weight: 700;
+                            color: #1e293b;
+                            margin: 0;
+                            letter-spacing: -0.5px;
+                        ">
                         Add New Customer</h3>
                     <p style="color: #64748b; margin: 4px 0 0; font-size: 14px;">
                         Fill customer details below
@@ -674,25 +752,25 @@
                 <div>
                     <label
                         style="
-                        display: block;
-                        color: #374151;
-                        font-weight: 600;
-                        margin-bottom: 8px;
-                        font-size: 14px;
-                    ">Full
+                            display: block;
+                            color: #374151;
+                            font-weight: 600;
+                            margin-bottom: 8px;
+                            font-size: 14px;
+                        ">Full
                         Name <span style="color: #ef4444;">*</span></label>
                     <input id="c_name" placeholder="Enter customer name"
                         style="
-                        width: 100%;
-                        padding: 14px 16px;
-                        border-radius: 12px;
-                        border: 1.5px solid #e5e7eb;
-                        background: white;
-                        font-size: 15px;
-                        color: #374151;
-                        outline: none;
-                        transition: all 0.2s;
-                    "
+                            width: 100%;
+                            padding: 14px 16px;
+                            border-radius: 12px;
+                            border: 1.5px solid #e5e7eb;
+                            background: white;
+                            font-size: 15px;
+                            color: #374151;
+                            outline: none;
+                            transition: all 0.2s;
+                        "
                         onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)'"
                         onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                 </div>
@@ -701,49 +779,49 @@
                     <div>
                         <label
                             style="
-                            display: block;
-                            color: #374151;
-                            font-weight: 600;
-                            margin-bottom: 8px;
-                            font-size: 14px;
-                        ">Mobile
+                                display: block;
+                                color: #374151;
+                                font-weight: 600;
+                                margin-bottom: 8px;
+                                font-size: 14px;
+                            ">Mobile
                             <span style="color: #ef4444;">*</span></label>
                         <input id="c_mobile" placeholder="Enter mobile number"
                             style="
-                            width: 100%;
-                            padding: 14px 16px;
-                            border-radius: 12px;
-                            border: 1.5px solid #e5e7eb;
-                            background: white;
-                            font-size: 15px;
-                            color: #374151;
-                            outline: none;
-                            transition: all 0.2s;
-                        "
+                                width: 100%;
+                                padding: 14px 16px;
+                                border-radius: 12px;
+                                border: 1.5px solid #e5e7eb;
+                                background: white;
+                                font-size: 15px;
+                                color: #374151;
+                                outline: none;
+                                transition: all 0.2s;
+                            "
                             onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)'"
                             onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                     </div>
                     <div>
                         <label
                             style="
-                            display: block;
-                            color: #374151;
-                            font-weight: 600;
-                            margin-bottom: 8px;
-                            font-size: 14px;
-                        ">Email</label>
+                                display: block;
+                                color: #374151;
+                                font-weight: 600;
+                                margin-bottom: 8px;
+                                font-size: 14px;
+                            ">Email</label>
                         <input id="c_email" placeholder="Enter email address"
                             style="
-                            width: 100%;
-                            padding: 14px 16px;
-                            border-radius: 12px;
-                            border: 1.5px solid #e5e7eb;
-                            background: white;
-                            font-size: 15px;
-                            color: #374151;
-                            outline: none;
-                            transition: all 0.2s;
-                        "
+                                width: 100%;
+                                padding: 14px 16px;
+                                border-radius: 12px;
+                                border: 1.5px solid #e5e7eb;
+                                background: white;
+                                font-size: 15px;
+                                color: #374151;
+                                outline: none;
+                                transition: all 0.2s;
+                            "
                             onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)'"
                             onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
                     </div>
@@ -752,26 +830,26 @@
                 <div>
                     <label
                         style="
-                        display: block;
-                        color: #374151;
-                        font-weight: 600;
-                        margin-bottom: 8px;
-                        font-size: 14px;
-                    ">Address</label>
+                            display: block;
+                            color: #374151;
+                            font-weight: 600;
+                            margin-bottom: 8px;
+                            font-size: 14px;
+                        ">Address</label>
                     <textarea id="c_address" placeholder="Enter customer address" rows="3"
                         style="
-                        width: 100%;
-                        padding: 14px 16px;
-                        border-radius: 12px;
-                        border: 1.5px solid #e5e7eb;
-                        background: white;
-                        font-size: 15px;
-                        color: #374151;
-                        outline: none;
-                        resize: vertical;
-                        transition: all 0.2s;
-                        font-family: inherit;
-                    "
+                            width: 100%;
+                            padding: 14px 16px;
+                            border-radius: 12px;
+                            border: 1.5px solid #e5e7eb;
+                            background: white;
+                            font-size: 15px;
+                            color: #374151;
+                            outline: none;
+                            resize: vertical;
+                            transition: all 0.2s;
+                            font-family: inherit;
+                        "
                         onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)'"
                         onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'"></textarea>
                 </div>
@@ -779,52 +857,52 @@
 
             <div
                 style="
-                display: flex;
-                gap: 12px;
-                margin-top: 30px;
-                padding-top: 25px;
-                border-top: 1px solid #e5e7eb;
-                justify-content: flex-end;
-            ">
+                    display: flex;
+                    gap: 12px;
+                    margin-top: 30px;
+                    padding-top: 25px;
+                    border-top: 1px solid #e5e7eb;
+                    justify-content: flex-end;
+                ">
                 <button onclick="closeCustomerModal()"
                     style="
-                    background: #f3f4f6;
-                    color: #374151;
-                    border: 1.5px solid #e5e7eb;
-                    padding: 12px 24px;
-                    border-radius: 10px;
-                    font-weight: 600;
-                    font-size: 15px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                "
+                        background: #f3f4f6;
+                        color: #374151;
+                        border: 1.5px solid #e5e7eb;
+                        padding: 12px 24px;
+                        border-radius: 10px;
+                        font-weight: 600;
+                        font-size: 15px;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    "
                     onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='#f3f4f6'">
                     Cancel
                 </button>
                 <button onclick="saveCustomer()" id="saveCustomerBtn"
                     style="
-                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                    color: white;
-                    border: none;
-                    padding: 12px 28px;
-                    border-radius: 10px;
-                    font-weight: 600;
-                    font-size: 15px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-                    transition: all 0.2s;
-                "
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 28px;
+                        border-radius: 10px;
+                        font-weight: 600;
+                        font-size: 15px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+                        transition: all 0.2s;
+                    "
                     onmouseover="
-                    this.style.transform='translateY(-2px)';
-                    this.style.boxShadow='0 6px 16px rgba(16, 185, 129, 0.3)';
-                "
+                        this.style.transform='translateY(-2px)';
+                        this.style.boxShadow='0 6px 16px rgba(16, 185, 129, 0.3)';
+                    "
                     onmouseout="
-                    this.style.transform='translateY(0)';
-                    this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.25)';
-                ">
+                        this.style.transform='translateY(0)';
+                        this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.25)';
+                    ">
                     <span style="font-size: 16px;">✓</span>
                     Save Customer
                 </button>
@@ -842,45 +920,6 @@
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
-            }
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-        }
-
-        /* Custom scrollbar */
-        #productResults::-webkit-scrollbar,
-        #customerResults::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        #productResults::-webkit-scrollbar-track,
-        #customerResults::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 10px;
-        }
-
-        #productResults::-webkit-scrollbar-thumb,
-        #customerResults::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 10px;
-        }
-
-        #productResults::-webkit-scrollbar-thumb:hover,
-        #customerResults::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
             }
         }
 
@@ -931,12 +970,22 @@
         let customerTimer = null;
         let isCustomerSelected = false;
 
+        // Barcode scanner variables
+        let isScannerEnabled = false;
+        let barcodeBuffer = '';
+        let barcodeTimeout = null;
+
         const customerSearch = document.getElementById('customerSearch');
         const customerResults = document.getElementById('customerResults');
         const customerIdInput = document.getElementById('customer_id');
         const customerStatus = document.getElementById('customerStatus');
+
+        // Customer info elements
         const selectedCustomerInfo = document.getElementById('selectedCustomerInfo');
         const selectedCustomerName = document.getElementById('selectedCustomerName');
+        const selectedCustomerMobileText = document.getElementById('selectedCustomerMobileText');
+        const selectedCustomerEmailText = document.getElementById('selectedCustomerEmailText');
+        const clearCustomerContainer = document.getElementById('clearCustomerContainer');
 
         const productSearch = document.getElementById('productSearch');
         const productResults = document.getElementById('productResults');
@@ -948,11 +997,217 @@
         const itemsStatus = document.getElementById('itemsStatus');
         const saveCustomerBtn = document.getElementById('saveCustomerBtn');
 
-        // Focus on customer search when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            customerSearch.focus();
-            updateUIState();
+        const barcodeInput = document.getElementById('barcodeInput');
+
+        // ========== BARCODE SCANNER FUNCTIONS ==========
+        function enableBarcodeScanner() {
+            isScannerEnabled = true;
+            barcodeInput.disabled = false;
+            barcodeInput.value = '';
+            barcodeBuffer = '';
+
+            if (!isInputFieldActive()) {
+                setTimeout(() => {
+                    barcodeInput.focus();
+                }, 100);
+            }
+            console.log('Barcode scanner enabled');
+        }
+
+        function disableBarcodeScanner() {
+            isScannerEnabled = false;
+            barcodeInput.disabled = true;
+            barcodeInput.value = '';
+            barcodeBuffer = '';
+            if (barcodeTimeout) {
+                clearTimeout(barcodeTimeout);
+                barcodeTimeout = null;
+            }
+            console.log('Barcode scanner disabled');
+        }
+
+        function isInputFieldActive() {
+            const activeElement = document.activeElement;
+            const activeTag = activeElement.tagName.toLowerCase();
+            const activeId = activeElement.id;
+
+            return (
+                activeTag === 'input' ||
+                activeTag === 'textarea' ||
+                activeTag === 'select' ||
+                activeId === 'customerSearch' ||
+                activeId === 'productSearch' ||
+                activeElement.closest('#customerModal')
+            );
+        }
+
+        barcodeInput.addEventListener('input', function(e) {
+            if (!isScannerEnabled || !isCustomerSelected) return;
+
+            barcodeBuffer += this.value;
+            this.value = '';
+
+            if (barcodeTimeout) {
+                clearTimeout(barcodeTimeout);
+            }
+
+            barcodeTimeout = setTimeout(() => {
+                if (barcodeBuffer.length > 0) {
+                    processBarcode(barcodeBuffer.trim());
+                    barcodeBuffer = '';
+                }
+            }, 100);
         });
+
+        barcodeInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+
+                if (!isScannerEnabled || !isCustomerSelected) {
+                    showToast('Please select customer first', 'error');
+                    this.value = '';
+                    return;
+                }
+
+                const scannedCode = this.value.trim();
+                if (scannedCode) {
+                    processBarcode(scannedCode);
+                }
+                this.value = '';
+            }
+        });
+
+        function processBarcode(code) {
+            if (!code || code.length === 0) return;
+
+            const product = products.find(p =>
+                p.product_code && p.product_code.toString() === code.toString()
+            );
+
+            if (!product) {
+                showToast(`Product not found for code: ${code}`, 'error');
+                return;
+            }
+
+            addProduct(product);
+            showToast(`Product added: ${product.name}`, 'success');
+        }
+
+        // ========== CUSTOMER FUNCTIONS ==========
+        function selectCustomer(customer) {
+            // Set customer data
+            customerSearch.value = customer.name; // Keep customer name in search bar
+            customerIdInput.value = customer.id;
+
+            // Update selected customer display
+            selectedCustomerName.textContent = customer.name;
+            selectedCustomerMobileText.textContent = customer.mobile || 'Not provided';
+            selectedCustomerEmailText.textContent = customer.email || 'Not provided';
+
+            // Show customer info and clear button
+            selectedCustomerInfo.style.display = 'block';
+            clearCustomerContainer.style.display = 'block';
+
+            // Hide search results
+            customerResults.style.display = 'none';
+
+            // Update state
+            isCustomerSelected = true;
+
+            // Enable product search
+            enableProductSearch();
+
+            // Clear customer status
+            customerStatus.textContent = '';
+
+            // Show success feedback on search bar
+            customerSearch.style.borderColor = '#10b981';
+
+            // Focus on product search
+            setTimeout(() => {
+                productSearch.focus();
+            }, 100);
+
+            // Enable barcode scanner
+            setTimeout(() => {
+                enableBarcodeScanner();
+            }, 500);
+
+            // Show toast
+            showToast(`Customer "${customer.name}" selected. Now you can add products.`, 'success');
+
+            // Update UI state
+            updateUIState();
+        }
+
+        function clearCustomerSelection() {
+            // Clear customer data
+            customerSearch.value = '';
+            customerIdInput.value = '';
+            isCustomerSelected = false;
+
+            // Hide customer info and clear button
+            selectedCustomerInfo.style.display = 'none';
+            clearCustomerContainer.style.display = 'none';
+
+            // Disable product search
+            disableProductSearch();
+
+            // Clear all products from table
+            clearAllProducts();
+
+            // Disable barcode scanner
+            disableBarcodeScanner();
+
+            // Reset search bar border
+            customerSearch.style.borderColor = '#d1d5db';
+
+            // Focus back on customer search
+            customerSearch.focus();
+
+            // Show message
+            customerStatus.textContent = 'Please select a customer first';
+            customerStatus.style.color = '#dc2626';
+
+            // Update UI state
+            updateUIState();
+
+            showToast('Customer selection cleared', 'info');
+        }
+
+        function enableProductSearch() {
+            productSearch.disabled = false;
+            productSearch.placeholder = "Type product name to search...";
+            productSearch.style.background = 'white';
+            productSearch.style.color = '#374151';
+            productSearch.style.cursor = 'text';
+            productSearchHint.textContent = 'Start typing to search products';
+            productSearchHint.style.color = '#059669';
+            productStatus.textContent = '';
+        }
+
+        function disableProductSearch() {
+            productSearch.disabled = true;
+            productSearch.value = '';
+            productSearch.placeholder = "First select a customer above...";
+            productSearch.style.background = '#f3f4f6';
+            productSearch.style.color = '#9ca3af';
+            productSearch.style.cursor = 'not-allowed';
+            productSearchHint.textContent = 'Select a customer first to enable product search';
+            productSearchHint.style.color = '#6b7280';
+            productStatus.textContent = 'Customer required';
+        }
+
+        function clearAllProducts() {
+            document.querySelectorAll('#itemsTable tr[data-pid]').forEach(row => {
+                row.remove();
+            });
+
+            if (emptyState) emptyState.style.display = '';
+
+            calculate();
+            itemsStatus.textContent = 'Add products after selecting customer';
+        }
 
         // ========== CUSTOMER SEARCH FUNCTIONALITY ==========
         customerSearch.addEventListener('input', function() {
@@ -965,7 +1220,6 @@
                 return;
             }
 
-            // Show loading state
             customerResults.innerHTML = `
                 <div style="padding: 20px; text-align: center; color: #64748b;">
                     <div style="
@@ -1008,7 +1262,6 @@
                             return;
                         }
 
-                        // Display found customers
                         customers.forEach((customer, index) => {
                             const item = document.createElement('div');
                             item.style.cssText = `
@@ -1086,110 +1339,7 @@
             }, 500);
         });
 
-        function selectCustomer(customer) {
-            // Set customer data
-            customerSearch.value = customer.name;
-            customerIdInput.value = customer.id;
-            selectedCustomerName.textContent = customer.name + (customer.mobile ? ` (${customer.mobile})` : '');
-
-            // Hide search results
-            customerResults.style.display = 'none';
-
-            // Update state
-            isCustomerSelected = true;
-
-            // Enable product search
-            enableProductSearch();
-
-            // Show selected customer info
-            selectedCustomerInfo.style.display = 'block';
-
-            // Clear customer status
-            customerStatus.textContent = '';
-
-            // Show success feedback
-            customerSearch.style.borderColor = '#10b981';
-
-            // Focus on product search
-            setTimeout(() => {
-                productSearch.focus();
-            }, 100);
-
-            // Show toast
-            showToast(`Customer "${customer.name}" selected. Now you can add products.`, 'success');
-
-            // Update UI state
-            updateUIState();
-        }
-
-        function clearCustomerSelection() {
-            // Clear customer data
-            customerSearch.value = '';
-            customerIdInput.value = '';
-            isCustomerSelected = false;
-
-            // Hide selected customer info
-            selectedCustomerInfo.style.display = 'none';
-
-            // Disable product search
-            disableProductSearch();
-
-            // Clear all products from table
-            clearAllProducts();
-
-            // Focus back on customer search
-            customerSearch.focus();
-
-            // Show message
-            customerStatus.textContent = 'Please select a customer first';
-            customerStatus.style.color = '#dc2626';
-
-            // Update UI state
-            updateUIState();
-
-            showToast('Customer selection cleared', 'info');
-        }
-
-        function enableProductSearch() {
-            productSearch.disabled = false;
-            productSearch.placeholder = "Type product name to search...";
-            productSearch.style.background = 'white';
-            productSearch.style.color = '#374151';
-            productSearch.style.cursor = 'text';
-            productSearchHint.textContent = 'Start typing to search products';
-            productSearchHint.style.color = '#059669';
-            productStatus.textContent = '';
-        }
-
-        function disableProductSearch() {
-            productSearch.disabled = true;
-            productSearch.value = '';
-            productSearch.placeholder = "First select a customer above...";
-            productSearch.style.background = '#f3f4f6';
-            productSearch.style.color = '#9ca3af';
-            productSearch.style.cursor = 'not-allowed';
-            productSearchHint.textContent = 'Select a customer first to enable product search';
-            productSearchHint.style.color = '#6b7280';
-            productStatus.textContent = 'Customer required';
-        }
-
-        function clearAllProducts() {
-            // Remove all product rows
-            document.querySelectorAll('#itemsTable tr[data-pid]').forEach(row => {
-                row.remove();
-            });
-
-            // Show empty state
-            if (emptyState) emptyState.style.display = '';
-
-            // Reset totals
-            calculate();
-
-            // Update items status
-            itemsStatus.textContent = 'Add products after selecting customer';
-        }
-
-        // ========== PRODUCT SEARCH FUNCTIONALITY ==========
+        // ========== PRODUCT SEARCH ==========
         productSearch.addEventListener('input', function() {
             if (!isCustomerSelected) {
                 showToast('Please select a customer first', 'error');
@@ -1207,8 +1357,21 @@
             }
 
             const filteredProducts = products.filter(p =>
-                p.name.toLowerCase().includes(val)
+                p.name.toLowerCase().includes(val) ||
+                (p.product_code && p.product_code.toLowerCase().includes(val))
             );
+
+            const exactMatch = products.find(
+                p => p.product_code && p.product_code.toLowerCase() === val
+            );
+
+            if (exactMatch) {
+                addProduct(exactMatch);
+                productResults.style.display = 'none';
+                productSearch.value = '';
+                showToast(`Product added: ${exactMatch.name}`, 'success');
+                return;
+            }
 
             if (filteredProducts.length === 0) {
                 productResults.innerHTML = `
@@ -1239,7 +1402,7 @@
                 item.innerHTML = `
                     <div>
                         <div style="font-weight: 600; color: #374151; margin-bottom: 4px;">${p.name}</div>
-                        <div style="font-size: 13px; color: #64748b;">SKU: ${p.sku || 'N/A'}</div>
+                        <div style="font-size: 13px; color: #64748b;">Code: ${p.product_code}</div>
                     </div>
                     <div style="
                         background: #10b981;
@@ -1276,10 +1439,8 @@
             productResults.style.display = 'none';
             productSearch.value = '';
 
-            // Hide empty state
             if (emptyState) emptyState.style.display = 'none';
 
-            // Check if product already exists
             let existingRow = null;
             document.querySelectorAll('#itemsTable tr').forEach(row => {
                 if (row.dataset.pid == p.id) {
@@ -1288,16 +1449,13 @@
             });
 
             if (existingRow) {
-                // Increase quantity
                 let qtyInput = existingRow.querySelector('.qty');
                 qtyInput.value = parseInt(qtyInput.value) + 1;
-                // Highlight the row briefly
                 existingRow.style.background = '#f0f9ff';
                 setTimeout(() => {
                     existingRow.style.background = '';
                 }, 300);
             } else {
-                // Add new row
                 const rowId = `product-row-${p.id}`;
                 itemsTable.insertAdjacentHTML('beforeend', `
                     <tr data-pid="${p.id}" id="${rowId}" style="
@@ -1321,7 +1479,7 @@
                                 ">${p.name.charAt(0)}</div>
                                 <div>
                                     <div style="font-weight: 600; color: #374151;">${p.name}</div>
-                                    <div style="font-size: 13px; color: #64748b;">SKU: ${p.sku || 'N/A'}</div>
+                                    <div style="font-size: 13px; color: #64748b;">PRD00${p.id || 'N/A'}</div>
                                 </div>
                             </div>
                             <input type="hidden" name="items[product_id][]" value="${p.id}">
@@ -1395,7 +1553,6 @@
                     </tr>
                 `);
 
-                // Remove highlight after animation
                 setTimeout(() => {
                     const newRow = document.getElementById(rowId);
                     if (newRow) newRow.style.background = '';
@@ -1406,15 +1563,13 @@
             updateUIState();
         }
 
-        // Remove product from table
         function removeProduct(rowId) {
             const row = document.getElementById(rowId);
             if (row) {
                 row.style.animation = 'slideOut 0.3s ease-out';
                 setTimeout(() => {
                     row.remove();
-                    // Show empty state if no items
-                    if (itemsTable.children.length === 1) { // Only empty state row left
+                    if (itemsTable.children.length === 1) {
                         emptyState.style.display = '';
                     }
                     calculate();
@@ -1423,7 +1578,6 @@
             }
         }
 
-        // Update UI state based on current status
         function updateUIState() {
             const hasProducts = document.querySelectorAll('#itemsTable tr[data-pid]').length > 0;
 
@@ -1444,7 +1598,6 @@
             }
         }
 
-        // Calculate totals
         function calculate() {
             let subTotal = 0;
             document.querySelectorAll('#itemsTable tr[data-pid]').forEach(row => {
@@ -1464,7 +1617,6 @@
             document.getElementById('grand_total').value = grandTotal.toFixed(2);
         }
 
-        // Form submission handler
         function handleSubmit(form) {
             if (!isCustomerSelected) {
                 showToast('Please select a customer first', 'error');
@@ -1474,7 +1626,6 @@
                 return false;
             }
 
-            // Check if any products added
             const hasProducts = document.querySelectorAll('#itemsTable tr[data-pid]').length > 0;
             if (!hasProducts) {
                 showToast('Please add at least one product', 'error');
@@ -1506,7 +1657,31 @@
             return true;
         }
 
-        // Close search results when clicking outside
+        // ========== EVENT LISTENERS ==========
+        customerSearch.addEventListener('focus', () => {
+            disableBarcodeScanner();
+        });
+
+        productSearch.addEventListener('focus', () => {
+            disableBarcodeScanner();
+        });
+
+        customerSearch.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (isCustomerSelected && !isInputFieldActive()) {
+                    enableBarcodeScanner();
+                }
+            }, 200);
+        });
+
+        productSearch.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (isCustomerSelected && !isInputFieldActive()) {
+                    enableBarcodeScanner();
+                }
+            }, 200);
+        });
+
         document.addEventListener('click', (e) => {
             if (!customerSearch.contains(e.target) && !customerResults.contains(e.target)) {
                 customerResults.style.display = 'none';
@@ -1516,14 +1691,24 @@
             }
         });
 
-        // Customer modal functions
+        document.addEventListener('mousedown', (e) => {
+            if (isInputFieldActive() || e.target.closest('button') || e.target.closest('a')) {
+                return;
+            }
+
+            if (isCustomerSelected && isScannerEnabled && !isInputFieldActive()) {
+                setTimeout(() => {
+                    barcodeInput.focus();
+                }, 50);
+            }
+        });
+
+        // ========== CUSTOMER MODAL FUNCTIONS ==========
         function openCustomerModal() {
-            // Clear modal fields
             ['c_name', 'c_mobile', 'c_email', 'c_address'].forEach(id => {
                 document.getElementById(id).value = '';
             });
 
-            // Show modal with animation
             document.getElementById('customerModal').style.display = 'flex';
             document.getElementById('c_name').focus();
         }
@@ -1532,7 +1717,6 @@
             document.getElementById('customerModal').style.display = 'none';
         }
 
-        // Save customer via AJAX
         function saveCustomer() {
             if (isSavingCustomer) return;
 
@@ -1541,7 +1725,6 @@
             const email = document.getElementById('c_email').value.trim();
             const address = document.getElementById('c_address').value.trim();
 
-            // Validation
             if (!name) {
                 showToast('Customer name is required', 'error');
                 document.getElementById('c_name').focus();
@@ -1585,13 +1768,8 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.customer) {
-                        // Close modal
                         closeCustomerModal();
-
-                        // Select the newly created customer
                         selectCustomer(data.customer);
-
-                        // Show success message
                         showToast('Customer added and selected! Now add products.', 'success');
                     } else {
                         showToast(data.message || 'Error saving customer', 'error');
@@ -1608,7 +1786,6 @@
                 });
         }
 
-        // Toast notification function
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.style.cssText = `
@@ -1634,13 +1811,11 @@
                 <span style="flex: 1;">${message}</span>
             `;
 
-            // Remove existing toasts
             document.querySelectorAll('.toast-notification').forEach(el => el.remove());
             toast.className = 'toast-notification';
 
             document.body.appendChild(toast);
 
-            // Remove after 3 seconds
             setTimeout(() => {
                 if (toast.parentNode) {
                     toast.remove();
@@ -1648,9 +1823,19 @@
             }, 3000);
         }
 
-        // Add animations
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            disableBarcodeScanner();
+            updateUIState();
+        });
+
+        // Add animation styles
         const animationStyle = document.createElement('style');
         animationStyle.innerHTML = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
             @keyframes slideIn {
                 from {
                     opacity: 0;

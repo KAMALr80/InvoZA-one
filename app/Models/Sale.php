@@ -46,14 +46,18 @@ class Sale extends Model
             ? $this->sale_date->format('d-m-Y')
             : null;
     }
-    public function payments()
+public function payments()
 {
-    return $this->hasMany(Payment::class);
+    return $this->hasMany(\App\Models\Payment::class);
 }
+
 
 public function latestPayment()
 {
     return $this->hasOne(Payment::class)->latestOfMany();
 }
-
+public function emiPlan()
+{
+    return $this->hasOne(EmiPlan::class);
+}
 }

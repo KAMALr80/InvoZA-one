@@ -1,158 +1,443 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="en">
 
-@section('content')
-    <div class="employee-container">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management</title>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Sorting arrow styles */
+        .sort-icon {
+            margin-left: 6px;
+            color: #9ca3af;
+            font-size: 12px;
+        }
 
-        {{-- HEADER --}}
-        <div class="employee-header">
-            <div class="header-content">
-                <div class="header-icon">👥</div>
-                <div class="header-text">
-                    <h1 class="header-title">Employee Management</h1>
-                    <p class="header-subtitle">Manage your team members and departments</p>
-                </div>
+        .sort-asc .sort-icon {
+            color: #3b82f6;
+        }
+
+        .sort-desc .sort-icon {
+            color: #3b82f6;
+        }
+
+        /* Action buttons with visible icons */
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            border: 1.5px solid transparent;
+        }
+
+        .action-btn i {
+            font-size: 16px !important;
+        }
+
+        .btn-view {
+            background: rgba(14, 165, 233, 0.1);
+            color: #0ea5e9;
+            border-color: rgba(14, 165, 233, 0.2);
+        }
+
+        .btn-edit {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Make table headers clickable for sorting */
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .sortable-header:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Ensure icons are visible */
+        i.fas,
+        i.far,
+        i.fab {
+            display: inline-block !important;
+            font-style: normal !important;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(34, 197, 94, 0.1);
+            color: #166534;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .status-inactive {
+            background: rgba(156, 163, 175, 0.1);
+            color: #4b5563;
+            border: 1px solid rgba(156, 163, 175, 0.2);
+        }
+
+        /* Department badges */
+        .dept-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(6, 182, 212, 0.1);
+            color: #0e7490;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+
+        /* Employee code badge */
+        .emp-code-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            color: #1d4ed8;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    @extends('layouts.app')
+
+    @section('content')
+        <div
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; padding: 32px; margin-bottom: 32px; box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden;">
+            <!-- Background pattern -->
+            <div style="position: absolute; top: 0; right: 0; width: 300px; height: 100%; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 100 100" fill="white" opacity="0.1">
+                <path d="M0,0 L100,0 L100,100 Z" /></svg>
             </div>
 
-            {{-- ADD EMPLOYEE – ADMIN ONLY --}}
-            @if (auth()->user()->role === 'admin')
-                <a href="{{ route('employees.create') }}" class="btn-add">
-                    <span class="btn-icon">+</span>
-                    Add Employee
-                </a>
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div
+                        style="width: 70px; height: 70px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); border-radius: 18px; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);">
+                        <i class="fas fa-users" style="font-size: 32px; color: white;"></i>
+                    </div>
+                    <div>
+                        <h1
+                            style="font-size: 36px; font-weight: 800; color: white; margin: 0; letter-spacing: -0.5px; line-height: 1.2;">
+                            Employee Management</h1>
+                        <p style="color: rgba(255, 255, 255, 0.9); font-size: 18px; margin: 8px 0 0 0; font-weight: 400;">
+                            Manage
+                            your team members and departments</p>
+                    </div>
+                </div>
+
+                @if (auth()->user()->role === 'admin')
+                    <a href="{{ route('employees.create') }}"
+                        style="display: inline-flex;
+                  align-items: center;
+                  gap: 12px;
+                  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                  color: white;
+                  border: none;
+                  padding: 16px 28px;
+                  border-radius: 14px;
+                  text-decoration: none;
+                  font-weight: 700;
+                  font-size: 16px;
+                  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
+                  transition: all 0.3s ease;
+                  position: relative;
+                  overflow: hidden;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 40px rgba(16, 185, 129, 0.6)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 32px rgba(16, 185, 129, 0.4)';">
+                        <span style="font-size: 20px;">+</span>
+                        <span>Add Employee</span>
+                        <div
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%); pointer-events: none;">
+                        </div>
+                    </a>
+                @endif
+            </div>
+
+            @if (session('success'))
+                <div
+                    style="margin-top: 24px;
+                background: rgba(34, 197, 94, 0.2);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(34, 197, 94, 0.3);
+                border-radius: 12px;
+                padding: 16px 20px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                animation: slideDown 0.3s ease;">
+                    <div
+                        style="width: 40px; height: 40px; background: rgba(34, 197, 94, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-check-circle" style="font-size: 20px; color: #22c55e;"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="color: white; font-weight: 600; font-size: 16px;">Success!</div>
+                        <div style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin-top: 2px;">
+                            {{ session('success') }}
+                        </div>
+                    </div>
+                    <button type="button" onclick="this.parentElement.style.display='none'"
+                        style="background: none; border: none; color: rgba(255, 255, 255, 0.7); font-size: 20px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: all 0.2s;"
+                        onmouseover="this.style.backgroundColor='rgba(255,255,255,0.1)'; this.style.color='white'"
+                        onmouseout="this.style.backgroundColor='transparent'; this.style.color='rgba(255, 255, 255, 0.7)'">
+                        ×
+                    </button>
+                </div>
             @endif
         </div>
 
-        {{-- SUCCESS MESSAGE --}}
-        @if (session('success'))
-            <div class="success-message">
-                <span class="success-icon">✓</span>
-                {{ session('success') }}
-            </div>
-        @endif
-
-        {{-- SEARCH BAR --}}
-        <div class="search-section">
-            <form method="GET" class="search-form">
-                <div class="search-wrapper">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" name="search" placeholder="Search by name, email, or department..."
-                        value="{{ request('search') }}" class="search-input">
+        <!-- DataTable Section -->
+        <div
+            style="background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); border: 1px solid #e5e7eb; overflow: hidden;">
+            <!-- Card Header -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e5e7eb; background: white;">
+                <!-- Show entries -->
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="color: #4b5563; font-size: 14px; font-weight: 500;">Show</span>
+                    <div style="position: relative;">
+                        <select id="entriesPerPage"
+                            style="padding: 8px 32px 8px 16px;
+                               border: 1.5px solid #e5e7eb;
+                               border-radius: 10px;
+                               font-size: 14px;
+                               color: #374151;
+                               background: white;
+                               cursor: pointer;
+                               appearance: none;
+                               min-width: 70px;"
+                            onchange="handlePerPageChange(this)">
+                            <option value="10" {{ request('per_page', 25) == 10 ? 'selected' : '' }}>10</option>
+                            <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25</option>
+                            <option value="50" {{ request('per_page', 25) == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ request('per_page', 25) == 100 ? 'selected' : '' }}>100</option>
+                        </select>
+                        <div
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 12px;">
+                            ▼</div>
+                    </div>
+                    <span style="color: #4b5563; font-size: 14px; font-weight: 500;">entries</span>
                 </div>
-                <button type="submit" class="btn-search">
-                    Search
-                </button>
-            </form>
-            <div class="search-info">
-                Showing {{ $employees->total() }} employees
-            </div>
-        </div>
 
-        {{-- TABLE CONTAINER --}}
-        <div class="table-container">
-            <div class="table-responsive">
-                <table class="employee-table">
+                <!-- Search box -->
+                <div style="position: relative;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="position: relative;">
+                            <input type="text" id="globalSearch" placeholder="Search employees..."
+                                value="{{ request('search') }}"
+                                style="padding: 10px 40px 10px 16px;
+                                  border: 1.5px solid #e5e7eb;
+                                  border-radius: 10px;
+                                  font-size: 14px;
+                                  color: #374151;
+                                  width: 240px;
+                                  transition: all 0.3s;"
+                                onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'"
+                                onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none'">
+                            <i class="fas fa-search"
+                                style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px;"></i>
+                        </div>
+                        @if (request('search'))
+                            <button id="clearSearch"
+                                style="background: #f3f4f6;
+                               border: 1.5px solid #e5e7eb;
+                               border-radius: 10px;
+                               width: 40px;
+                               height: 40px;
+                               display: flex;
+                               align-items: center;
+                               justify-content: center;
+                               cursor: pointer;
+                               transition: all 0.3s;"
+                                onmouseover="this.style.backgroundColor='#e5e7eb'"
+                                onmouseout="this.style.backgroundColor='#f3f4f6'">
+                                <i class="fas fa-times" style="color: #6b7280; font-size: 14px;"></i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div style="overflow-x: auto;">
+                <table id="employeeDataTable" style="width: 100%; border-collapse: collapse;">
                     <thead>
-                        <tr>
-                            <th>
-                                <div class="table-header">
-                                    <span class="header-icon">#</span>
-                                    Employee Code
-                                </div>
+                        <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                            <th
+                                style="padding: 16px 12px; text-align: center; font-size: 13px; font-weight: 600; color: #374151; text-transform: uppercase; white-space: nowrap; min-width: 60px;">
+                                #</th>
+                            <th class="sortable-header" onclick="sortTable(1)"
+                                style="padding: 16px 12px; text-align: left; font-size: 13px; font-weight: 600; color: #374151; text-transform: uppercase; white-space: nowrap; min-width: 140px; cursor: pointer;">
+                                <span>EMPLOYEE CODE</span>
+                                <i class="fas fa-sort sort-icon"
+                                    style="margin-left: 6px; color: #9ca3af; font-size: 12px;"></i>
                             </th>
-                            <th>
-                                <div class="table-header">
-                                    <span class="header-icon">👤</span>
-                                    Name
-                                </div>
+                            <th class="sortable-header" onclick="sortTable(2)"
+                                style="padding: 16px 12px; text-align: left; font-size: 13px; font-weight: 600; color: #374151; text-transform: uppercase; white-space: nowrap; min-width: 160px; cursor: pointer;">
+                                <span>NAME</span>
+                                <i class="fas fa-sort sort-icon"
+                                    style="margin-left: 6px; color: #9ca3af; font-size: 12px;"></i>
                             </th>
-                            <th>
-                                <div class="table-header">
-                                    <span class="header-icon">✉️</span>
-                                    Email
-                                </div>
+                            <th class="sortable-header" onclick="sortTable(3)"
+                                style="padding: 16px 12px; text-align: left; font-size: 13px; font-weight: 600; color: #374151; text-transform: uppercase; white-space: nowrap; min-width: 200px; cursor: pointer;">
+                                <span>EMAIL</span>
+                                <i class="fas fa-sort sort-icon"
+                                    style="margin-left: 6px; color: #9ca3af; font-size: 12px;"></i>
                             </th>
-                            <th>
-                                <div class="table-header">
-                                    <span class="header-icon">🏢</span>
-                                    Department
-                                </div>
+                            <th class="sortable-header" onclick="sortTable(4)"
+                                style="padding: 16px 12px; text-align: left; font-size: 13px; font-weight: 600; color: #374151; text-transform: uppercase; white-space: nowrap; min-width: 140px; cursor: pointer;">
+                                <span>DEPARTMENT</span>
+                                <i class="fas fa-sort sort-icon"
+                                    style="margin-left: 6px; color: #9ca3af; font-size: 12px;"></i>
                             </th>
-                            <th>
-                                <div class="table-header">
-                                    <span class="header-icon">⚡</span>
-                                    Actions
-                                </div>
-                            </th>
+                            <th
+                                style="padding: 16px 12px; text-align: center; font-size: 13px; font-weight: 600; color: #374151; text-transform: uppercase; white-space: nowrap; min-width: 100px;">
+                                STATUS</th>
+                            <th
+                                style="padding: 16px 12px; text-align: center; font-size: 13px; font-weight: 600; color: #374151; text-transform: uppercase; white-space: nowrap; min-width: 180px;">
+                                ACTIONS</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse ($employees as $emp)
-                            <tr class="table-row">
-                                <td>
-                                    <div class="employee-code">
-                                        <span class="code-badge">{{ $emp->employee_code }}</span>
-                                    </div>
+                        @forelse ($employees as $index => $emp)
+                            <tr style="border-bottom: 1px solid #f3f4f6; transition: background-color 0.2s;"
+                                onmouseover="this.style.backgroundColor='#f9fafb'"
+                                onmouseout="this.style.backgroundColor='white'">
+                                <td
+                                    style="padding: 16px 12px; text-align: center; color: #6b7280; font-size: 14px; font-weight: 500;">
+                                    {{ $loop->iteration + ($employees->currentPage() - 1) * $employees->perPage() }}
                                 </td>
-                                <td>
-                                    <div class="employee-name">
-                                        <div class="avatar">
-                                            {{ strtoupper(substr($emp->name, 0, 1)) }}
-                                        </div>
-                                        <div class="name-info">
-                                            <div class="name">{{ $emp->name }}</div>
-                                            <div class="role">Employee</div>
-                                        </div>
-                                    </div>
+                                <td style="padding: 16px 12px;">
+                                    <span class="emp-code-badge">
+                                        <i class="fas fa-id-card" style="font-size: 12px;"></i>
+                                        {{ $emp->employee_code }}
+                                    </span>
                                 </td>
-                                <td>
-                                    <div class="employee-email">
-                                        <span class="email-icon">📧</span>
+                                <td style="padding: 16px 12px; color: #111827; font-size: 15px; font-weight: 600;">
+                                    {{ $emp->name }}
+                                </td>
+                                <td style="padding: 16px 12px;">
+                                    <a href="mailto:{{ $emp->email }}"
+                                        style="display: inline-flex; align-items: center; gap: 8px; color: #3b82f6; text-decoration: none; font-size: 14px; transition: color 0.2s;"
+                                        onmouseover="this.style.color='#1d4ed8'" onmouseout="this.style.color='#3b82f6'">
+                                        <i class="fas fa-envelope" style="font-size: 14px;"></i>
                                         {{ $emp->email }}
-                                    </div>
+                                    </a>
                                 </td>
-                                <td>
-                                    <span
-                                        class="department-badge {{ strtolower(str_replace(' ', '-', $emp->department)) }}">
+                                <td style="padding: 16px 12px;">
+                                    <span class="dept-badge">
+                                        <i class="fas fa-building" style="font-size: 12px;"></i>
                                         {{ $emp->department }}
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        {{-- EDIT – ADMIN + HR --}}
+                                <td style="padding: 16px 12px; text-align: center;">
+                                    <span
+                                        class="status-badge {{ $emp->status == 1 ? 'status-active' : 'status-inactive' }}">
+                                        <i class="fas fa-circle"
+                                            style="font-size: 8px; color: {{ $emp->status == 1 ? '#22c55e' : '#9ca3af' }};"></i>
+                                        {{ $emp->status == 1 ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td style="padding: 16px 12px; text-align: center;">
+                                    <div
+                                        style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+                                        <!-- View Button -->
+                                        <a href="{{ route('employees.show', $emp->id) }}" class="action-btn btn-view"
+                                            title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
+                                        <!-- Edit Button -->
                                         @if (in_array(auth()->user()->role, ['admin', 'hr']))
-                                            <a href="{{ route('employees.edit', $emp->id) }}" class="btn-edit">
-                                                <span class="btn-icon">✏️</span>
-                                                Edit
+                                            <a href="{{ route('employees.edit', $emp->id) }}" class="action-btn btn-edit"
+                                                title="Edit Employee">
+                                                <i class="fas fa-edit"></i>
                                             </a>
                                         @endif
 
-                                        {{-- DELETE – ADMIN ONLY --}}
+                                        <!-- Delete Button -->
                                         @if (auth()->user()->role === 'admin')
                                             <form action="{{ route('employees.destroy', $emp->id) }}" method="POST"
-                                                class="delete-form">
+                                                style="margin: 0;">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn-delete" onclick="return confirmDelete()">
-                                                    <span class="btn-icon">🗑️</span>
-                                                    Delete
+                                                <button type="button" class="action-btn btn-delete"
+                                                    onclick="confirmDelete(event, '{{ $emp->name }}')"
+                                                    title="Delete Employee">
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
                                         @endif
 
-                                        {{-- STAFF VIEW --}}
                                         @if (auth()->user()->role === 'staff')
-                                            <span class="view-only">View Only</span>
+                                            <span
+                                                style="background: rgba(156, 163, 175, 0.1); color: #6b7280; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid rgba(156, 163, 175, 0.2);">
+                                                <i class="fas fa-eye me-1"></i> View Only
+                                            </span>
                                         @endif
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr class="empty-row">
-                                <td colspan="5">
-                                    <div class="empty-state">
-                                        <div class="empty-icon">👤</div>
-                                        <h3>No Employees Found</h3>
-                                        <p>Try searching with different keywords or add a new employee</p>
+                            <tr>
+                                <td colspan="7" style="padding: 40px; text-align: center; color: #6b7280;">
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                                        <div
+                                            style="width: 80px; height: 80px; background: #f3f4f6; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-users" style="font-size: 32px; color: #9ca3af;"></i>
+                                        </div>
+                                        <div>
+                                            <div
+                                                style="font-size: 18px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                                No employees found</div>
+                                            <div style="font-size: 14px; color: #6b7280;">Try adding a new employee or
+                                                adjust your search</div>
+                                        </div>
+                                        @if (auth()->user()->role === 'admin')
+                                            <a href="{{ route('employees.create') }}"
+                                                style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 14px; margin-top: 8px;">
+                                                <i class="fas fa-plus"></i>
+                                                Add First Employee
+                                            </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -160,546 +445,262 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Footer -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-top: 1px solid #e5e7eb; background: white;">
+                <div style="color: #6b7280; font-size: 14px;">
+                    Showing <span style="font-weight: 600; color: #374151;">{{ $employees->firstItem() ?? 0 }}</span>
+                    to <span style="font-weight: 600; color: #374151;">{{ $employees->lastItem() ?? 0 }}</span>
+                    of <span style="font-weight: 600; color: #374151;">{{ $employees->total() }}</span> entries
+                </div>
+
+                <!-- Pagination -->
+                @if ($employees->hasPages())
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <!-- First Page -->
+                        @if (!$employees->onFirstPage())
+                            <a href="{{ $employees->url(1) }}"
+                                style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #374151; text-decoration: none; font-size: 14px; transition: all 0.2s;"
+                                onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#d1d5db'"
+                                onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e5e7eb'"
+                                title="First Page">
+                                <i class="fas fa-angle-double-left" style="font-size: 12px;"></i>
+                            </a>
+                        @else
+                            <span
+                                style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #9ca3af; background: #f9fafb; font-size: 14px;">
+                                <i class="fas fa-angle-double-left" style="font-size: 12px;"></i>
+                            </span>
+                        @endif
+
+                        <!-- Previous Page -->
+                        @if (!$employees->onFirstPage())
+                            <a href="{{ $employees->previousPageUrl() }}"
+                                style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #374151; text-decoration: none; font-size: 14px; transition: all 0.2s;"
+                                onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#d1d5db'"
+                                onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e5e7eb'"
+                                title="Previous">
+                                <i class="fas fa-angle-left" style="font-size: 12px;"></i>
+                            </a>
+                        @else
+                            <span
+                                style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #9ca3af; background: #f9fafb; font-size: 14px;">
+                                <i class="fas fa-angle-left" style="font-size: 12px;"></i>
+                            </span>
+                        @endif
+
+                        <!-- Page Numbers -->
+                        @php
+                            $current = $employees->currentPage();
+                            $last = $employees->lastPage();
+                            $start = max(1, $current - 2);
+                            $end = min($last, $current + 2);
+                        @endphp
+
+                        @if ($start > 1)
+                            <a href="{{ $employees->url(1) }}"
+                                style="display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #374151; text-decoration: none; font-size: 14px; transition: all 0.2s; margin: 0 2px; padding: 0 8px;"
+                                onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#d1d5db'"
+                                onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e5e7eb'">
+                                1
+                            </a>
+                            @if ($start > 2)
+                                <span
+                                    style="display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; color: #9ca3af; font-size: 14px; margin: 0 2px;">...</span>
+                            @endif
+                        @endif
+
+                        @for ($i = $start; $i <= $end; $i++)
+                            @if ($i == $current)
+                                <span
+                                    style="display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border-radius: 10px; font-size: 14px; font-weight: 600; margin: 0 2px; padding: 0 8px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                                    {{ $i }}
+                                </span>
+                            @else
+                                <a href="{{ $employees->url($i) }}"
+                                    style="display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #374151; text-decoration: none; font-size: 14px; transition: all 0.2s; margin: 0 2px; padding: 0 8px;"
+                                    onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#d1d5db'"
+                                    onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e5e7eb'">
+                                    {{ $i }}
+                                </a>
+                            @endif
+                        @endfor
+
+                        @if ($end < $last)
+                            @if ($end < $last - 1)
+                                <span
+                                    style="display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; color: #9ca3af; font-size: 14px; margin: 0 2px;">...</span>
+                            @endif
+                            <a href="{{ $employees->url($last) }}"
+                                style="display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #374151; text-decoration: none; font-size: 14px; transition: all 0.2s; margin: 0 2px; padding: 0 8px;"
+                                onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#d1d5db'"
+                                onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e5e7eb'">
+                                {{ $last }}
+                            </a>
+                        @endif
+
+                        <!-- Next Page -->
+                        @if ($employees->hasMorePages())
+                            <a href="{{ $employees->nextPageUrl() }}"
+                                style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #374151; text-decoration: none; font-size: 14px; transition: all 0.2s;"
+                                onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#d1d5db'"
+                                onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e5e7eb'"
+                                title="Next">
+                                <i class="fas fa-angle-right" style="font-size: 12px;"></i>
+                            </a>
+                        @else
+                            <span
+                                style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #9ca3af; background: #f9fafb; font-size: 14px;">
+                                <i class="fas fa-angle-right" style="font-size: 12px;"></i>
+                            </span>
+                        @endif
+
+                        <!-- Last Page -->
+                        @if ($employees->hasMorePages())
+                            <a href="{{ $employees->url($last) }}"
+                                style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #374151; text-decoration: none; font-size: 14px; transition: all 0.2s;"
+                                onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.borderColor='#d1d5db'"
+                                onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e5e7eb'"
+                                title="Last Page">
+                                <i class="fas fa-angle-double-right" style="font-size: 12px;"></i>
+                            </a>
+                        @else
+                            <span
+                                style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid #e5e7eb; border-radius: 10px; color: #9ca3af; background: #f9fafb; font-size: 14px;">
+                                <i class="fas fa-angle-double-right" style="font-size: 12px;"></i>
+                            </span>
+                        @endif
+                    </div>
+                @endif
+            </div>
         </div>
 
-        {{-- PAGINATION --}}
-        @if ($employees->hasPages())
-            <div class="pagination-container">
-                {{ $employees->links('vendor.pagination.custom') }}
-            </div>
-        @endif
-
-    </div>
-
-    <script>
-        function confirmDelete() {
-            return confirm('Are you sure you want to delete this employee? This action cannot be undone.');
-        }
-    </script>
-
-    <style>
-        /* Main Container */
-        .employee-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 24px;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-
-        /* Header */
-        .employee-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            padding: 0 8px;
-        }
-
-        .header-content {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-icon {
-            font-size: 48px;
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
-        }
-
-        .header-text {
-            flex: 1;
-        }
-
-        .header-title {
-            font-size: 32px;
-            font-weight: 800;
-            color: #1e293b;
-            margin: 0;
-            letter-spacing: -0.5px;
-        }
-
-        .header-subtitle {
-            color: #64748b;
-            font-size: 16px;
-            margin: 8px 0 0 0;
-        }
-
-        /* Buttons */
-        .btn-add {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 14px 28px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 15px;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-add:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
-        }
-
-        .btn-icon {
-            font-size: 18px;
-        }
-
-        /* Success Message */
-        .success-message {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            border: 1px solid #10b981;
-            color: #065f46;
-            padding: 16px 24px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
-        }
-
-        .success-icon {
-            font-size: 20px;
-            color: #10b981;
-        }
-
-        /* Search Section */
-        .search-section {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-        }
-
-        .search-form {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .search-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            font-size: 18px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 14px 16px 14px 48px;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 15px;
-            color: #1e293b;
-            background: white;
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #8b5cf6;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        }
-
-        .btn-search {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
-        }
-
-        .btn-search:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
-        }
-
-        .search-info {
-            color: #64748b;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        /* Table Container */
-        .table-container {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            margin-bottom: 24px;
-            border: 1px solid #e5e7eb;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        .employee-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 1000px;
-        }
-
-        .employee-table thead {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-        }
-
-        .employee-table th {
-            padding: 20px 24px;
-            text-align: left;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .table-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #374151;
-            font-size: 14px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .header-icon {
-            font-size: 16px;
-            opacity: 0.7;
-        }
-
-        /* Table Rows */
-        .table-row {
-            border-bottom: 1px solid #f1f5f9;
-            transition: all 0.3s ease;
-        }
-
-        .table-row:hover {
-            background: #f8fafc;
-        }
-
-        .table-row td {
-            padding: 20px 24px;
-        }
-
-        /* Employee Code */
-        .employee-code {
-            display: flex;
-            align-items: center;
-        }
-
-        .code-badge {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #92400e;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            border: 1px solid #fbbf24;
-        }
-
-        /* Employee Name */
-        .employee-name {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .avatar {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 18px;
-            font-weight: 700;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-        }
-
-        .name-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 4px;
-        }
-
-        .role {
-            font-size: 13px;
-            color: #64748b;
-            font-weight: 500;
-        }
-
-        /* Email */
-        .employee-email {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #4b5563;
-            font-size: 15px;
-        }
-
-        .email-icon {
-            color: #9ca3af;
-            font-size: 16px;
-        }
-
-        /* Department Badges */
-        .department-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: center;
-            min-width: 100px;
-        }
-
-        .department-badge.human-resources {
-            background: linear-gradient(135deg, #dbeafe 0%, #93c5fd 100%);
-            color: #1e40af;
-            border: 1px solid #60a5fa;
-        }
-
-        .department-badge.engineering,
-        .department-badge.technology {
-            background: linear-gradient(135deg, #fce7f3 0%, #f9a8d4 100%);
-            color: #831843;
-            border: 1px solid #f472b6;
-        }
-
-        .department-badge.sales {
-            background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
-            color: #166534;
-            border: 1px solid #4ade80;
-        }
-
-        .department-badge.marketing {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #92400e;
-            border: 1px solid #fbbf24;
-        }
-
-        .department-badge.finance {
-            background: linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%);
-            color: #3730a3;
-            border: 1px solid #818cf8;
-        }
-
-        /* Default badge for other departments */
-        .department-badge:not(.human-resources):not(.engineering):not(.technology):not(.sales):not(.marketing):not(.finance) {
-            background: linear-gradient(135deg, #f3f4f6 0%, #d1d5db 100%);
-            color: #374151;
-            border: 1px solid #9ca3af;
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-edit {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            padding: 10px 18px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 3px 10px rgba(59, 130, 246, 0.2);
-        }
-
-        .btn-edit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-delete {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            padding: 10px 18px;
-            border-radius: 10px;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 3px 10px rgba(239, 68, 68, 0.2);
-        }
-
-        .btn-delete:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-        }
-
-        .delete-form {
-            display: inline;
-        }
-
-        .view-only {
-            background: #f3f4f6;
-            color: #6b7280;
-            padding: 10px 18px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            border: 1px solid #d1d5db;
-            font-style: italic;
-        }
-
-        /* Empty State */
-        .empty-row {
-            border-bottom: none;
-        }
-
-        .empty-state {
-            padding: 80px 20px;
-            text-align: center;
-        }
-
-        .empty-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-            opacity: 0.3;
-        }
-
-        .empty-state h3 {
-            font-size: 20px;
-            color: #1e293b;
-            margin: 0 0 8px 0;
-            font-weight: 700;
-        }
-
-        .empty-state p {
-            color: #64748b;
-            margin: 0;
-            font-size: 15px;
-        }
-
-        /* Pagination */
-        .pagination-container {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .employee-container {
-                padding: 16px;
+        <script>
+            function handlePerPageChange(select) {
+                const perPage = select.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('per_page', perPage);
+                url.searchParams.delete('page');
+                window.location.href = url.toString();
             }
 
-            .employee-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 20px;
+            function confirmDelete(event, employeeName) {
+                if (confirm(`Are you sure you want to delete "${employeeName}"? This action cannot be undone.`)) {
+                    event.target.closest('form').submit();
+                }
+                event.preventDefault();
             }
 
-            .header-content {
-                width: 100%;
+            let currentSortColumn = -1;
+            let sortDirection = 1; // 1 = asc, -1 = desc
+
+            function sortTable(columnIndex) {
+                const headers = document.querySelectorAll('.sortable-header');
+
+                // Reset all sort icons
+                headers.forEach(header => {
+                    header.classList.remove('sort-asc', 'sort-desc');
+                    const icon = header.querySelector('.sort-icon');
+                    if (icon) {
+                        icon.className = 'fas fa-sort sort-icon';
+                    }
+                });
+
+                // Get current header
+                const currentHeader = headers[columnIndex - 1];
+                const currentIcon = currentHeader.querySelector('.sort-icon');
+
+                // Toggle direction if same column
+                if (currentSortColumn === columnIndex) {
+                    sortDirection *= -1;
+                } else {
+                    currentSortColumn = columnIndex;
+                    sortDirection = 1;
+                }
+
+                // Update icon
+                if (sortDirection === 1) {
+                    currentHeader.classList.add('sort-asc');
+                    if (currentIcon) {
+                        currentIcon.className = 'fas fa-sort-up sort-icon';
+                    }
+                } else {
+                    currentHeader.classList.add('sort-desc');
+                    if (currentIcon) {
+                        currentIcon.className = 'fas fa-sort-down sort-icon';
+                    }
+                }
+
+                // Get table data
+                const table = document.getElementById('employeeDataTable');
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                // Sort rows
+                rows.sort((a, b) => {
+                    const aCell = a.cells[columnIndex];
+                    const bCell = b.cells[columnIndex];
+
+                    let aValue = aCell ? aCell.textContent.trim() : '';
+                    let bValue = bCell ? bCell.textContent.trim() : '';
+
+                    // For numeric sorting in # column
+                    if (columnIndex === 0) {
+                        aValue = parseInt(aValue) || 0;
+                        bValue = parseInt(bValue) || 0;
+                    }
+
+                    if (aValue < bValue) return -1 * sortDirection;
+                    if (aValue > bValue) return 1 * sortDirection;
+                    return 0;
+                });
+
+                // Reorder rows
+                rows.forEach(row => tbody.appendChild(row));
+
+                console.log(`Sorted column ${columnIndex} ${sortDirection === 1 ? 'ascending' : 'descending'}`);
             }
 
-            .header-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 32px;
-            }
+            // Search functionality
+            document.getElementById('globalSearch')?.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = document.querySelectorAll('#employeeDataTable tbody tr');
 
-            .header-title {
-                font-size: 24px;
-            }
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            });
 
-            .search-form {
-                flex-direction: column;
-            }
+            // Clear search
+            document.getElementById('clearSearch')?.addEventListener('click', function() {
+                document.getElementById('globalSearch').value = '';
+                window.location.href = "{{ route('employees.index') }}";
+            });
 
-            .btn-add,
-            .btn-search {
-                width: 100%;
-                justify-content: center;
-            }
+            // Add animation for table rows
+            document.addEventListener('DOMContentLoaded', function() {
+                const rows = document.querySelectorAll('#employeeDataTable tbody tr');
+                rows.forEach((row, index) => {
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateY(10px)';
+                    setTimeout(() => {
+                        row.style.transition = 'all 0.3s ease';
+                        row.style.opacity = '1';
+                        row.style.transform = 'translateY(0)';
+                    }, index * 50);
+                });
 
-            .action-buttons {
-                flex-direction: column;
-                align-items: flex-start;
-            }
+                // Make sure all icons are visible
+                const allIcons = document.querySelectorAll('i');
+                allIcons.forEach(icon => {
+                    icon.style.visibility = 'visible';
+                    icon.style.opacity = '1';
+                });
+            });
+        </script>
+    @endsection
+</body>
 
-            .btn-edit,
-            .btn-delete,
-            .view-only {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-
-        @media (max-width: 480px) {
-
-            .employee-table th,
-            .employee-table td {
-                padding: 12px;
-            }
-
-            .employee-name {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-
-            .department-badge {
-                min-width: auto;
-                padding: 6px 12px;
-                font-size: 12px;
-            }
-        }
-    </style>
-@endsection
+</html>

@@ -30,6 +30,7 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'mobile' => 'required|digits:10',
         ]);
 
     $user = User::create([
@@ -37,6 +38,7 @@ class RegisteredUserController extends Controller
         'email' => $request->email,
         'password' => Hash::make($request->password),
         'role' => 'staff',
+        'mobile' => $request->mobile,
         'status' => 'pending',
     ]);
 

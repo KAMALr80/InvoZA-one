@@ -10,12 +10,14 @@ class Customer extends Model
 
       use SoftDeletes;
     protected $fillable = [
-        'name',
-        'mobile',
-        'email',
-        'address',
-        'gst_no'
-    ];
+    'name',
+    'mobile',
+    'email',
+    'address',
+    'gst_no',
+    'open_balance',
+];
+
 
     /**
      * Customer ke saare sales
@@ -24,4 +26,6 @@ class Customer extends Model
     {
         return $this->hasMany(\App\Models\Sale::class);
     }
+
+
 }

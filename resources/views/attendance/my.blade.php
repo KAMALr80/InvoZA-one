@@ -41,12 +41,50 @@
             <div style="margin-bottom:25px;">
                 <strong>Check In:</strong> {{ $todayAttendance->check_in ?? '-' }} <br>
                 <strong>Check Out:</strong> {{ $todayAttendance->check_out ?? '-' }} <br>
+
                 <strong>Status:</strong>
-                <span style="color:#16a34a;font-weight:600;">
+                <span
+                    style="
+                font-weight:600;
+                color:
+                    {{ $todayAttendance->status === 'Late'
+                        ? '#dc2626'
+                        : ($todayAttendance->status === 'Half Day'
+                            ? '#f59e0b'
+                            : '#16a34a') }};
+            ">
                     {{ $todayAttendance->status }}
                 </span>
+
+                {{-- ⚠ Status Messages --}}
+                @if ($todayAttendance->status === 'Late')
+                    <p style="color:#dc2626; font-weight:600; margin-top:8px;">
+                        ⚠ You are marked Late today
+                    </p>
+                @elseif ($todayAttendance->status === 'Half Day')
+                    <p style="color:#f59e0b; font-weight:600; margin-top:8px;">
+                        ⚠ Half Day marked (less working hours)
+                    </p>
+                @elseif ($todayAttendance->status === 'Present')
+                    <p style="color:#16a34a; font-weight:600; margin-top:8px;">
+                        ✅ You are On Time today
+                    </p>
+                @endif
+
+                {{-- ⏱ LIVE WORKING TIMER --}}
+                @if ($todayAttendance->check_in && !$todayAttendance->check_out)
+                    <div style="margin-top:15px;">
+                        <strong>⏱ Working Time:</strong>
+                        <span id="working-timer" style="font-weight:700; color:#2563eb;">
+                            00:00:00
+                        </span>
+                    </div>
+                @endif
             </div>
         @endif
+
+
+
 
         <h3>📜 Attendance History</h3>
 
@@ -92,4 +130,33 @@
         </div>
 
     </div>
+    @if ($todayAttendance && $todayAttendance->check_in && !$todayAttendance->check_out)
+        <script>
+            // Check-in time from server
+            const checkInTime = new Date(
+                "{{ \Carbon\Carbon::parse($todayAttendance->check_in)->format('Y-m-d H:i:s') }}"
+            );
+
+            function startWorkingTimer() {
+                const now = new Date();
+                let diff = Math.floor((now - checkInTime) / 1000); // total seconds
+
+                if (diff < 0) diff = 0;
+
+                const hours = String(Math.floor(diff / 3600)).padStart(2, '0');
+                const minutes = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+                const seconds = String(diff % 60).padStart(2, '0');
+
+                document.getElementById('working-timer').innerText =
+                    `${hours}:${minutes}:${seconds}`;
+            }
+
+            // Start immediately
+            startWorkingTimer();
+
+            // Update every second
+            setInterval(startWorkingTimer, 1000);
+        </script>
+    @endif
+
 @endsection

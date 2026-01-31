@@ -601,6 +601,7 @@
                         <th>Contact</th>
                         <th>Email</th>
                         <th>GST Number</th>
+                        <th>Open Balance</th>
                         <th style="text-align: center;">Actions</th>
                     </tr>
                 </thead>
@@ -642,6 +643,22 @@
                                     <span style="color: #9ca3af;">N/A</span>
                                 @endif
                             </td>
+                                <td>
+    @if ($c->open_balance > 0)
+        <span style="color:#dc2626;font-weight:700;">
+            ₹ {{ number_format($c->open_balance,2) }} Due
+        </span>
+    @elseif ($c->open_balance < 0)
+        <span style="color:#16a34a;font-weight:700;">
+            ₹ {{ number_format(abs($c->open_balance),2) }} Advance
+        </span>
+    @else
+        <span style="color:#64748b;font-weight:600;">
+            Clear
+        </span>
+    @endif
+</td>
+
                             <td>
                                 <div class="action-buttons">
                                     <a href="{{ route('customers.sales', $c->id) }}" class="action-btn view-btn"
@@ -774,7 +791,17 @@
                         <td>${c.mobile}</td>
                         <td>${c.email ?? 'Not provided'}</td>
                         <td>${c.gst_no ?? 'N/A'}</td>
-                       <td>
+                            <td>
+    ${
+        c.open_balance > 0
+            ? `<span style="color:#dc2626;font-weight:700;">₹ ${c.open_balance} Due</span>`
+            : c.open_balance < 0
+                ? `<span style="color:#16a34a;font-weight:700;">₹ ${Math.abs(c.open_balance)} Advance</span>`
+                : `<span style="color:#64748b;font-weight:600;">Clear</span>`
+    }
+</td>
+
+                        <td>
     <div class="action-buttons">
 
         <!-- 👁️ VIEW SALES -->

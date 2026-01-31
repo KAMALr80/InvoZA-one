@@ -17,6 +17,15 @@ class Payment extends Model
     {
         return $this->belongsTo(Sale::class);
     }
+    public function customer()
+{
+    return $this->belongsTo(Customer::class);
+}
+public function scopeEmi($query)
+{
+    return $query->where('method', 'emi');
+}
+
 }
 
 

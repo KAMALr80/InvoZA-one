@@ -10,6 +10,8 @@ use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Payment;
+use App\Models\EmiPlan;
 
 use NumberFormatter;
 
@@ -77,100 +79,170 @@ class SalesController extends Controller
     /* =========================================================
        STORE SALE (DUPLICATE + STOCK SAFE)
     ========================================================= */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'customer_id'        => 'required|exists:customers,id',
-            'invoice_token'      => 'required|string',
-            'items.product_id'   => 'required|array|min:1',
-            'items.quantity'     => 'required|array|min:1',
-            'items.price'        => 'required|array|min:1',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'customer_id'        => 'required|exists:customers,id',
+        'invoice_token'      => 'required|string',
+        'items.product_id'   => 'required|array|min:1',
+        'items.quantity'     => 'required|array|min:1',
+        'items.price'        => 'required|array|min:1',
+    ]);
 
-        /* 🔒 LEVEL-2 DUPLICATE PROTECTION */
-        $existingSale = Sale::where('invoice_token', $request->invoice_token)->first();
-        if ($existingSale) {
-            return redirect()
-                ->route('sales.show', $existingSale->id)
-                ->with('error', 'Invoice already generated');
-        }
+    /* 🔒 Duplicate Invoice Protection */
+    $existingSale = Sale::where('invoice_token', $request->invoice_token)->first();
+    if ($existingSale) {
+        return redirect()
+            ->route('sales.show', $existingSale->id)
+            ->with('error', 'Invoice already generated');
+    }
 
-        try {
-            DB::transaction(function () use ($request) {
+    try {
+        DB::transaction(function () use ($request) {
 
-                /* ===== CALCULATE TOTAL ===== */
-                $subTotal = 0;
-                foreach ($request->items['product_id'] as $i => $productId) {
-                    $qty   = (int) $request->items['quantity'][$i];
-                    $price = (float) $request->items['price'][$i];
-                    $subTotal += ($qty * $price);
+            /* ================= CALCULATE TOTAL ================= */
+            $subTotal = 0;
+            foreach ($request->items['product_id'] as $i => $productId) {
+                $qty   = (int) $request->items['quantity'][$i];
+                $price = (float) $request->items['price'][$i];
+                $subTotal += ($qty * $price);
+            }
+
+            $discount   = (float) ($request->discount ?? 0);
+            $tax        = (float) ($request->tax ?? 0);
+            $grandTotal = $subTotal - $discount + ($subTotal * $tax / 100);
+
+            /* ================= CUSTOMER ================= */
+            $customer = Customer::lockForUpdate()->findOrFail($request->customer_id);
+
+            /* ================= INVOICE NUMBER ================= */
+            $invoiceNo = 'INV-' . str_pad((Sale::max('id') + 1), 6, '0', STR_PAD_LEFT);
+
+            /* ================= CREATE SALE ================= */
+            $sale = Sale::create([
+                'customer_id'   => $customer->id,
+                'invoice_no'    => $invoiceNo,
+                'invoice_token' => $request->invoice_token,
+                'sale_date'     => now(),
+                'sub_total'     => $subTotal,
+                'discount'      => $discount,
+                'tax'           => $tax,
+                'grand_total'   => $grandTotal,
+                'payment_status'=> 'unpaid',
+            ]);
+
+            /* ================= SALE ITEMS + STOCK ================= */
+            foreach ($request->items['product_id'] as $i => $productId) {
+
+                $qty   = (int) $request->items['quantity'][$i];
+                $price = (float) $request->items['price'][$i];
+
+                $product = Product::lockForUpdate()->findOrFail($productId);
+
+                if ($product->quantity < $qty) {
+                    throw new \Exception("Stock not enough for {$product->name}");
                 }
 
-                $discount   = (float) ($request->discount ?? 0);
-                $tax        = (float) ($request->tax ?? 0);
-                $grandTotal = $subTotal - $discount + ($subTotal * $tax / 100);
-
-                /* ===== INVOICE NUMBER ===== */
-                $invoiceNo = 'INV-' . str_pad((Sale::max('id') + 1), 6, '0', STR_PAD_LEFT);
-
-                /* ===== CREATE SALE ===== */
-                $sale = Sale::create([
-                    'customer_id'   => $request->customer_id,
-                    'invoice_no'    => $invoiceNo,
-                    'invoice_token' => $request->invoice_token,
-                    'sale_date'     => now(),
-                    'sub_total'     => $subTotal,
-                    'discount'      => $discount,
-                    'tax'           => $tax,
-                    'grand_total'   => $grandTotal,
+                SaleItem::create([
+                    'sale_id'    => $sale->id,
+                    'product_id' => $productId,
+                    'quantity'   => $qty,
+                    'price'      => $price,
+                    'total'      => $qty * $price,
                 ]);
 
-                /* ===== SALE ITEMS + STOCK UPDATE ===== */
-                foreach ($request->items['product_id'] as $i => $productId) {
+                $product->decrement('quantity', $qty);
+            }
 
-                    $qty   = (int) $request->items['quantity'][$i];
-                    $price = (float) $request->items['price'][$i];
+            /* ================= OPEN BALANCE AUTO ADJUST ================= */
 
-                    $product = Product::lockForUpdate()->findOrFail($productId);
+            $openBalance = $customer->open_balance ?? 0;
+            $advanceAvailable = $openBalance < 0 ? abs($openBalance) : 0;
+            $advanceUsed = min($advanceAvailable, $grandTotal);
+            $remainingPayable = $grandTotal - $advanceUsed;
 
-                    if ($product->quantity < $qty) {
-                        throw new \Exception(
-                            "Stock not enough for {$product->name}. Available: {$product->quantity}"
-                        );
-                    }
+            if ($advanceUsed > 0) {
 
-                    SaleItem::create([
-                        'sale_id'    => $sale->id,
-                        'product_id' => $productId,
-                        'quantity'   => $qty,
-                        'price'      => $price,
-                        'total'      => $qty * $price,
-                    ]);
+                // update customer open balance
+                $customer->update([
+                    'open_balance' => $openBalance + $advanceUsed
+                ]);
 
-                    $product->decrement('quantity', $qty);
-                }
-            });
+                // wallet ledger
+                \App\Models\CustomerWallet::create([
+                    'customer_id' => $customer->id,
+                    'type'        => 'debit',
+                    'amount'      => $advanceUsed,
+                    'balance'     => $customer->open_balance,
+                    'reference'   => 'Adjusted against Invoice ' . $sale->invoice_no,
+                ]);
 
-            return redirect()
-                ->route('sales.index')
-                ->with('success', 'Sale created successfully');
+                // payment record
+                Payment::create([
+                    'sale_id' => $sale->id,
+                    'amount'  => $advanceUsed,
+                    'method'  => 'advance',
+                    'status'  => 'paid',
+                ]);
+            }
 
-        } catch (\Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', $e->getMessage());
-        }
+            /* ================= UPDATE SALE STATUS ================= */
+            $sale->update([
+                'payment_status' => $remainingPayable <= 0
+                    ? 'paid'
+                    : ($advanceUsed > 0 ? 'partial' : 'unpaid'),
+            ]);
+        });
+
+        return redirect()
+            ->route('sales.index')
+            ->with('success', 'Sale created successfully');
+
+    } catch (\Exception $e) {
+        return back()
+            ->withInput()
+            ->with('error', $e->getMessage());
     }
+}
+
 
     /* =========================================================
        SHOW SALE (FIXED - Was missing)
     ========================================================= */
+     /* ================= SHOW (🔥 EMI AWARE) ================= */
     public function show(Sale $sale)
     {
-        $sale->load(['customer', 'items.product']);
-        return view('sales.show', compact('sale'));
-    }
+        $sale->load(['customer','items.product']);
 
+        $emi = EmiPlan::where('sale_id',$sale->id)
+            ->where('status','running')
+            ->first();
+
+        $emiData = null;
+
+        if ($emi) {
+            $total = $emi->emi_amount * $emi->months;
+
+            $paid = Payment::where('sale_id',$sale->id)
+                ->whereIn('method',['emi','advance'])
+                ->sum('amount');
+
+            $remaining = max($total - $paid, 0);
+
+            $nextPay = min($emi->emi_amount, $remaining);
+
+            $emiData = [
+                'emi'        => $emi,
+                'total'      => $total,
+                'paid'       => $paid,
+                'remaining'  => $remaining,
+                'nextPay'    => $nextPay,
+                'completed'  => $remaining <= 0
+            ];
+        }
+
+        return view('sales.show', compact('sale','emiData'));
+    }
     /* =========================================================
        VIEW SALE (ADDED - This is what's being called)
     ========================================================= */
@@ -195,72 +267,192 @@ class SalesController extends Controller
     /* =========================================================
        UPDATE SALE
     ========================================================= */
-    public function update(Request $request, Sale $sale)
-    {
-        $request->validate([
-            'items.product_id' => 'required|array|min:1',
-            'items.quantity'   => 'required|array|min:1',
-            'items.price'      => 'required|array|min:1',
-        ]);
+  public function update(Request $request, Sale $sale)
+{
+    $request->validate([
+        'items.product_id' => 'required|array|min:1',
+        'items.quantity'   => 'required|array|min:1',
+        'items.price'      => 'required|array|min:1',
+    ]);
 
-        try {
-            DB::transaction(function () use ($request, $sale) {
+    try {
+        DB::transaction(function () use ($request, $sale) {
 
-                /* RESTORE OLD STOCK */
-                foreach ($sale->items as $item) {
-                    $item->product->increment('quantity', $item->quantity);
+            $customer = \App\Models\Customer::lockForUpdate()
+                ->findOrFail($sale->customer_id);
+
+            /* =====================================================
+               1️⃣ ROLLBACK OLD EFFECT (IMPORTANT)
+            ===================================================== */
+
+            // old paid amount
+            $oldPaid = $sale->payments()
+                ->where('status', 'paid')
+                ->sum('amount');
+
+            // old due effect remove
+            if ($sale->payment_status !== 'paid') {
+                $customer->open_balance -= ($sale->grand_total - $oldPaid);
+            }
+
+            // rollback advance usage
+            $advanceUsed = $sale->payments()
+                ->where('method', 'advance')
+                ->sum('amount');
+
+            if ($advanceUsed > 0) {
+                $customer->open_balance -= $advanceUsed;
+            }
+
+            /* =====================================================
+               2️⃣ RESTORE OLD STOCK
+            ===================================================== */
+            foreach ($sale->items as $item) {
+                $item->product->increment('quantity', $item->quantity);
+            }
+
+            $sale->items()->delete();
+
+            /* =====================================================
+               3️⃣ RECALCULATE TOTAL
+            ===================================================== */
+            $subTotal = 0;
+            foreach ($request->items['product_id'] as $i => $pid) {
+                $subTotal += $request->items['quantity'][$i] * $request->items['price'][$i];
+            }
+
+            $discount   = (float) ($request->discount ?? 0);
+            $tax        = (float) ($request->tax ?? 0);
+            $grandTotal = $subTotal - $discount + ($subTotal * $tax / 100);
+
+            $sale->update([
+                'sub_total'   => $subTotal,
+                'discount'    => $discount,
+                'tax'         => $tax,
+                'grand_total' => $grandTotal,
+            ]);
+
+            /* =====================================================
+               4️⃣ ADD NEW ITEMS + STOCK
+            ===================================================== */
+            foreach ($request->items['product_id'] as $i => $pid) {
+
+                $qty   = $request->items['quantity'][$i];
+                $price = $request->items['price'][$i];
+
+                $product = \App\Models\Product::lockForUpdate()->findOrFail($pid);
+
+                if ($product->quantity < $qty) {
+                    throw new \Exception("Stock not enough for {$product->name}");
                 }
 
-                $sale->items()->delete();
-
-                $subTotal = 0;
-                foreach ($request->items['product_id'] as $i => $pid) {
-                    $subTotal += $request->items['quantity'][$i] * $request->items['price'][$i];
-                }
-
-                $discount   = (float) ($request->discount ?? 0);
-                $tax        = (float) ($request->tax ?? 0);
-                $grandTotal = $subTotal - $discount + ($subTotal * $tax / 100);
-
-                $sale->update([
-                    'customer_id' => $request->customer_id,
-                    'sub_total'   => $subTotal,
-                    'discount'    => $discount,
-                    'tax'         => $tax,
-                    'grand_total' => $grandTotal,
+                \App\Models\SaleItem::create([
+                    'sale_id'    => $sale->id,
+                    'product_id' => $pid,
+                    'quantity'   => $qty,
+                    'price'      => $price,
+                    'total'      => $qty * $price,
                 ]);
 
-                foreach ($request->items['product_id'] as $i => $pid) {
+                $product->decrement('quantity', $qty);
+            }
 
-                    $qty   = $request->items['quantity'][$i];
-                    $price = $request->items['price'][$i];
+            /* =====================================================
+               5️⃣ APPLY ADVANCE AGAIN (STEP-7 LOGIC)
+            ===================================================== */
 
-                    $product = Product::lockForUpdate()->findOrFail($pid);
+            $openBalance = $customer->open_balance ?? 0;
+            $advanceAvailable = $openBalance < 0 ? abs($openBalance) : 0;
 
-                    if ($product->quantity < $qty) {
-                        throw new \Exception("Stock not enough for {$product->name}");
-                    }
+            $advanceUsed = min($advanceAvailable, $grandTotal);
+            $remaining   = $grandTotal - $advanceUsed;
 
-                    SaleItem::create([
-                        'sale_id'    => $sale->id,
-                        'product_id' => $pid,
-                        'quantity'   => $qty,
-                        'price'      => $price,
-                        'total'      => $qty * $price,
-                    ]);
+            if ($advanceUsed > 0) {
+                $customer->open_balance += $advanceUsed;
 
-                    $product->decrement('quantity', $qty);
-                }
-            });
+                \App\Models\Payment::create([
+                    'sale_id' => $sale->id,
+                    'amount'  => $advanceUsed,
+                    'method'  => 'advance',
+                    'status'  => 'paid',
+                ]);
+            }
 
-            return redirect()
-                ->route('customers.sales', $sale->customer_id)
-                ->with('success', 'Invoice updated successfully');
+            if ($remaining <= 0) {
 
-        } catch (\Exception $e) {
-            return back()->withInput()->with('error', $e->getMessage());
-        }
+                $sale->payment_status = 'paid';
+
+            } elseif ($advanceUsed > 0) {
+
+                $sale->payment_status = 'partial';
+                $customer->open_balance += $remaining;
+
+            } else {
+
+                $sale->payment_status = 'unpaid';
+                $customer->open_balance += $grandTotal;
+            }
+        /* =====================================================
+   8️⃣ EMI PLAN SYNC (IF EXISTS)
+===================================================== */
+
+$emi = $sale->emiPlan;
+
+if ($emi && $emi->status === 'running') {
+
+    // total EMI already paid
+    $emiPaid = \App\Models\Payment::where('sale_id', $sale->id)
+        ->where('method', 'emi')
+        ->sum('amount');
+
+    $downPayment = $emi->down_payment;
+
+    // NEW remaining based on updated invoice
+    $newRemaining = max(0, $sale->grand_total - $downPayment - $emiPaid);
+
+    // update customer open balance
+    $customer->open_balance = $newRemaining;
+
+    // EMI completed automatically
+    if ($newRemaining <= 0) {
+
+        $emi->status = 'completed';
+        $emi->months = 0;
+
+        $sale->payment_status = 'paid';
+        $customer->open_balance = 0;
+
+    } else {
+
+        // EMI still running
+        $emi->status = 'running';
+
+        // recalc remaining months (safe)
+        $emi->months = (int) ceil($newRemaining / $emi->emi_amount);
+
+        $sale->payment_status = 'emi';
     }
+
+    $emi->save();
+}
+
+            $customer->save();
+            $sale->save();
+
+
+        });
+
+        return redirect()
+            ->route('customers.sales', $sale->customer_id)
+            ->with('success', 'Invoice updated successfully');
+
+    } catch (\Exception $e) {
+        return back()
+            ->withInput()
+            ->with('error', $e->getMessage());
+    }
+}
+
 
  /* =========================================================
    INVOICE PDF (FIXED + AMOUNT IN WORDS)
