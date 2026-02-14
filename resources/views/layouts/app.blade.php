@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>SmartERP</title>
+    <title>INVOZA One</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -131,7 +131,7 @@
                 -webkit-background-clip:text;
                 -webkit-text-fill-color:transparent;
             ">
-                SmartERP
+                INVOZA One
             </h2>
             <div style="margin-top:8px; font-size:12px; color:#94a3b8; font-weight:500;">
                 Business Intelligence System
@@ -969,7 +969,7 @@
         {{-- Footer --}}
         <div
             style="margin-top:auto; padding-top:20px; text-align:center; font-size:11px; color:#94a3b8; opacity:0.7; border-top:1px solid rgba(255,255,255,0.1);">
-            SmartERP v1.0 • {{ date('Y') }}
+            INVOZA One v1.0 • {{ date('Y') }}
         </div>
     </div>
 

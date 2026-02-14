@@ -2,53 +2,37 @@
 
 @section('content')
     <style>
-        /* ===== MAIN CONTAINER ===== */
+        /* ================= BRAND SYSTEM ================= */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --bg-soft: #f8fafc;
+            --border-soft: #e5e7eb;
+        }
+
+        /* ================= CONTAINER ================= */
         .customers-container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 40px auto;
             padding: 40px;
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            background: linear-gradient(135deg, #ffffff, var(--bg-soft));
             border-radius: 24px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            border: 1px solid #e5e7eb;
-            min-height: calc(100vh - 80px);
+            border: 1px solid var(--border-soft);
         }
 
-        /* ===== SEARCH BUTTON ===== */
-        .search-btn {
-            margin-top: 14px;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: #fff;
-            border: none;
-            padding: 14px 26px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.35);
-            transition: all 0.3s ease;
-        }
-
-        .search-btn:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 16px 30px rgba(59, 130, 246, 0.45);
-        }
-
-        .search-btn:active {
-            transform: translateY(0);
-        }
-
-
-        /* ===== HEADER SECTION ===== */
+        /* ================= HEADER ================= */
         .header-section {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
+            margin-bottom: 35px;
             padding-bottom: 25px;
             border-bottom: 2px solid #f1f5f9;
             flex-wrap: wrap;
@@ -64,794 +48,509 @@
         .title-icon {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            color: white;
+            font-size: 26px;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, .35);
         }
 
         .title-content h1 {
             margin: 0;
             font-size: 32px;
             font-weight: 800;
-            color: #1e293b;
-            letter-spacing: -0.5px;
+            color: var(--text-main);
         }
 
         .title-content p {
             margin: 6px 0 0;
-            color: #64748b;
-            font-size: 15px;
+            color: var(--text-muted);
         }
 
         .add-customer-btn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             padding: 14px 28px;
             border-radius: 14px;
-            text-decoration: none;
             font-weight: 700;
-            font-size: 15px;
+            text-decoration: none;
             display: flex;
-            align-items: center;
             gap: 10px;
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: none;
-            cursor: pointer;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, .35);
+            transition: all .3s;
         }
 
         .add-customer-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 25px rgba(16, 185, 129, 0.4);
         }
 
-        .add-customer-btn span {
-            font-size: 20px;
-            font-weight: 300;
-        }
-
-        /* ===== SUCCESS ALERT ===== */
-        .success-alert {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            color: #065f46;
-            padding: 18px 24px;
-            border-radius: 14px;
-            margin-bottom: 30px;
-            border-left: 5px solid #10b981;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 600;
-            font-size: 15px;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
-        }
-
-        .success-alert::before {
-            content: "✓";
-            background: #10b981;
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        /* ===== STATS GRID ===== */
+        /* ================= STATS ================= */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
         }
 
         .stat-card {
             background: white;
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s;
+            padding: 24px;
+            border-radius: 18px;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .05);
+            position: relative;
+            overflow: hidden;
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            right: -30px;
+            top: -30px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(99, 102, 241, .12), transparent 70%);
         }
 
         .stat-icon {
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
+            color: white;
             margin-bottom: 15px;
         }
 
         .stat-value {
             font-size: 28px;
             font-weight: 800;
-            color: #1e293b;
-            margin: 5px 0;
+            color: var(--text-main);
         }
 
         .stat-label {
-            color: #64748b;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 13px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 700;
         }
 
-        /* ===== SEARCH & FILTER ===== */
-        .search-filter {
-            background: white;
-            padding: 20px;
-            border-radius: 16px;
-            margin-bottom: 30px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 14px 20px;
-            border-radius: 10px;
-            border: 1.5px solid #e5e7eb;
-            background: white;
-            font-size: 15px;
-            color: #374151;
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .search-input:focus {
-            border-color: #6366f1;
-            box-shadow:
-                0 0 0 3px rgba(99, 102, 241, 0.25),
-                0 8px 20px rgba(99, 102, 241, 0.15);
-            background: linear-gradient(180deg, #ffffff, #f9fafb);
-        }
-
-        /* ===== LOADING SHIMMER ===== */
-        .search-loading {
-            font-size: 16px;
-            font-weight: 600;
-            color: #6366f1;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .search-loading::after {
-            content: "";
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            border: 3px solid rgba(99, 102, 241, .3);
-            border-top-color: #6366f1;
-            animation: spin 0.7s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .search-input::placeholder {
-            color: #9ca3af;
-        }
-
-        /* ===== TABLE CONTAINER ===== */
-        .table-container {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-            margin-bottom: 30px;
-            overflow-x: auto;
-        }
-
-        .customers-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-            min-width: 800px;
-        }
-
-        .customers-table thead {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-        }
-
-        .customers-table th {
-            padding: 18px 24px;
-            text-align: left;
-            color: white;
-            font-weight: 600;
-            font-size: 14px;
+        /* ================= TABLE ================= */
+        #customersTable thead th {
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 13px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 700;
         }
 
-        .customers-table tbody tr {
-            border-bottom: 1px solid #f1f5f9;
-            transition: all 0.2s ease;
+        #customersTable tbody tr {
+            transition: all .2s ease;
         }
 
-        .customers-table tbody tr:hover {
+        #customersTable tbody tr:hover {
             background: #f8fafc;
+            transform: scale(1.003);
         }
 
-        .customers-table td {
-            padding: 18px 24px;
-            color: #475569;
-            font-weight: 500;
+        #customersTable td {
             vertical-align: middle;
+            position: relative;
         }
 
-        /* ===== CUSTOMER INFO CELL ===== */
         .customer-info {
             display: flex;
+            gap: 12px;
             align-items: center;
-            gap: 14px;
         }
 
         .customer-avatar {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 18px;
-            flex-shrink: 0;
+            font-weight: 800;
         }
 
-        .customer-name {
-            font-weight: 600;
-            color: #1f2937;
-            font-size: 15px;
-            margin-bottom: 2px;
-        }
-
-        .customers-table tbody tr:hover {
-            background: linear-gradient(90deg, #f8fafc, #eef2ff);
-            box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.15);
-        }
-
-
-        /* ===== CONTACT CELLS ===== */
-        .mobile-cell {
-            font-weight: 500;
-            color: #374151;
-        }
-
-        .email-cell {
-            color: #3b82f6;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-
-        .email-cell:hover {
-            color: #1d4ed8;
-            text-decoration: underline;
-        }
-
-        /* ===== GST BADGE ===== */
-        .gst-badge {
-            background: #fef3c7;
-            color: #92400e;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 500;
+        /* ================= DROPDOWN ACTION BUTTON - FIXED ================= */
+        .action-container {
+            position: relative;
             display: inline-block;
-            font-family: 'Courier New', monospace;
         }
 
-        /* ===== ACTION BUTTONS ===== */
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .action-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 18px;
-            transition: all 0.2s;
+        .main-action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
             border: none;
-            cursor: pointer;
-        }
-
-        .edit-btn {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-        }
-
-        .edit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
-        }
-
-        .delete-btn {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .delete-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
-        }
-
-        /* ===== PAGINATION ===== */
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            padding: 20px 0;
-        }
-
-        .pagination {
-            display: flex;
-            gap: 8px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            background: white;
-            padding: 12px 20px;
+            padding: 10px 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
-        }
-
-        .pagination li a,
-        .pagination li span {
-            display: inline-flex;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
             align-items: center;
-            justify-content: center;
-            min-width: 40px;
-            height: 40px;
-            padding: 0 12px;
-            border-radius: 8px;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            white-space: nowrap;
+        }
+
+        .main-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: calc(100% + 5px);
+            right: 0;
+            left: auto;
+            margin-top: 0;
             background: white;
-            color: #4b5563;
-            font-weight: 500;
-            text-decoration: none;
-            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            min-width: 200px;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-5px);
             transition: all 0.2s ease;
+            border: 1px solid var(--border-soft);
+            overflow: hidden;
         }
 
-        .pagination li a:hover {
-            background: #f3f4f6;
-            border-color: #d1d5db;
+        /* Position dropdown to the left if it's near the edge */
+        .action-container .dropdown-menu {
+            right: 0;
+            left: auto;
         }
 
-        .pagination li.active span {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            color: white;
-            border-color: transparent;
+        /* For the last few rows, show dropdown above instead of below */
+        .action-container.dropdown-up .dropdown-menu {
+            top: auto;
+            bottom: calc(100% + 5px);
+            transform: translateY(5px);
         }
 
-        .pagination li.disabled span {
-            background: #f9fafb;
-            color: #9ca3af;
-            cursor: not-allowed;
+        .action-container.active .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
         }
 
-        /* ===== RESPONSIVE DESIGN ===== */
-        @media (max-width: 768px) {
-            .customers-container {
-                padding: 20px;
-                margin: 20px auto;
-            }
-
-            .header-section {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .add-customer-btn {
-                justify-content: center;
-                width: 100%;
-            }
-
-            .title-content h1 {
-                font-size: 24px;
-            }
-
-            .search-input {
-                font-size: 14px;
-            }
-
-            .customers-table {
-                min-width: 600px;
-            }
-
-            .customers-table th,
-            .customers-table td {
-                padding: 14px 16px;
-            }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: var(--text-main);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
         }
 
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
 
-            .action-buttons {
-                flex-direction: row;
-            }
+        .dropdown-item:hover {
+            background: #f8fafc;
+        }
 
-            .action-btn {
-                width: 36px;
-                height: 36px;
-                font-size: 16px;
-            }
+        .dropdown-item.view {
+            color: var(--info);
+        }
+
+        .dropdown-item.edit {
+            color: var(--primary);
+        }
+
+        .dropdown-item.delete {
+            color: var(--danger);
+        }
+
+        .dropdown-item i,
+        .dropdown-item span:first-child {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .delete-form {
+            margin: 0;
+            display: block;
+        }
+
+        .delete-button {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--danger);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .delete-button:hover {
+            background: #fef2f2;
+        }
+
+        /* ================= SEARCH ================= */
+        .dataTables_filter {
+            margin-bottom: 20px;
+        }
+
+        .dataTables_filter input {
+            border: 1.5px solid var(--border-soft) !important;
+            border-radius: 12px !important;
+            padding: 10px 15px !important;
+            width: 250px !important;
+            margin-left: 10px !important;
+        }
+
+        .dataTables_filter label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* ================= PAGINATION ================= */
+        .dataTables_paginate {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+
+        .dataTables_paginate .paginate_button {
+            border-radius: 10px !important;
+            padding: 8px 14px !important;
+            margin: 0 2px !important;
+            border: 1px solid var(--border-soft) !important;
+        }
+
+        .dataTables_paginate .paginate_button.current {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        .dataTables_info {
+            margin-top: 15px;
+            color: var(--text-muted);
         }
     </style>
 
-
     <div class="customers-container">
+
         {{-- HEADER --}}
         <div class="header-section">
             <div class="title-wrapper">
-                <div class="title-icon">
-                    <span style="font-size: 28px; color: white;">👥</span>
-                </div>
+                <div class="title-icon">👥</div>
                 <div class="title-content">
                     <h1>Customers</h1>
                     <p>Manage and track all your customers</p>
                 </div>
             </div>
             <a href="{{ route('customers.create') }}" class="add-customer-btn">
-                <span style="font-size: 20px;">+</span>
-                Add New Customer
+                ➕ Add Customer
             </a>
         </div>
 
         {{-- STATS --}}
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
-                    👥
-                </div>
-                <div class="stat-value">{{ $customers->total() }}</div>
+                <div class="stat-icon" style="background:var(--primary)">👥</div>
+                <div class="stat-value">{{ $customers->count() }}</div>
                 <div class="stat-label">Total Customers</div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-                    💰
-                </div>
+                <div class="stat-icon" style="background:var(--success)">💰</div>
                 <div class="stat-value">{{ $totalRevenue ?? '₹0' }}</div>
                 <div class="stat-label">Total Revenue</div>
             </div>
+
             <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white;">
-                    📊
-                </div>
+                <div class="stat-icon" style="background:var(--info)">📊</div>
                 <div class="stat-value">{{ $activeCustomers ?? $customers->count() }}</div>
                 <div class="stat-label">Active Customers</div>
             </div>
         </div>
 
-        {{-- SEARCH FILTER --}}
-        <div class="search-filter">
-            <input type="text" id="ajaxSearch" placeholder="Search customers by name, mobile, or email..."
-                class="search-input" autocomplete="off">
-        </div>
-
-        <button type="submit" class="search-btn">
-            <span>🔍</span>
-            Search
-        </button>
-        @if (request('search'))
-            <a href="{{ route('customers.index') }}"
-                style="
-                background: #f3f4f6;
-                color: #374151;
-                border: 1.5px solid #e5e7eb;
-                padding: 12px 24px;
-                border-radius: 10px;
-                text-decoration: none;
-                font-weight: 600;
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            ">
-                <span>🔄</span>
-                Clear
-            </a>
-        @endif
-        </form>
-
-        {{-- SUCCESS MESSAGE --}}
-        @if (session('success'))
-            <div class="success-alert">
-                {{ session('success') }}
-            </div>
-        @endif
-
         {{-- TABLE --}}
-        <div class="table-container">
-            <table class="customers-table">
-                <thead>
-                    <tr>
-                        <th>Customer</th>
-                        <th>Contact</th>
-                        <th>Email</th>
-                        <th>GST Number</th>
-                        <th>Open Balance</th>
-                        <th style="text-align: center;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="customersTableBody">
-
-                    @forelse ($customers as $c)
-                        <tr>
-                            <td>
-                                <div class="customer-info">
-                                    <div class="customer-avatar">
-                                        {{ strtoupper(substr($c->name, 0, 1)) }}
-                                    </div>
-                                    <div>
-                                        <div class="customer-name">{{ $c->name }}</div>
-                                        <div style="font-size: 12px; color: #94a3b8;">
-                                            ID: {{ $c->id }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="mobile-cell">
-                                    {{ $c->mobile }}
-                                </div>
-                            </td>
-                            <td>
-                                @if ($c->email)
-                                    <a href="mailto:{{ $c->email }}" class="email-cell">
-                                        {{ $c->email }}
-                                    </a>
-                                @else
-                                    <span style="color: #9ca3af;">Not provided</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if ($c->gst_no)
-                                    <span class="gst-badge">{{ $c->gst_no }}</span>
-                                @else
-                                    <span style="color: #9ca3af;">N/A</span>
-                                @endif
-                            </td>
-                                <td>
-    @if ($c->open_balance > 0)
-        <span style="color:#dc2626;font-weight:700;">
-            ₹ {{ number_format($c->open_balance,2) }} Due
-        </span>
-    @elseif ($c->open_balance < 0)
-        <span style="color:#16a34a;font-weight:700;">
-            ₹ {{ number_format(abs($c->open_balance),2) }} Advance
-        </span>
-    @else
-        <span style="color:#64748b;font-weight:600;">
-            Clear
-        </span>
-    @endif
-</td>
-
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="{{ route('customers.sales', $c->id) }}" class="action-btn view-btn"
-                                        title="View Sales">
-                                        👁️
-                                    </a>
-                                    <a href="{{ route('customers.edit', $c->id) }}" class="action-btn edit-btn"
-                                        title="Edit Customer">
-                                        ✏️
-                                    </a>
-                                    <form action="{{ route('customers.destroy', $c->id) }}" method="POST"
-                                        style="display: inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="action-btn delete-btn"
-                                            onclick="return confirm('Are you sure you want to delete this customer? This action cannot be undone.')"
-                                            title="Delete Customer">
-                                            🗑️
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="empty-state">
-                                <div class="empty-content">
-                                    <span class="empty-icon">👥</span>
-                                    <div class="empty-title">No Customers Found</div>
-                                    <div class="empty-description">
-                                        @if (request('search'))
-                                            No customers found matching "{{ request('search') }}".
-                                        @else
-                                            Start adding customers to manage your client relationships and track their
-                                            purchases.
-                                        @endif
-                                    </div>
-                                    <a href="{{ route('customers.create') }}" class="add-customer-btn"
-                                        style="display: inline-flex;">
-                                        <span>+</span>
-                                        Add Your First Customer
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        {{-- PAGINATION --}}
-        @if ($customers->hasPages())
-            <div class="pagination-container" id="paginationBox">
-
-                <div class="pagination">
-                    {{ $customers->links() }}
-                </div>
-            </div>
-        @endif
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-
-            const input = document.getElementById('ajaxSearch');
-            const tbody = document.getElementById('customersTableBody');
-            const pagination = document.getElementById('paginationBox');
-            let timer = null;
-
-            if (!input) return;
-
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text ?? '';
-                return div.innerHTML;
-            }
-
-            input.addEventListener('keyup', function() {
-                clearTimeout(timer);
-                const query = this.value.trim();
-
-                if (query === '') {
-                    location.reload();
-                    return;
-                }
-
-                timer = setTimeout(() => {
-
-                    tbody.innerHTML = `
-        <tr>
-            <td colspan="5" style="text-align:center;padding:40px;">
-                <span class="search-loading">Searching customers</span>
-            </td>
-        </tr>`;
-
-                    if (pagination) {
-                        pagination.style.display = 'none';
-                    }
-
-                    fetch(
-                            `{{ route('customers.ajax.search') }}?search=${encodeURIComponent(query)}`
-                        )
-                        .then(res => res.json())
-                        .then(data => {
-
-                            tbody.innerHTML = '';
-
-                            if (data.length === 0) {
-                                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="5" style="text-align:center;padding:40px;color:#6b7280;">
-                            😕 No customers found for "${query}"
-                        </td>
-                    </tr>`;
-                                return;
-                            }
-
-                            data.forEach(c => {
-                                tbody.innerHTML += `
+        <table id="customersTable" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Mobile</th>
+                    <th>Email</th>
+                    <th>GST</th>
+                    <th>Balance</th>
+                    <th style="min-width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($customers as $index => $c)
                     <tr>
                         <td>
                             <div class="customer-info">
-                                <div class="customer-avatar">${c.name.charAt(0)}</div>
+                                <div class="customer-avatar">{{ strtoupper(substr($c->name, 0, 1)) }}</div>
                                 <div>
-                                    <div class="customer-name">${c.name}</div>
-                                    <div style="font-size:12px;color:#94a3b8;">ID: ${c.id}</div>
+                                    <strong>{{ $c->name }}</strong><br>
+                                    <small>ID: {{ $c->id }}</small>
                                 </div>
                             </div>
                         </td>
-                        <td>${c.mobile}</td>
-                        <td>${c.email ?? 'Not provided'}</td>
-                        <td>${c.gst_no ?? 'N/A'}</td>
-                            <td>
-    ${
-        c.open_balance > 0
-            ? `<span style="color:#dc2626;font-weight:700;">₹ ${c.open_balance} Due</span>`
-            : c.open_balance < 0
-                ? `<span style="color:#16a34a;font-weight:700;">₹ ${Math.abs(c.open_balance)} Advance</span>`
-                : `<span style="color:#64748b;font-weight:600;">Clear</span>`
-    }
-</td>
-
+                        <td>{{ $c->mobile }}</td>
+                        <td>{{ $c->email ?? 'N/A' }}</td>
+                        <td>{{ $c->gst_no ?? 'N/A' }}</td>
                         <td>
-    <div class="action-buttons">
-
-        <!-- 👁️ VIEW SALES -->
-        <a href="/customers/${c.id}/sales"
-           class="action-btn view-btn"
-           title="View Sales">
-            👁️
-        </a>
-
-        <!-- ✏️ EDIT -->
-        <a href="/customers/${c.id}/edit"
-           class="action-btn edit-btn"
-           title="Edit Customer">
-            ✏️
-        </a>
-
-        <!-- 🗑️ DELETE -->
-        <form action="/customers/${c.id}"
-              method="POST"
-              style="display:inline;"
-              onsubmit="return confirm('Are you sure you want to delete this customer?')">
-
-            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="_method" value="DELETE">
-
-            <button type="submit"
-                    class="action-btn delete-btn"
-                    title="Delete Customer">
-                🗑️
-            </button>
-        </form>
-
+                            @if ($c->open_balance > 0)
+                                <span
+                                    style="color:var(--danger); font-weight: 600;">₹{{ number_format($c->open_balance, 2) }}
+                                    Due</span>
+                            @elseif($c->open_balance < 0)
+                                <span
+                                    style="color:var(--success); font-weight: 600;">₹{{ number_format(abs($c->open_balance), 2) }}
+                                    Advance</span>
+                            @else
+                                <span style="color:var(--text-muted);">Clear</span>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="action-container" data-row-index="{{ $index }}">
+                                <button class="main-action-btn" onclick="toggleDropdown(this, event)">
+                                    <span>Actions</span>
+                                    <span style="font-size: 12px;">▼</span>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a href="{{ route('customers.sales', $c->id) }}" class="dropdown-item view">
+                                        <span>👁️</span> View Details
+                                    </a>
+                                    <a href="{{ route('customers.edit', $c->id) }}" class="dropdown-item edit">
+                                        <span>✏️</span> Edit Customer
+                                    </a>
+                                    <form method="POST" action="{{ route('customers.destroy', $c->id) }}"
+                                        class="delete-form">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="delete-button"
+                                            onclick="return confirm('Are you sure you want to delete this customer?')">
+                                            <span>🗑️</span> Delete Customer
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
-</td>
 
-                    </tr>`;
-                            });
-                        })
-                        .catch(() => {
-                            tbody.innerHTML = `
-                <tr>
-                    <td colspan="5" style="text-align:center;color:red;padding:40px;">
-                        ⚠️ Error loading data
-                    </td>
-                </tr>`;
-                        });
+    {{-- DATATABLES --}}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-                }, 400);
+    <script>
+        $(function() {
+            // Initialize DataTable
+            var table = $('#customersTable').DataTable({
+                pageLength: 25,
+                responsive: false, // Disable responsive to have better control
+                language: {
+                    searchPlaceholder: "Search customers...",
+                    search: "🔍 Search:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                },
+                drawCallback: function() {
+                    // Close all dropdowns when table redraws
+                    $('.action-container').removeClass('active');
+                }
             });
 
+            // Close dropdown when clicking anywhere on the page
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.action-container').length) {
+                    $('.action-container').removeClass('active');
+                }
+            });
+
+            // Prevent dropdown from closing when clicking inside dropdown menu
+            $(document).on('click', '.dropdown-menu', function(e) {
+                e.stopPropagation();
+            });
         });
+
+        function toggleDropdown(button, event) {
+            // Prevent the click from bubbling up
+            if (event) {
+                event.stopPropagation();
+            }
+
+            var container = $(button).closest('.action-container');
+            var dropdown = container.find('.dropdown-menu');
+
+            // Close all other dropdowns
+            $('.action-container').not(container).removeClass('active');
+
+            // Toggle current dropdown
+            container.toggleClass('active');
+
+            if (container.hasClass('active')) {
+                // Get the row position
+                var row = container.closest('tr');
+                var tableBody = row.closest('tbody');
+                var rows = tableBody.find('tr');
+                var rowIndex = rows.index(row);
+                var totalRows = rows.length;
+
+                // If this is one of the last 3 rows, show dropdown above
+                if (rowIndex >= totalRows - 3) {
+                    container.addClass('dropdown-up');
+                } else {
+                    container.removeClass('dropdown-up');
+                }
+
+                // Check if dropdown is going out of viewport on the right
+                var dropdownOffset = dropdown.offset();
+                if (dropdownOffset) {
+                    var dropdownWidth = dropdown.outerWidth();
+                    var viewportWidth = $(window).width();
+
+                    if (dropdownOffset.left + dropdownWidth > viewportWidth - 20) {
+                        dropdown.css('left', 'auto');
+                        dropdown.css('right', '0');
+                    } else {
+                        dropdown.css('left', 'auto');
+                        dropdown.css('right', '0');
+                    }
+                }
+            }
+        }
     </script>
 @endsection

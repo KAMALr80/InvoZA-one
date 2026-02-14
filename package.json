@@ -20,6 +20,8 @@
     },
     "dependencies": {
         "datatables.net": "^2.3.7",
-        "datatables.net-bs5": "^2.3.7"
+        "datatables.net-bs5": "^2.3.7",
+        "jspdf": "^4.1.0",
+        "jspdf-autotable": "^5.0.7"
     }
 }

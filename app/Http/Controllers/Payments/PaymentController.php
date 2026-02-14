@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Payments/PaymentController.php
 
 namespace App\Http\Controllers\Payments;
 
@@ -7,226 +8,375 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
 use App\Models\Payment;
-use App\Models\EmiPlan;
 use App\Models\Customer;
+use App\Models\EmiPlan;
 
 class PaymentController extends Controller
 {
-    /* =======================
-       PAYMENT FORM
-    ======================= */
+    /**
+     * Show payment form
+     */
     public function create($saleId)
-{
-    $sale = Sale::with('emiPlan')->findOrFail($saleId);
+    {
+        $sale = Sale::with('customer', 'payments')->findOrFail($saleId);
 
-    // 🔒 EMI started → no manual payment allowed
-    if ($sale->payment_status === 'emi') {
-        return redirect()
-            ->route('sales.show', $sale->id)
-            ->with('error', 'EMI is running. Please pay EMI only.');
+        // If already paid
+        if ($sale->payment_status === 'paid') {
+            return redirect()->route('sales.show', $sale->id)
+                ->with('error', 'Invoice already fully paid.');
+        }
+
+        // If EMI is running
+        if ($sale->payment_status === 'emi') {
+            return redirect()->route('sales.show', $sale->id)
+                ->with('error', 'EMI is running. Please pay EMI only.');
+        }
+
+        // Calculate paid amount for this invoice only
+        $paidAmount = Payment::where('sale_id', $sale->id)
+            ->where('status', 'paid')
+            ->where(function ($q) {
+                $q->where('remarks', 'INVOICE')
+                    ->orWhere('remarks', 'EMI_DOWN');
+            })
+            ->sum('amount');
+
+        $remaining = $sale->grand_total - $paidAmount;
+
+        // Get customer balance details
+        $advanceBalance = 0;
+        $dueBalance = 0;
+
+        if ($sale->customer) {
+            $customer = $sale->customer;
+            // open_balance > 0 means customer owes us (due from previous invoices)
+            // open_balance < 0 means customer has advance with us
+            if ($customer->open_balance > 0) {
+                $dueBalance = $customer->open_balance;
+            } elseif ($customer->open_balance < 0) {
+                $advanceBalance = abs($customer->open_balance);
+            }
+        }
+
+        return view('payments.create', compact(
+            'sale',
+            'remaining',
+            'advanceBalance',
+            'dueBalance',
+            'paidAmount'
+        ));
     }
 
-    if ($sale->payment_status === 'paid') {
-        return redirect()
-            ->route('sales.show', $sale->id)
-            ->with('error', 'Invoice already fully paid');
-    }
-
-    // existing remaining logic
-    $totalPaid = $sale->payments()
-        ->where('status', 'paid')
-        ->sum('amount');
-
-    $remaining = max(0, $sale->grand_total - $totalPaid);
-
-    return view('payments.create', compact('sale', 'remaining'));
-}
-
-
-    /* =======================
-       STORE PAYMENT
-    ======================= */
+    /**
+     * Store payment
+     */
     public function store(Request $request)
     {
         $request->validate([
             'sale_id' => 'required|exists:sales,id',
-            'method'  => 'required|in:cash,upi,card,net_banking,emi,advance',
-
-            'amount' => [
-                'exclude_if:method,advance',
-                'exclude_if:method,emi',
-                'required',
-                'numeric',
-                'min:1'
-            ],
-
-            'emi_months' => [
-                'exclude_unless:method,emi',
-                'required',
-                'integer',
-                'min:1'
-            ],
-            'emi_amount' => [
-                'exclude_unless:method,emi',
-                'required',
-                'numeric',
-                'min:1'
-            ],
-
-            'advance_amount' => [
-                'exclude_unless:method,advance',
-                'required',
-                'numeric',
-                'min:1'
-            ],
-
+            'payment_type' => 'required|in:full,partial,excess',
+            'method' => 'required|in:cash,upi,card,net_banking,emi,advance',
+            'payment_amount' => 'nullable|numeric|min:0',
+            'advance_amount' => 'nullable|numeric|min:0',
+            'advance_used' => 'nullable|numeric|min:0',
+            'down_payment' => 'nullable|numeric|min:0',
+            'emi_months' => 'nullable|integer|min:1',
+            'emi_amount' => 'nullable|numeric|min:0',
             'transaction_id' => 'nullable|string|max:255',
+            'remarks' => 'nullable|string|max:500',
+            'is_advance_only' => 'nullable|in:0,1',
         ]);
 
-        $sale     = Sale::with('payments')->findOrFail($request->sale_id);
-        $customer = Customer::lockForUpdate()->findOrFail($sale->customer_id);
+        DB::beginTransaction();
 
-        DB::transaction(function () use ($request, $sale, $customer) {
+        try {
+            $sale = Sale::lockForUpdate()->findOrFail($request->sale_id);
+            $customer = Customer::lockForUpdate()->findOrFail($sale->customer_id);
 
-            /* =====================
-               SINGLE SOURCE OF TRUTH
-            ===================== */
-            $totalPaidBefore = $sale->payments()
-                ->where('status', 'paid')
-                ->sum('amount');
+            // Check payment type from tabs
+            if ($request->is_advance_only == '1') {
+                // PURE ADVANCE PAYMENT
+                $this->processPureAdvance($request, $customer);
+            } elseif ($request->method == 'emi') {
+                // EMI PAYMENT
+                $this->processEmiPayment($request, $sale, $customer);
+            } else {
+                // INVOICE PAYMENT (with or without advance)
+                $this->processInvoicePayment($request, $sale, $customer);
+            }
 
-            $remainingBefore = max(0, $sale->grand_total - $totalPaidBefore);
+            DB::commit();
 
+            return redirect()->route('sales.show', $sale->id)
+                ->with('success', 'Payment recorded successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage())->withInput();
+        }
+    }
 
-/* ================= ADVANCE ================= */
-if ($request->method === 'advance') {
+    /**
+     * Process pure advance payment
+     */
+    private function processPureAdvance($request, $customer)
+    {
+        $amount = $request->advance_amount ?? 0;
 
-    $paid = $request->advance_amount;
+        if ($amount <= 0) {
+            throw new \Exception('Please enter a valid advance amount.');
+        }
 
-    /*
-    |----------------------------------------------------
-    | STEP 1: Calculate how much bill is actually pending
-    |----------------------------------------------------
-    */
-    $totalPaidBefore = $sale->payments()
-        ->where('status', 'paid')
-        ->sum('amount');
+        // Create advance payment record
+        Payment::create([
+            'customer_id' => $customer->id,
+            'amount' => $amount,
+            'method' => $request->method,
+            'status' => 'paid',
+            'remarks' => 'ADVANCE_ONLY',
+            'transaction_id' => $request->transaction_id,
+        ]);
 
-    $remainingBefore = max(0, $sale->grand_total - $totalPaidBefore);
+        // Update customer balance (negative = advance given to us)
+        // When customer gives advance, open_balance decreases (becomes more negative)
+        $customer->open_balance -= $amount;
+        $customer->save();
+    }
 
-    /*
-    |----------------------------------------------------
-    | STEP 2: Split advance into bill-payment + extra
-    |----------------------------------------------------
-    */
-    $billPayment  = min($paid, $remainingBefore);
-    $extraAdvance = max(0, $paid - $remainingBefore);
+    /**
+     * Process invoice payment
+     */
+    /**
+     * Process invoice payment
+     */
+    private function processInvoicePayment($request, $sale, $customer)
+    {
+        $cashAmount = $request->payment_amount ?? 0;
+        $advanceUsed = $request->advance_used ?? 0;
 
-    /*
-    |----------------------------------------------------
-    | STEP 3: Record ONLY bill part as sale payment
-    |----------------------------------------------------
-    */
-    if ($billPayment > 0) {
+        $totalPayment = $cashAmount + $advanceUsed;
+
+        if ($totalPayment <= 0) {
+            throw new \Exception('Please enter a payment amount or use advance.');
+        }
+
+        // Get total paid for this invoice so far (including both INVOICE and ADVANCE_USED)
+        $paidSoFar = Payment::where('sale_id', $sale->id)
+            ->where('status', 'paid')
+            ->where(function ($q) {
+                $q->where('remarks', 'INVOICE')
+                    ->orWhere('remarks', 'EMI_DOWN')
+                    ->orWhere('remarks', 'ADVANCE_USED'); // IMPORTANT: Include advance used
+            })
+            ->sum('amount');
+
+        $remainingDue = $sale->grand_total - $paidSoFar;
+
+        // Check if using advance
+        if ($advanceUsed > 0) {
+            // Check if customer has enough advance (open_balance negative means advance)
+            $availableAdvance = $customer->open_balance < 0 ? abs($customer->open_balance) : 0;
+
+            if ($advanceUsed > $availableAdvance) {
+                throw new \Exception('Insufficient advance balance. Available: ₹' . number_format($availableAdvance, 2));
+            }
+
+            // Record advance usage - THIS COUNTS TOWARD INVOICE PAYMENT
+            Payment::create([
+                'sale_id' => $sale->id,
+                'customer_id' => $customer->id,
+                'amount' => $advanceUsed,
+                'method' => 'advance',
+                'status' => 'paid',
+                'remarks' => 'ADVANCE_USED', // This now counts toward invoice
+                'transaction_id' => $request->transaction_id,
+            ]);
+
+            // Reduce advance balance (move towards zero/positive)
+            $customer->open_balance += $advanceUsed;
+        }
+
+        // Record cash payment
+        if ($cashAmount > 0) {
+            // Calculate how much goes to invoice vs excess
+            $remainingAfterAdvance = $remainingDue - $advanceUsed;
+            $invoicePortion = min($cashAmount, max(0, $remainingAfterAdvance));
+            $excess = $cashAmount - $invoicePortion;
+
+            // Invoice payment
+            if ($invoicePortion > 0) {
+                Payment::create([
+                    'sale_id' => $sale->id,
+                    'customer_id' => $customer->id,
+                    'amount' => $invoicePortion,
+                    'method' => $request->method,
+                    'status' => 'paid',
+                    'remarks' => 'INVOICE',
+                    'transaction_id' => $request->transaction_id,
+                ]);
+            }
+
+            // Excess goes to advance (customer overpaid)
+            if ($excess > 0) {
+                Payment::create([
+                    'sale_id' => $sale->id,
+                    'customer_id' => $customer->id,
+                    'amount' => $excess,
+                    'method' => $request->method,
+                    'status' => 'paid',
+                    'remarks' => 'EXCESS_TO_ADVANCE',
+                    'transaction_id' => $request->transaction_id,
+                ]);
+
+                $customer->open_balance -= $excess;
+            }
+        }
+
+        // Recalculate total paid for invoice including ALL payment types
+        $newPaidAmount = Payment::where('sale_id', $sale->id)
+            ->where('status', 'paid')
+            ->where(function ($q) {
+                $q->where('remarks', 'INVOICE')
+                    ->orWhere('remarks', 'EMI_DOWN')
+                    ->orWhere('remarks', 'ADVANCE_USED'); // Include advance used
+            })
+            ->sum('amount');
+
+        $newRemaining = $sale->grand_total - $newPaidAmount;
+
+        // Update sale payment status
+        if ($newRemaining <= 0.01) { // Small tolerance for floating point
+            $sale->payment_status = 'paid';
+
+            // If invoice becomes paid, remove any due record if exists
+            Payment::where('sale_id', $sale->id)
+                ->where('remarks', 'INVOICE_DUE')
+                ->delete();
+        } elseif ($newRemaining < $sale->grand_total) {
+            $sale->payment_status = 'partial';
+        }
+
+        $sale->save();
+        $customer->save();
+    }
+
+    /**
+     * Process EMI payment
+     */
+    private function processEmiPayment($request, $sale, $customer)
+    {
+        $downPayment = $request->down_payment ?? 0;
+        $emiMonths = $request->emi_months ?? 0;
+        $emiAmount = $request->emi_amount ?? 0;
+
+        if ($downPayment <= 0) {
+            throw new \Exception('Please enter down payment amount.');
+        }
+
+        if ($emiMonths <= 0) {
+            throw new \Exception('Please select EMI months.');
+        }
+
+        if ($emiAmount <= 0) {
+            throw new \Exception('EMI amount calculation failed.');
+        }
+
+        // Get paid amount so far
+        $paidSoFar = Payment::where('sale_id', $sale->id)
+            ->where('status', 'paid')
+            ->where(function ($q) {
+                $q->where('remarks', 'INVOICE')
+                    ->orWhere('remarks', 'EMI_DOWN');
+            })
+            ->sum('amount');
+
+        $remainingDue = $sale->grand_total - $paidSoFar;
+
+        if ($downPayment >= $remainingDue) {
+            throw new \Exception('Down payment cannot be equal to or greater than remaining amount. Use regular payment instead.');
+        }
+
+        // Record down payment
         Payment::create([
             'sale_id' => $sale->id,
-            'amount'  => $billPayment,
-            'method'  => 'advance',
-            'status'  => 'paid',
+            'customer_id' => $customer->id,
+            'amount' => $downPayment,
+            'method' => $request->method,
+            'status' => 'paid',
+            'remarks' => 'EMI_DOWN',
+            'transaction_id' => $request->transaction_id,
         ]);
+
+        // Create EMI plan
+        EmiPlan::create([
+            'sale_id' => $sale->id,
+            'total_amount' => $remainingDue,
+            'down_payment' => $downPayment,
+            'months' => $emiMonths,
+            'emi_amount' => $emiAmount,
+            'status' => 'running',
+        ]);
+
+        // Update sale status
+        $sale->payment_status = 'emi';
+        $sale->save();
+
+        // No change to customer balance for EMI
+        // Balance will be updated when monthly EMIs are paid
     }
 
-    /*
-    |----------------------------------------------------
-    | STEP 4: Update sale status
-    |----------------------------------------------------
-    */
-    if ($billPayment == $remainingBefore) {
-        $sale->payment_status = 'paid';
-    } else {
-        $sale->payment_status = 'partial';
-    }
+    /**
+     * Mark invoice as due (add to customer balance)
+     */
+    public function markAsDue(Sale $sale)
+    {
+        DB::beginTransaction();
 
-    /*
-    |----------------------------------------------------
-    | STEP 5: Handle EXTRA advance correctly
-    |----------------------------------------------------
-    | open_balance:
-    | +ve = due
-    | -ve = advance
-    */
-    if ($extraAdvance > 0) {
-        $customer->open_balance -= $extraAdvance;
-    }
+        try {
+            // Calculate paid amount
+            $paidAmount = Payment::where('sale_id', $sale->id)
+                ->where('status', 'paid')
+                ->where(function ($q) {
+                    $q->where('remarks', 'INVOICE')
+                        ->orWhere('remarks', 'EMI_DOWN');
+                })
+                ->sum('amount');
 
-    $sale->save();
-    $customer->save();
-    return;
-}
+            $remaining = $sale->grand_total - $paidAmount;
 
+            if ($remaining <= 0) {
+                return back()->with('error', 'Invoice is already fully paid.');
+            }
 
-            /* ================= EMI START ================= */
-           if ($request->method === 'emi') {
+            // Check if already marked as due
+            $alreadyDue = Payment::where('sale_id', $sale->id)
+                ->where('remarks', 'INVOICE_DUE')
+                ->exists();
 
-    $downPayment = $request->amount;
+            if ($alreadyDue) {
+                return back()->with('error', 'Invoice already marked as due.');
+            }
 
-    if ($downPayment >= $remainingBefore) {
-        throw new \Exception('EMI not allowed for full payment');
-    }
+            // Create due record
+            Payment::create([
+                'sale_id' => $sale->id,
+                'customer_id' => $sale->customer_id,
+                'amount' => $remaining,
+                'method' => 'due',
+                'status' => 'pending',
+                'remarks' => 'INVOICE_DUE',
+            ]);
 
-    Payment::create([
-        'sale_id' => $sale->id,
-        'amount'  => $downPayment,
-        'method'  => 'emi',
-        'status'  => 'paid',
-    ]);
+            // Update customer balance (positive = they owe us)
+            $customer = $sale->customer;
+            $customer->open_balance += $remaining;
+            $customer->save();
 
-    $emiRemaining = $remainingBefore - $downPayment;
+            DB::commit();
 
-    EmiPlan::create([
-        'sale_id'      => $sale->id,
-        'total_amount' => $remainingBefore,
-        'down_payment' => $downPayment,
-        'months'       => $request->emi_months,
-        'emi_amount'   => $request->emi_amount,
-        'status'       => 'running',
-    ]);
-
-    // 🔥 EMI due add ONLY ONCE
-    $customer->open_balance += $emiRemaining;
-
-    $sale->payment_status = 'emi';
-
-    $sale->save();
-    $customer->save();
-    return;
-}
-
-
-            /* ================= NORMAL PAYMENT ================= */
-          $paid = $request->amount;
-
-Payment::create([
-    'sale_id' => $sale->id,
-    'amount'  => $paid,
-    'method'  => $request->method,
-    'status'  => 'paid',
-]);
-
-$remainingAfter = max(0, $remainingBefore - $paid);
-
-// 🔥 same difference logic
-$customer->open_balance += ($remainingAfter - $remainingBefore);
-
-$sale->payment_status = $remainingAfter == 0 ? 'paid' : 'partial';
-
-$sale->save();
-$customer->save();
-
-        });
-
-        return redirect()
-            ->route('sales.show', $sale->id)
-            ->with('success', 'Payment processed successfully');
+            return back()->with('success', 'Invoice marked as due. ₹' . number_format($remaining, 2) . ' added to customer balance.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error marking invoice as due: ' . $e->getMessage());
+        }
     }
 }

@@ -145,17 +145,49 @@ Route::middleware('auth')->group(function () {
             ->name('admin.staff.approve');
     });
 
-    /* ================= SALES ================= */
-    Route::prefix('sales')->group(function () {
-        Route::get('/', [SalesController::class, 'index'])->name('sales.index');
-        Route::get('/create', [SalesController::class, 'create'])->name('sales.create');
-        Route::post('/', [SalesController::class, 'store'])->name('sales.store');
-        Route::get('/{sale}', [SalesController::class, 'show'])->name('sales.show');
-        Route::get('/{sale}/invoice', [SalesController::class, 'invoice'])->name('sales.invoice');
-        Route::get('/{sale}/edit', [SalesController::class, 'edit'])->name('sales.edit');
-        Route::put('/{sale}', [SalesController::class, 'update'])->name('sales.update');
-        Route::get('/{sale}/view', [SalesController::class, 'view'])->name('sales.view');
-    });
+      /* ================= SALES ================= */
+   /* ================= SALES ================= */
+Route::middleware('auth')->prefix('sales')->group(function () {
+
+    Route::get('/', [SalesController::class, 'index'])
+        ->name('sales.index');
+
+    Route::get('/create', [SalesController::class, 'create'])
+        ->name('sales.create');
+
+    Route::post('/', [SalesController::class, 'store'])
+        ->name('sales.store');
+
+    // ✅ DATATABLE (AJAX)
+    Route::get('/datatable', [SalesController::class, 'datatable'])
+        ->name('sales.datatable');
+
+    // ✅ STATS (AJAX)
+    Route::get('/stats', [SalesController::class, 'stats'])
+        ->name('sales.stats');
+
+    Route::get('/{sale}', [SalesController::class, 'show'])
+        ->name('sales.show');
+
+    Route::get('/{sale}/invoice', [SalesController::class, 'invoice'])
+        ->name('sales.invoice');
+
+    Route::get('/{sale}/edit', [SalesController::class, 'edit'])
+        ->name('sales.edit');
+
+    Route::put('/{sale}', [SalesController::class, 'update'])
+        ->name('sales.update');
+
+    Route::get('/{sale}/view', [SalesController::class, 'view'])
+        ->name('sales.view');
+
+
+        Route::delete('/{sale}', [SalesController::class, 'destroy'])
+        ->name('sales.destroy');
+
+        Route::post('/{sale}/mark-due', [PaymentController::class, 'markAsDue'])->name('sales.mark-due');
+});
+
 
     /* ================= PURCHASES ================= */
     Route::resource('purchases', PurchaseController::class);
