@@ -37,7 +37,8 @@ class PaymentController extends Controller
             ->where('status', 'paid')
             ->where(function ($q) {
                 $q->where('remarks', 'INVOICE')
-                    ->orWhere('remarks', 'EMI_DOWN');
+                    ->orWhere('remarks', 'EMI_DOWN')
+                    ->orWhere('remarks', 'ADVANCE_USED');
             })
             ->sum('amount');
 
@@ -145,9 +146,6 @@ class PaymentController extends Controller
     /**
      * Process invoice payment
      */
-    /**
-     * Process invoice payment
-     */
     private function processInvoicePayment($request, $sale, $customer)
     {
         $cashAmount = $request->payment_amount ?? 0;
@@ -243,7 +241,7 @@ class PaymentController extends Controller
 
         $newRemaining = $sale->grand_total - $newPaidAmount;
 
-        // Update sale payment status
+        // Update sale payment status - Using allowed enum values: unpaid, partial, paid, emi
         if ($newRemaining <= 0.01) { // Small tolerance for floating point
             $sale->payment_status = 'paid';
 
@@ -253,6 +251,8 @@ class PaymentController extends Controller
                 ->delete();
         } elseif ($newRemaining < $sale->grand_total) {
             $sale->payment_status = 'partial';
+        } else {
+            $sale->payment_status = 'unpaid'; // Changed from 'pending' to 'unpaid'
         }
 
         $sale->save();
@@ -337,7 +337,8 @@ class PaymentController extends Controller
                 ->where('status', 'paid')
                 ->where(function ($q) {
                     $q->where('remarks', 'INVOICE')
-                        ->orWhere('remarks', 'EMI_DOWN');
+                        ->orWhere('remarks', 'EMI_DOWN')
+                        ->orWhere('remarks', 'ADVANCE_USED');
                 })
                 ->sum('amount');
 
@@ -379,4 +380,263 @@ class PaymentController extends Controller
             return back()->with('error', 'Error marking invoice as due: ' . $e->getMessage());
         }
     }
+
+
+  public function deleteBulk($saleId)
+    {
+        DB::beginTransaction();
+
+        try {
+            $currentSale = Sale::lockForUpdate()->findOrFail($saleId);
+            $customer = Customer::lockForUpdate()->findOrFail($currentSale->customer_id);
+
+            // Get all payments for current sale
+            $currentPayments = Payment::where('sale_id', $saleId)->get();
+
+            if ($currentPayments->isEmpty()) {
+                return back()->with('error', 'No transactions found for this invoice.');
+            }
+
+            $transactionCount = $currentPayments->count();
+            $totalAmount = $currentPayments->sum('amount');
+
+            // STEP 1: Calculate advance generated from this invoice (EXCESS_TO_ADVANCE + ADVANCE_ONLY)
+            $advanceGenerated = $currentPayments
+                ->where('status', 'paid')
+                ->whereIn('remarks', ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY'])
+                ->sum('amount');
+
+            // STEP 2: Calculate advance used in this invoice
+            $advanceUsed = $currentPayments
+                ->where('status', 'paid')
+                ->where('remarks', 'ADVANCE_USED')
+                ->sum('amount');
+
+            // STEP 3: Find and delete advance used in OTHER invoices (jo advance generate hua tha yahan se)
+            if ($advanceGenerated > 0) {
+                // Find all ADVANCE_USED entries in OTHER invoices
+                $advanceUsedInOtherInvoices = Payment::where('customer_id', $customer->id)
+                    ->where('sale_id', '!=', $saleId) // Current invoice ke alawa
+                    ->where('remarks', 'ADVANCE_USED')
+                    ->where('status', 'paid')
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                $advanceToDelete = $advanceGenerated;
+                $deletedFromInvoices = [];
+
+                foreach ($advanceUsedInOtherInvoices as $advancePayment) {
+                    if ($advanceToDelete <= 0) break;
+
+                    $amountToDelete = min($advancePayment->amount, $advanceToDelete);
+
+                    if ($amountToDelete >= $advancePayment->amount) {
+                        // Poora payment delete karo
+                        $otherSaleId = $advancePayment->sale_id;
+                        $advancePayment->delete();
+
+                        // Store for recalculation
+                        if (!in_array($otherSaleId, $deletedFromInvoices)) {
+                            $deletedFromInvoices[] = $otherSaleId;
+                        }
+                    } else {
+                        // Partial delete - amount kam karo
+                        $advancePayment->amount -= $amountToDelete;
+                        $advancePayment->save();
+
+                        if (!in_array($advancePayment->sale_id, $deletedFromInvoices)) {
+                            $deletedFromInvoices[] = $advancePayment->sale_id;
+                        }
+                    }
+
+                    $advanceToDelete -= $amountToDelete;
+                }
+
+                // STEP 4: Recalculate all affected invoices
+                foreach ($deletedFromInvoices as $affectedSaleId) {
+                    $this->recalculateSingleInvoice($affectedSaleId);
+                }
+
+                // STEP 5: Update customer balance - Advance generated hat raha hai
+                // open_balance negative tha (advance), ab aur negative hoga? Ya positive?
+                // EXCESS_TO_ADVANCE: open_balance negative hota hai (customer ne advance diya)
+                // Isko delete karne se advance kam hoga, to open_balance positive ki taraf jayega
+                $customer->open_balance += $advanceGenerated;
+            }
+
+            // STEP 6: Handle advance used in current invoice
+            if ($advanceUsed > 0) {
+                // Jo advance use hua tha current invoice mein, wo ab wapas jayega
+                // open_balance negative tha, ab aur negative hoga (advance badhega)
+                $customer->open_balance -= $advanceUsed;
+            }
+
+            // STEP 7: Delete ALL payments of current invoice
+            foreach ($currentPayments as $payment) {
+                $payment->delete();
+            }
+
+            $customer->save();
+
+            // STEP 8: Update current invoice status to unpaid
+            $currentSale->payment_status = 'unpaid';
+            $currentSale->save();
+
+            // STEP 9: Delete EMI plan if exists
+            if ($currentSale->emiPlan) {
+                $currentSale->emiPlan->delete();
+            }
+
+            // STEP 10: Recalculate ALL invoices for this customer to ensure everything is correct
+            $this->recalculateAllCustomerInvoices($customer->id);
+
+            DB::commit();
+
+            $message = "✅ SMART DELETE COMPLETED!\n\n";
+            $message .= "📄 Invoice #{$currentSale->invoice_no}:\n";
+            $message .= "   - {$transactionCount} transactions deleted\n";
+            $message .= "   - Invoice is now UNPAID (Due: ₹" . number_format($currentSale->grand_total, 2) . ")\n\n";
+
+            if ($advanceGenerated > 0) {
+                $message .= "💰 ADVANCE IMPACT:\n";
+                $message .= "   - Advance generated: ₹" . number_format($advanceGenerated, 2) . "\n";
+                $message .= "   - Removed from " . count($deletedFromInvoices) . " other invoice(s)\n";
+                $message .= "   - Advance balance DECREASED by ₹" . number_format($advanceGenerated, 2) . "\n\n";
+            }
+
+            if ($advanceUsed > 0) {
+                $message .= "🔄 ADVANCE USAGE IMPACT:\n";
+                $message .= "   - Advance used in this invoice: ₹" . number_format($advanceUsed, 2) . "\n";
+                $message .= "   - Advance balance INCREASED by ₹" . number_format($advanceUsed, 2) . "\n\n";
+            }
+
+            $message .= "💰 NEW CUSTOMER BALANCE: ₹" . number_format($customer->open_balance, 2);
+
+            return redirect()->back()->with('success', nl2br($message));
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete single payment
+     */
+    public function destroy(Payment $payment)
+    {
+        DB::beginTransaction();
+
+        try {
+            $customer = Customer::lockForUpdate()->findOrFail($payment->customer_id);
+            $saleId = $payment->sale_id;
+            $remarks = $payment->remarks;
+            $amount = $payment->amount;
+
+            // Reverse the effect based on payment type
+            switch ($remarks) {
+                case 'ADVANCE_ONLY':
+                    // Customer gave advance, deleting it reduces advance balance
+                    $customer->open_balance += $amount;
+                    break;
+
+                case 'EXCESS_TO_ADVANCE':
+                    // Overpaid amount that went to advance
+                    $customer->open_balance += $amount;
+                    break;
+
+                case 'ADVANCE_USED':
+                    // Customer used advance for invoice
+                    $customer->open_balance -= $amount;
+                    break;
+
+                case 'INVOICE_DUE':
+                    // Invoice was marked as due
+                    $customer->open_balance -= $amount;
+                    break;
+
+                case 'INVOICE':
+                case 'EMI_DOWN':
+                    // Direct invoice payment - no effect on customer balance
+                    break;
+            }
+
+            $customer->save();
+
+            // Delete the payment
+            $payment->delete();
+
+            // Recalculate affected invoice
+            if ($saleId) {
+                $this->recalculateSingleInvoice($saleId);
+            }
+
+            // Recalculate all invoices (advance balance change)
+            $this->recalculateAllCustomerInvoices($customer->id);
+
+            DB::commit();
+
+            $balanceMsg = $customer->open_balance > 0 ?
+                "Due: ₹" . number_format($customer->open_balance, 2) :
+                "Advance: ₹" . number_format(abs($customer->open_balance), 2);
+
+            return redirect()->back()->with('success',
+                "✅ Transaction deleted successfully!\n" .
+                "Type: " . str_replace('_', ' ', $remarks) . "\n" .
+                "Amount: ₹" . number_format($amount, 2) . "\n" .
+                "New Balance: " . $balanceMsg
+            );
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Recalculate single invoice status
+     */
+    private function recalculateSingleInvoice($saleId)
+    {
+        $sale = Sale::find($saleId);
+        if (!$sale) return;
+
+        // Calculate total paid for this invoice
+        $totalPaid = Payment::where('sale_id', $saleId)
+            ->where('status', 'paid')
+            ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
+            ->sum('amount');
+
+        $grandTotal = $sale->grand_total;
+        $remaining = $grandTotal - $totalPaid;
+
+        // Determine new status
+        if ($remaining <= 0.01) {
+            $newStatus = 'paid';
+        } elseif ($totalPaid > 0) {
+            $newStatus = 'partial';
+        } else {
+            $newStatus = 'unpaid';
+        }
+
+        $sale->payment_status = $newStatus;
+        $sale->save();
+    }
+
+    /**
+     * Recalculate all invoices for a customer
+     */
+    private function recalculateAllCustomerInvoices($customerId)
+    {
+        $invoices = Sale::where('customer_id', $customerId)->get();
+
+        foreach ($invoices as $invoice) {
+            $this->recalculateSingleInvoice($invoice->id);
+        }
+    }
 }
+
+
+
+
+

@@ -8,6 +8,7 @@ use App\Models\Product;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
 {
@@ -36,6 +37,12 @@ class InventoryController extends Controller
             })
             ->get();
 
+        // Add image URLs to products
+        $products->transform(function ($product) {
+            $product->image_url = $this->getImageUrl($product->image);
+            return $product;
+        });
+
         // Calculate stats for filtered results
         $lowStockCount = $products->where('quantity', '<=', 10)->count();
         $totalValue = $products->sum(function ($product) {
@@ -59,26 +66,26 @@ class InventoryController extends Controller
         // Calculate statistics
         $lowStockCount = Product::where('quantity', '<=', 10)->count();
         $totalValue = Product::sum(DB::raw('price * quantity'));
-        $totalProducts = Product::count(); // यहाँ total count अलग से निकालें
         $categories = Product::distinct()->pluck('category')->sort();
 
-        return view('inventory.index', compact('products', 'lowStockCount', 'totalValue', 'totalProducts', 'categories'));
+        return view('inventory.index', compact('products', 'lowStockCount', 'totalValue', 'categories'));
     }
+
     // ================= DataTable AJAX Data Source =================
     private function getDataTableData(Request $request)
     {
         $draw = $request->get('draw');
         $start = $request->get("start");
-        $rowperpage = $request->get("length"); // Rows display per page
+        $rowperpage = $request->get("length");
         $columnIndex_arr = $request->get('order');
         $columnName_arr = $request->get('columns');
         $order_arr = $request->get('order');
         $search_arr = $request->get('search');
 
-        $columnIndex = $columnIndex_arr[0]['column']; // Column index
-        $columnName = $columnName_arr[$columnIndex]['data']; // Column name
-        $columnSortOrder = $order_arr[0]['dir']; // asc or desc
-        $searchValue = $search_arr['value']; // Search value
+        $columnIndex = $columnIndex_arr[0]['column'];
+        $columnName = $columnName_arr[$columnIndex]['data'];
+        $columnSortOrder = $order_arr[0]['dir'];
+        $searchValue = $search_arr['value'];
 
         // Total records
         $totalRecords = Product::select('count(*) as allcount')->count();
@@ -99,6 +106,7 @@ class InventoryController extends Controller
                 "quantity" => $record->quantity,
                 "price" => $record->price,
                 "category" => $record->category,
+                "image" => $this->getImageUrl($record->image),
                 "actions" => view('inventory.actions', ['product' => $record])->render()
             );
         }
@@ -113,6 +121,20 @@ class InventoryController extends Controller
         return response()->json($response);
     }
 
+    // ================= Helper function to get image URL =================
+    private function getImageUrl($image)
+    {
+        if (!$image) {
+            return asset('images/no-image.png');
+        }
+
+        if (filter_var($image, FILTER_VALIDATE_URL)) {
+            return $image;
+        }
+
+        return asset('storage/' . $image);
+    }
+
     // ================= CREATE =================
     public function create()
     {
@@ -123,25 +145,42 @@ class InventoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'quantity' => 'required|integer|min:0',
-            'price'    => 'required|numeric|min:0',
-            'category' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
+            'quantity'    => 'required|integer|min:0',
+            'price'       => 'required|numeric|min:0',
+            'category'    => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image_url'   => 'nullable|url',
         ]);
 
         // Generate product code
         $nextId = Product::max('id') + 1;
         $code = 'PRD' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
 
-        Product::create([
+        $data = [
             'product_code' => $code,
             'name'         => $request->name,
             'quantity'     => $request->quantity,
             'price'        => $request->price,
             'category'     => $request->category,
-        ]);
+            'description'  => $request->description,
+        ];
 
-        return redirect()->route('inventory.index')->with('success', 'Product added successfully!');
+        // Handle Image Upload
+        if ($request->hasFile('image')) {
+            // File upload
+            $imagePath = $request->file('image')->store('products', 'public');
+            $data['image'] = $imagePath;
+        } elseif ($request->filled('image_url')) {
+            // URL upload
+            $data['image'] = $request->image_url;
+        }
+
+        Product::create($data);
+
+        return redirect()->route('inventory.index')
+            ->with('success', 'Product added successfully with image!');
     }
 
     // ================= EDIT =================
@@ -155,21 +194,52 @@ class InventoryController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'quantity' => 'required|integer|min:0',
-            'price'    => 'required|numeric|min:0',
-            'category' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
+            'quantity'    => 'required|integer|min:0',
+            'price'       => 'required|numeric|min:0',
+            'category'    => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image_url'   => 'nullable|url',
         ]);
 
         $product = Product::findOrFail($id);
-        $product->update([
-            'name'     => $request->name,
-            'quantity' => $request->quantity,
-            'price'    => $request->price,
-            'category' => $request->category,
-        ]);
 
-        return redirect()->route('inventory.index')->with('success', 'Product updated successfully!');
+        $data = [
+            'name'        => $request->name,
+            'quantity'    => $request->quantity,
+            'price'       => $request->price,
+            'category'    => $request->category,
+            'description' => $request->description,
+        ];
+
+        // Handle Image Upload/Update
+        if ($request->hasFile('image')) {
+            // Delete old image if exists and is not URL
+            if ($product->image && !filter_var($product->image, FILTER_VALIDATE_URL)) {
+                Storage::disk('public')->delete($product->image);
+            }
+
+            // Upload new image
+            $imagePath = $request->file('image')->store('products', 'public');
+            $data['image'] = $imagePath;
+        }
+        elseif ($request->filled('image_url')) {
+            // URL upload
+            $data['image'] = $request->image_url;
+        }
+        elseif ($request->has('remove_image')) {
+            // Remove image
+            if ($product->image && !filter_var($product->image, FILTER_VALIDATE_URL)) {
+                Storage::disk('public')->delete($product->image);
+            }
+            $data['image'] = null;
+        }
+
+        $product->update($data);
+
+        return redirect()->route('inventory.index')
+            ->with('success', 'Product updated successfully!');
     }
 
     // ================= SHOW =================
@@ -183,9 +253,16 @@ class InventoryController extends Controller
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
+
+        // Delete image if exists and is not URL
+        if ($product->image && !filter_var($product->image, FILTER_VALIDATE_URL)) {
+            Storage::disk('public')->delete($product->image);
+        }
+
         $product->delete();
 
-        return redirect()->route('inventory.index')->with('success', 'Product deleted successfully!');
+        return redirect()->route('inventory.index')
+            ->with('success', 'Product deleted successfully!');
     }
 
     // ================= SIMPLE BARCODE PREVIEW =================

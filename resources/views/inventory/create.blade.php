@@ -1,7 +1,10 @@
 @extends('layouts.app')
 
+@section('page-title', 'Add New Product')
+
 @section('content')
-<div style="
+    <div
+        style="
     min-height: 100vh;
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     display: flex;
@@ -12,9 +15,10 @@
     margin-top: 70px;
 ">
 
-    @if(auth()->user()->role !== 'admin')
-    <!-- Unauthorized Access Card -->
-    <div style="
+        @if (auth()->user()->role !== 'admin')
+            <!-- Unauthorized Access Card -->
+            <div
+                style="
         max-width: 500px;
         width: 100%;
         background: white;
@@ -24,7 +28,8 @@
         text-align: center;
         border: 1px solid #e5e7eb;
     ">
-        <div style="
+                <div
+                    style="
             background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
             width: 80px;
             height: 80px;
@@ -35,29 +40,32 @@
             margin: 0 auto 25px auto;
             font-size: 32px;
         ">
-            🚫
-        </div>
+                    🚫
+                </div>
 
-        <h2 style="
+                <h2
+                    style="
             margin: 0 0 10px 0;
             font-size: 28px;
             font-weight: 800;
             color: #1f2937;
         ">
-            Access Restricted
-        </h2>
+                    Access Restricted
+                </h2>
 
-        <p style="
+                <p
+                    style="
             color: #6b7280;
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 30px;
         ">
-            Only administrators have permission to add new products to the inventory.
-            Please contact your system administrator for access.
-        </p>
+                    Only administrators have permission to add new products to the inventory.
+                    Please contact your system administrator for access.
+                </p>
 
-        <a href="{{ route('inventory.index') }}" style="
+                <a href="{{ route('inventory.index') }}"
+                    style="
             display: inline-flex;
             align-items: center;
             gap: 10px;
@@ -71,17 +79,17 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(59, 130, 246, 0.25);
         "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.35)';"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.25)';">
-            <span>←</span>
-            Back to Inventory
-        </a>
-    </div>
-
-    @else
-    <!-- Create Product Form -->
-    <div style="
-        max-width: 900px;
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.35)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.25)';">
+                    <span>←</span>
+                    Back to Inventory
+                </a>
+            </div>
+        @else
+            <!-- Create Product Form -->
+            <div
+                style="
+        max-width: 1000px;
         width: 100%;
         background: white;
         border-radius: 20px;
@@ -89,16 +97,18 @@
         box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
         border: 1px solid #e5e7eb;
     ">
-        <!-- Form Header -->
-        <div style="
+                <!-- Form Header -->
+                <div
+                    style="
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             padding: 30px;
             color: white;
             position: relative;
             overflow: hidden;
         ">
-            <!-- Background pattern -->
-            <div style="
+                    <!-- Background pattern -->
+                    <div
+                        style="
                 position: absolute;
                 right: -40px;
                 top: -40px;
@@ -107,8 +117,10 @@
                 background: rgba(255, 255, 255, 0.1);
                 border-radius: 50%;
                 transform: rotate(45deg);
-            "></div>
-            <div style="
+            ">
+                    </div>
+                    <div
+                        style="
                 position: absolute;
                 left: -60px;
                 bottom: -60px;
@@ -116,9 +128,11 @@
                 height: 180px;
                 background: rgba(255, 255, 255, 0.1);
                 border-radius: 50%;
-            "></div>
+            ">
+                    </div>
 
-            <div style="
+                    <div
+                        style="
                 display: flex;
                 align-items: center;
                 gap: 20px;
@@ -126,7 +140,8 @@
                 position: relative;
                 z-index: 1;
             ">
-                <div style="
+                        <div
+                            style="
                     background: rgba(255, 255, 255, 0.2);
                     backdrop-filter: blur(10px);
                     width: 70px;
@@ -137,41 +152,46 @@
                     justify-content: center;
                     font-size: 32px;
                 ">
-                    ➕
-                </div>
-                <div>
-                    <h2 style="
+                            ➕
+                        </div>
+                        <div>
+                            <h2
+                                style="
                         margin: 0;
                         font-size: 32px;
                         font-weight: 800;
                     ">
-                        Add New Product
-                    </h2>
-                    <p style="
+                                Add New Product
+                            </h2>
+                            <p
+                                style="
                         margin: 5px 0 0 0;
                         opacity: 0.9;
                         font-size: 16px;
                     ">
-                        Add a new item to your inventory
-                    </p>
+                                Add a new item to your inventory with image
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Form Content -->
-        <form method="POST" action="{{ route('inventory.store') }}" style="padding: 40px;">
-            @csrf
+                <!-- Form Content -->
+                <form method="POST" action="{{ route('inventory.store') }}" enctype="multipart/form-data"
+                    style="padding: 40px;">
+                    @csrf
 
-            <!-- Two Column Layout -->
-            <div style="
+                    <!-- Two Column Layout -->
+                    <div
+                        style="
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
                 gap: 30px;
-                margin-bottom: 40px;
+                margin-bottom: 30px;
             ">
-                <!-- Left Column - Basic Info -->
-                <div>
-                    <h3 style="
+                        <!-- Left Column - Basic Info -->
+                        <div>
+                            <h3
+                                style="
                         margin: 0 0 20px 0;
                         font-size: 20px;
                         font-weight: 700;
@@ -180,19 +200,21 @@
                         align-items: center;
                         gap: 10px;
                     ">
-                        <span style="
+                                <span
+                                    style="
                             background: #10b981;
                             width: 6px;
                             height: 20px;
                             border-radius: 3px;
                             display: inline-block;
                         "></span>
-                        Basic Information
-                    </h3>
+                                Basic Information
+                            </h3>
 
-                    <!-- Product Name -->
-                    <div style="margin-bottom: 25px;">
-                        <label style="
+                            <!-- Product Code -->
+                            <div style="margin-bottom: 25px;">
+                                <label
+                                    style="
                             display: block;
                             margin-bottom: 10px;
                             font-weight: 600;
@@ -202,7 +224,8 @@
                             align-items: center;
                             gap: 8px;
                         ">
-                            <span style="
+                                    <span
+                                        style="
                                 background: #dbeafe;
                                 width: 24px;
                                 height: 24px;
@@ -213,33 +236,36 @@
                                 font-size: 12px;
                                 color: #3b82f6;
                             ">
-                                📝
-                            </span>
-                            Product Name *
-                        </label>
-                        <input type="text"
-                               name="name"
-                               required
-                               placeholder="Enter product name"
-                               style="
+                                        🔢
+                                    </span>
+                                    Product Code *
+                                </label>
+                                <input type="text" name="product_code" value="{{ old('product_code') }}" required
+                                    placeholder="Enter unique product code"
+                                    style="
                                     width: 100%;
                                     padding: 16px 20px;
-                                    border: 2px solid #e5e7eb;
+                                    border: 2px solid {{ $errors->has('product_code') ? '#ef4444' : '#e5e7eb' }};
                                     border-radius: 12px;
                                     font-size: 16px;
                                     color: #1f2937;
                                     background: white;
                                     transition: all 0.3s ease;
                                "
-                               onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)';"
-                               onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                    </div>
+                                    onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                                    onblur="this.style.borderColor='{{ $errors->has('product_code') ? '#ef4444' : '#e5e7eb' }}'; this.style.boxShadow='none';">
+                                @error('product_code')
+                                    <p
+                                        style="color: #ef4444; font-size: 13px; margin-top: 5px; display: flex; align-items: center; gap: 5px;">
+                                        <span>⚠️</span> {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
 
-                   
-
-                    <!-- Category -->
-                    <div style="margin-bottom: 25px;">
-                        <label style="
+                            <!-- Product Name -->
+                            <div style="margin-bottom: 25px;">
+                                <label
+                                    style="
                             display: block;
                             margin-bottom: 10px;
                             font-weight: 600;
@@ -249,7 +275,59 @@
                             align-items: center;
                             gap: 8px;
                         ">
-                            <span style="
+                                    <span
+                                        style="
+                                background: #dbeafe;
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 6px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 12px;
+                                color: #3b82f6;
+                            ">
+                                        📝
+                                    </span>
+                                    Product Name *
+                                </label>
+                                <input type="text" name="name" value="{{ old('name') }}" required
+                                    placeholder="Enter product name"
+                                    style="
+                                    width: 100%;
+                                    padding: 16px 20px;
+                                    border: 2px solid {{ $errors->has('name') ? '#ef4444' : '#e5e7eb' }};
+                                    border-radius: 12px;
+                                    font-size: 16px;
+                                    color: #1f2937;
+                                    background: white;
+                                    transition: all 0.3s ease;
+                               "
+                                    onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                                    onblur="this.style.borderColor='{{ $errors->has('name') ? '#ef4444' : '#e5e7eb' }}'; this.style.boxShadow='none';">
+                                @error('name')
+                                    <p
+                                        style="color: #ef4444; font-size: 13px; margin-top: 5px; display: flex; align-items: center; gap: 5px;">
+                                        <span>⚠️</span> {{ $message }}
+                                    </p>
+                                @enderror
+                            </div>
+
+                            <!-- Category Field with ALL Categories -->
+                            <div style="margin-bottom: 25px;">
+                                <label
+                                    style="
+                            display: block;
+                            margin-bottom: 10px;
+                            font-weight: 600;
+                            color: #374151;
+                            font-size: 15px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        ">
+                                    <span
+                                        style="
                                 background: #e0e7ff;
                                 width: 24px;
                                 height: 24px;
@@ -260,61 +338,103 @@
                                 font-size: 12px;
                                 color: #6366f1;
                             ">
-                                🏷️
-                            </span>
-                            Category *
-                        </label>
-                        <select name="category"
-                                required
-                                style="
+                                        🏷️
+                                    </span>
+                                    Category
+                                </label>
+
+                                <!-- Category Dropdown with ALL Categories -->
+                                <select id="category_select" name="category" onchange="toggleCategoryInput(this)"
+                                    style="
                                     width: 100%;
                                     padding: 16px 20px;
-                                    border: 2px solid #e5e7eb;
+                                    border: 2px solid {{ $errors->has('category') ? '#ef4444' : '#e5e7eb' }};
                                     border-radius: 12px;
                                     font-size: 16px;
                                     color: #1f2937;
                                     background: white;
                                     transition: all 0.3s ease;
+                                    cursor: pointer;
+                                    margin-bottom: 10px;
                                "
-                               onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99, 102, 241, 0.1)';"
-                               onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                            <option value="">Select Category</option>
-                            <option value="Electronics">Electronics</option>
-                            <option value="Clothing">Clothing</option>
-                            <option value="Home & Kitchen">Home & Kitchen</option>
-                            <option value="Books">Books</option>
-                            <option value="Sports">Sports</option>
-                            <option value="Beauty">Beauty</option>
-                            <option value="Toys">Toys</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
+                                    onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99, 102, 241, 0.1)';"
+                                    onblur="this.style.borderColor='{{ $errors->has('category') ? '#ef4444' : '#e5e7eb' }}'; this.style.boxShadow='none';">
+                                    <option value="">Select Category</option>
 
-                <!-- Right Column - Stock & Pricing -->
-                <div>
-                    <h3 style="
-                        margin: 0 0 20px 0;
-                        font-size: 20px;
-                        font-weight: 700;
-                        color: #1f2937;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                    ">
-                        <span style="
-                            background: #8b5cf6;
-                            width: 6px;
-                            height: 20px;
-                            border-radius: 3px;
-                            display: inline-block;
-                        "></span>
-                        Stock & Pricing
-                    </h3>
+                                    <!-- Original Categories -->
+                                    <option value="Electronics" {{ old('category') == 'Electronics' ? 'selected' : '' }}>
+                                        📱 Electronics
+                                    </option>
+                                    <option value="Clothing" {{ old('category') == 'Clothing' ? 'selected' : '' }}>
+                                        👕 Clothing
+                                    </option>
+                                    <option value="Home & Kitchen"
+                                        {{ old('category') == 'Home & Kitchen' ? 'selected' : '' }}>
+                                        🏠 Home & Kitchen
+                                    </option>
+                                    <option value="Books" {{ old('category') == 'Books' ? 'selected' : '' }}>
+                                        📚 Books
+                                    </option>
+                                    <option value="Sports" {{ old('category') == 'Sports' ? 'selected' : '' }}>
+                                        ⚽ Sports
+                                    </option>
+                                    <option value="Beauty" {{ old('category') == 'Beauty' ? 'selected' : '' }}>
+                                        💄 Beauty
+                                    </option>
+                                    <option value="Toys" {{ old('category') == 'Toys' ? 'selected' : '' }}>
+                                        🧸 Toys
+                                    </option>
 
-                    <!-- Quantity -->
-                    <div style="margin-bottom: 25px;">
-                        <label style="
+                                    <!-- NEW CATEGORIES ADDED HERE -->
+                                    <option value="Stationery" {{ old('category') == 'Stationery' ? 'selected' : '' }}>
+                                        ✏️ Stationery
+                                    </option>
+                                    <option value="Household" {{ old('category') == 'Household' ? 'selected' : '' }}>
+                                        🧹 Household
+                                    </option>
+                                    <option value="Misc" {{ old('category') == 'Misc' ? 'selected' : '' }}>
+                                        📌 Misc
+                                    </option>
+                                    <option value="Grocery" {{ old('category') == 'Grocery' ? 'selected' : '' }}>
+                                        🛒 Grocery
+                                    </option>
+
+                                    <!-- Other (Custom) -->
+                                    <option value="Other" {{ old('category') == 'Other' ? 'selected' : '' }}>
+                                        ✨ Other (Custom)
+                                    </option>
+                                </select>
+
+                                <!-- Custom Category Input (Hidden by default) -->
+                                <div id="custom_category_container" style="display: none; margin-top: 10px;">
+                                    <input type="text" id="custom_category" name="custom_category"
+                                        value="{{ old('custom_category') }}" placeholder="Enter custom category name"
+                                        style="
+                                        width: 100%;
+                                        padding: 16px 20px;
+                                        border: 2px solid #8b5cf6;
+                                        border-radius: 12px;
+                                        font-size: 16px;
+                                        color: #1f2937;
+                                        background: #f5f3ff;
+                                        transition: all 0.3s ease;
+                                   "
+                                        onfocus="this.style.borderColor='#6d28d9'; this.style.boxShadow='0 0 0 3px rgba(109, 40, 217, 0.1)';"
+                                        onblur="this.style.borderColor='#8b5cf6'; this.style.boxShadow='none';">
+                                    <p style="font-size: 12px; color: #6b7280; margin-top: 5px;">
+                                        <span style="color: #8b5cf6;">✨</span> Enter your custom category name
+                                    </p>
+                                </div>
+
+                                @error('category')
+                                    <p style="color: #ef4444; font-size: 13px; margin-top: 5px;">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Description (Optional) -->
+                            <div style="margin-bottom: 25px;">
+                                <label
+                                    style="
                             display: block;
                             margin-bottom: 10px;
                             font-weight: 600;
@@ -324,7 +444,78 @@
                             align-items: center;
                             gap: 8px;
                         ">
-                            <span style="
+                                    <span
+                                        style="
+                                background: #fef3c7;
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 6px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                font-size: 12px;
+                                color: #f59e0b;
+                            ">
+                                        📝
+                                    </span>
+                                    Description
+                                </label>
+                                <textarea name="description" rows="4" placeholder="Enter product description (optional)"
+                                    style="
+                                    width: 100%;
+                                    padding: 16px 20px;
+                                    border: 2px solid #e5e7eb;
+                                    border-radius: 12px;
+                                    font-size: 16px;
+                                    color: #1f2937;
+                                    background: white;
+                                    transition: all 0.3s ease;
+                                    resize: vertical;
+                                    font-family: inherit;
+                                  "
+                                    onfocus="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 0 0 3px rgba(245, 158, 11, 0.1)';"
+                                    onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">{{ old('description') }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Right Column - Stock & Pricing -->
+                        <div>
+                            <h3
+                                style="
+                        margin: 0 0 20px 0;
+                        font-size: 20px;
+                        font-weight: 700;
+                        color: #1f2937;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    ">
+                                <span
+                                    style="
+                            background: #8b5cf6;
+                            width: 6px;
+                            height: 20px;
+                            border-radius: 3px;
+                            display: inline-block;
+                        "></span>
+                                Stock & Pricing
+                            </h3>
+
+                            <!-- Quantity -->
+                            <div style="margin-bottom: 25px;">
+                                <label
+                                    style="
+                            display: block;
+                            margin-bottom: 10px;
+                            font-weight: 600;
+                            color: #374151;
+                            font-size: 15px;
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        ">
+                                    <span
+                                        style="
                                 background: #fce7f3;
                                 width: 24px;
                                 height: 24px;
@@ -335,29 +526,27 @@
                                 font-size: 12px;
                                 color: #db2777;
                             ">
-                                📦
-                            </span>
-                            Initial Quantity *
-                        </label>
-                        <div style="position: relative;">
-                            <input type="number"
-                                   name="quantity"
-                                   required
-                                   min="0"
-                                   placeholder="0"
-                                   style="
+                                        📦
+                                    </span>
+                                    Initial Quantity *
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="number" name="quantity" value="{{ old('quantity', 0) }}" required
+                                        min="0" placeholder="0"
+                                        style="
                                         width: 100%;
                                         padding: 16px 20px 16px 50px;
-                                        border: 2px solid #e5e7eb;
+                                        border: 2px solid {{ $errors->has('quantity') ? '#ef4444' : '#e5e7eb' }};
                                         border-radius: 12px;
                                         font-size: 16px;
                                         color: #1f2937;
                                         background: white;
                                         transition: all 0.3s ease;
                                    "
-                                   onfocus="this.style.borderColor='#db2777'; this.style.boxShadow='0 0 0 3px rgba(219, 39, 119, 0.1)';"
-                                   onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                            <div style="
+                                        onfocus="this.style.borderColor='#db2777'; this.style.boxShadow='0 0 0 3px rgba(219, 39, 119, 0.1)';"
+                                        onblur="this.style.borderColor='{{ $errors->has('quantity') ? '#ef4444' : '#e5e7eb' }}'; this.style.boxShadow='none';">
+                                    <div
+                                        style="
                                 position: absolute;
                                 left: 20px;
                                 top: 50%;
@@ -366,14 +555,18 @@
                                 font-weight: 600;
                                 font-size: 14px;
                             ">
-                                Qty
+                                        Qty
+                                    </div>
+                                </div>
+                                @error('quantity')
+                                    <p style="color: #ef4444; font-size: 13px; margin-top: 5px;">{{ $message }}</p>
+                                @enderror
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- Price -->
-                    <div style="margin-bottom: 25px;">
-                        <label style="
+                            <!-- Price -->
+                            <div style="margin-bottom: 25px;">
+                                <label
+                                    style="
                             display: block;
                             margin-bottom: 10px;
                             font-weight: 600;
@@ -383,7 +576,8 @@
                             align-items: center;
                             gap: 8px;
                         ">
-                            <span style="
+                                    <span
+                                        style="
                                 background: #d1fae5;
                                 width: 24px;
                                 height: 24px;
@@ -394,30 +588,27 @@
                                 font-size: 12px;
                                 color: #10b981;
                             ">
-                                💰
-                            </span>
-                            Price (₹) *
-                        </label>
-                        <div style="position: relative;">
-                            <input type="number"
-                                   name="price"
-                                   required
-                                   step="0.01"
-                                   min="0"
-                                   placeholder="0.00"
-                                   style="
+                                        💰
+                                    </span>
+                                    Price (₹) *
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="number" name="price" value="{{ old('price', 0) }}" required
+                                        step="0.01" min="0" placeholder="0.00"
+                                        style="
                                         width: 100%;
                                         padding: 16px 20px 16px 50px;
-                                        border: 2px solid #e5e7eb;
+                                        border: 2px solid {{ $errors->has('price') ? '#ef4444' : '#e5e7eb' }};
                                         border-radius: 12px;
                                         font-size: 16px;
                                         color: #1f2937;
                                         background: white;
                                         transition: all 0.3s ease;
                                    "
-                                   onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
-                                   onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                            <div style="
+                                        onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
+                                        onblur="this.style.borderColor='{{ $errors->has('price') ? '#ef4444' : '#e5e7eb' }}'; this.style.boxShadow='none';">
+                                    <div
+                                        style="
                                 position: absolute;
                                 left: 20px;
                                 top: 50%;
@@ -426,17 +617,172 @@
                                 font-weight: 600;
                                 font-size: 14px;
                             ">
-                                ₹
+                                        ₹
+                                    </div>
+                                </div>
+                                @error('price')
+                                    <p style="color: #ef4444; font-size: 13px; margin-top: 5px;">{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Upload Section - Full Width -->
+                    <div
+                        style="
+                margin-bottom: 30px;
+                background: #f9fafb;
+                border-radius: 16px;
+                padding: 30px;
+                border: 2px dashed #e5e7eb;
+            ">
+                        <h3
+                            style="
+                    margin: 0 0 20px 0;
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: #1f2937;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                ">
+                            <span
+                                style="
+                        background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+                        width: 40px;
+                        height: 40px;
+                        border-radius: 10px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 20px;
+                        color: white;
+                    ">
+                                🖼️
+                            </span>
+                            Product Image
+                        </h3>
+
+                        <!-- Image Type Toggle -->
+                        <div
+                            style="
+                    display: flex;
+                    gap: 30px;
+                    margin-bottom: 25px;
+                    background: white;
+                    padding: 15px 20px;
+                    border-radius: 12px;
+                    border: 1px solid #e5e7eb;
+                ">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="radio" name="image_type" value="upload" checked
+                                    onclick="toggleImageInput('upload')" style="width: 18px; height: 18px;">
+                                <span
+                                    style="font-weight: 500; color: #374151; display: flex; align-items: center; gap: 5px;">
+                                    <span style="font-size: 18px;">📤</span> Upload File
+                                </span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="radio" name="image_type" value="url" onclick="toggleImageInput('url')"
+                                    style="width: 18px; height: 18px;">
+                                <span
+                                    style="font-weight: 500; color: #374151; display: flex; align-items: center; gap: 5px;">
+                                    <span style="font-size: 18px;">🔗</span> Image URL
+                                </span>
+                            </label>
+                        </div>
+
+                        <!-- File Upload Input -->
+                        <div id="upload-input" style="display: block;">
+                            <div style="
+                        background: white;
+                        border-radius: 12px;
+                        padding: 25px;
+                        text-align: center;
+                        border: 2px dashed #cbd5e1;
+                        transition: all 0.3s;
+                        cursor: pointer;
+                    "
+                                onclick="document.getElementById('fileInput').click()"
+                                onmouseover="this.style.borderColor='#8b5cf6'; this.style.background='#f5f3ff'"
+                                onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='white'">
+                                <div style="font-size: 40px; margin-bottom: 10px;">📸</div>
+                                <p style="font-weight: 600; color: #374151; margin: 0 0 5px 0;">Click to upload or drag and
+                                    drop</p>
+                                <p style="font-size: 13px; color: #6b7280; margin: 0;">JPG, PNG, GIF (Max: 2MB)</p>
+                                <input type="file" name="image" id="fileInput" accept="image/*"
+                                    style="display: none;" onchange="previewImage(this)">
                             </div>
                         </div>
 
+                        <!-- URL Input -->
+                        <div id="url-input" style="display: none;">
+                            <div style="position: relative;">
+                                <input type="url" name="image_url" id="imageUrl"
+                                    placeholder="https://example.com/image.jpg"
+                                    style="
+                                    width: 100%;
+                                    padding: 16px 20px;
+                                    border: 2px solid #e5e7eb;
+                                    border-radius: 12px;
+                                    font-size: 16px;
+                                    transition: all 0.3s;
+                               "
+                                    onfocus="this.style.borderColor='#8b5cf6'; this.style.boxShadow='0 0 0 3px rgba(139, 92, 246, 0.1)';"
+                                    onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';"
+                                    oninput="previewUrl(this.value)">
+                                <p style="font-size: 13px; color: #6b7280; margin-top: 8px;">
+                                    <span
+                                        style="background: #e0e7ff; padding: 2px 8px; border-radius: 4px; font-size: 12px;">🔗</span>
+                                    Enter direct image URL (must start with http:// or https://)
+                                </p>
+                            </div>
+                        </div>
 
+                        <!-- Image Preview Section -->
+                        <div id="image-preview"
+                            style="
+                    margin-top: 25px;
+                    display: none;
+                    background: white;
+                    border-radius: 12px;
+                    padding: 20px;
+                    border: 1px solid #e5e7eb;
+                ">
+                            <p
+                                style="font-weight: 600; color: #374151; margin: 0 0 15px 0; display: flex; align-items: center; gap: 8px;">
+                                <span
+                                    style="background: #8b5cf6; width: 4px; height: 18px; border-radius: 2px; display: inline-block;"></span>
+                                Image Preview
+                            </p>
+                            <div style="text-align: center;">
+                                <img id="preview-img" src="" alt="Preview"
+                                    style="
+                                max-width: 100%;
+                                max-height: 250px;
+                                border-radius: 12px;
+                                border: 2px solid #e5e7eb;
+                                padding: 5px;
+                                background: #f9fafb;
+                             "
+                                    onerror="this.onerror=null; this.src=''; document.getElementById('image-preview').style.display='none';">
+                            </div>
+                        </div>
 
+                        @error('image')
+                            <p style="color: #ef4444; font-size: 13px; margin-top: 10px;">{{ $message }}</p>
+                        @enderror
+                        @error('image_url')
+                            <p style="color: #ef4444; font-size: 13px; margin-top: 10px;">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-            </div>
+                    <!-- Hidden input to handle custom category -->
+                    <input type="hidden" name="use_custom_category" id="use_custom_category" value="0">
 
-            <!-- Action Buttons -->
-            <div style="
+                    <!-- Action Buttons -->
+                    <div
+                        style="
                 display: flex;
                 gap: 15px;
                 justify-content: flex-end;
@@ -444,7 +790,8 @@
                 border-top: 1px solid #e5e7eb;
                 flex-wrap: wrap;
             ">
-                <a href="{{ route('inventory.index') }}" style="
+                        <a href="{{ route('inventory.index') }}"
+                            style="
                     display: inline-flex;
                     align-items: center;
                     gap: 10px;
@@ -458,13 +805,14 @@
                     transition: all 0.3s ease;
                     border: 2px solid #e5e7eb;
                 "
-                onmouseover="this.style.backgroundColor='#f9fafb'; this.style.borderColor='#9ca3af';"
-                onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e5e7eb';">
-                    <span>←</span>
-                    Cancel
-                </a>
+                            onmouseover="this.style.backgroundColor='#f9fafb'; this.style.borderColor='#9ca3af';"
+                            onmouseout="this.style.backgroundColor='white'; this.style.borderColor='#e5e7eb';">
+                            <span>←</span>
+                            Cancel
+                        </a>
 
-                <button type="submit" style="
+                        <button type="submit"
+                            style="
                     display: inline-flex;
                     align-items: center;
                     gap: 10px;
@@ -479,75 +827,217 @@
                     transition: all 0.3s ease;
                     box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
                 "
-                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(16, 185, 129, 0.35)';"
-                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(16, 185, 129, 0.25)';">
-                    <span>💾</span>
-                    Save Product
-                </button>
+                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(16, 185, 129, 0.35)';"
+                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(16, 185, 129, 0.25)';">
+                            <span>💾</span>
+                            Save Product
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
+        @endif
     </div>
-    @endif
 
-</div>
+    <!-- JavaScript for Category and Image Handling -->
+    <script>
+        // ========== CATEGORY HANDLING ==========
+        function toggleCategoryInput(selectElement) {
+            const customContainer = document.getElementById('custom_category_container');
+            const customInput = document.getElementById('custom_category');
+            const useCustomHidden = document.getElementById('use_custom_category');
 
-<!-- Responsive adjustments -->
-<style>
-    /* Mobile responsiveness */
-    @media (max-width: 768px) {
-        div[style*="margin-left: 260px; margin-top: 70px;"] {
-            margin-left: 0 !important;
-            margin-top: 0 !important;
-            padding: 10px !important;
+            if (selectElement.value === 'Other') {
+                // Show custom input
+                customContainer.style.display = 'block';
+                useCustomHidden.value = '1';
+
+                // If coming from old input, keep the value
+                @if (old('custom_category'))
+                    customInput.value = '{{ old('custom_category') }}';
+                @endif
+            } else {
+                // Hide custom input
+                customContainer.style.display = 'none';
+                useCustomHidden.value = '0';
+                customInput.value = '';
+            }
         }
 
-        div[style*="max-width: 900px;"] {
-            margin: 10px !important;
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const categorySelect = document.getElementById('category_select');
+
+            // Check if old category is 'Other'
+            @if (old('category') === 'Other')
+                categorySelect.value = 'Other';
+                toggleCategoryInput(categorySelect);
+            @endif
+
+            // ========== IMAGE HANDLING ==========
+            @if (old('image_type') === 'url' && old('image_url'))
+                toggleImageInput('url');
+                document.querySelector('input[name="image_type"][value="url"]').checked = true;
+                document.getElementById('imageUrl').value = '{{ old('image_url') }}';
+                previewUrl('{{ old('image_url') }}');
+            @endif
+        });
+
+        // ========== IMAGE HANDLING FUNCTIONS ==========
+        function toggleImageInput(type) {
+            const uploadInput = document.getElementById('upload-input');
+            const urlInput = document.getElementById('url-input');
+            const preview = document.getElementById('image-preview');
+
+            if (type === 'upload') {
+                uploadInput.style.display = 'block';
+                urlInput.style.display = 'none';
+            } else {
+                uploadInput.style.display = 'none';
+                urlInput.style.display = 'block';
+            }
+
+            // Hide preview when switching
+            preview.style.display = 'none';
+            document.getElementById('preview-img').src = '';
         }
 
-        div[style*="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));"] {
-            grid-template-columns: 1fr !important;
+        function previewImage(input) {
+            const preview = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
         }
 
-        div[style*="padding: 40px;"] {
-            padding: 20px !important;
+        function previewUrl(url) {
+            const preview = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+
+            if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                previewImg.src = url;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+                previewImg.src = '';
+            }
         }
 
-        h2[style*="font-size: 32px;"] {
-            font-size: 24px !important;
-        }
-    }
+        // Form submit handling to ensure custom category is sent correctly
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const categorySelect = document.getElementById('category_select');
+            const customInput = document.getElementById('custom_category');
+            const useCustomHidden = document.getElementById('use_custom_category');
 
-    @media (max-width: 480px) {
-        div[style*="display: flex; justify-content: flex-end;"] {
-            flex-direction: column !important;
-            align-items: stretch !important;
+            if (categorySelect.value === 'Other' && customInput.value.trim() !== '') {
+                // Set the category select value to custom input value
+                // Create a hidden input to override the select
+                const hiddenCategory = document.createElement('input');
+                hiddenCategory.type = 'hidden';
+                hiddenCategory.name = 'category';
+                hiddenCategory.value = customInput.value.trim();
+
+                // Disable the original select so it doesn't get submitted
+                categorySelect.disabled = true;
+
+                // Add the hidden input
+                this.appendChild(hiddenCategory);
+            }
+        });
+    </script>
+
+    <!-- Responsive adjustments -->
+    <style>
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            div[style*="margin-left: 260px; margin-top: 70px;"] {
+                margin-left: 0 !important;
+                margin-top: 0 !important;
+                padding: 10px !important;
+            }
+
+            div[style*="max-width: 1000px;"] {
+                margin: 10px !important;
+            }
+
+            div[style*="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            div[style*="padding: 40px;"] {
+                padding: 20px !important;
+            }
+
+            h2[style*="font-size: 32px;"] {
+                font-size: 24px !important;
+            }
         }
 
-        a[style*="padding: 16px 30px;"],
-        button[style*="padding: 16px 30px;"] {
-            width: 100% !important;
-            justify-content: center !important;
+        @media (max-width: 480px) {
+            div[style*="display: flex; justify-content: flex-end;"] {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            a[style*="padding: 16px 30px;"],
+            button[style*="padding: 16px 30px;"] {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+
+            div[style*="padding: 30px;"] {
+                padding: 15px !important;
+            }
+
+            div[style*="display: flex; gap: 30px; margin-bottom: 25px;"] {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
         }
 
-        div[style*="padding: 30px;"] {
-            padding: 15px !important;
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-    }
 
-    /* Scrollbar styling */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-</style>
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Loading animation */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #8b5cf6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+    </style>
 @endsection

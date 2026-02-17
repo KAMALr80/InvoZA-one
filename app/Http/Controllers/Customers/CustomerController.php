@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Customers;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use Illuminate\Http\Request;
+use App\Models\Payment;
+use App\Models\Sale;
 
 class CustomerController extends Controller
 {
@@ -181,9 +183,50 @@ class CustomerController extends Controller
     {
         $sales = $customer->sales()
             ->with('items.product')
-            ->latest()
+             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return view('customers.sales', compact('customer', 'sales'));
     }
+
+
+
+public function payments(Customer $customer)
+{
+    // Get all invoices for this customer with pagination
+    $invoices = Sale::where('customer_id', $customer->id)
+        ->orderBy('sale_date', 'desc')
+        ->paginate(10, ['*'], 'invoices_page');
+
+    // Get all transactions for this customer with eager loading
+    $transactions = Payment::with('sale')
+        ->where('customer_id', $customer->id)
+        ->orderBy('created_at', 'desc')
+        ->paginate(20, ['*'], 'transactions_page');
+
+    // Calculate invoice statistics
+    $invoiceStats = [
+        'total' => Sale::where('customer_id', $customer->id)->count(),
+        'paid' => Sale::where('customer_id', $customer->id)->where('payment_status', 'paid')->count(),
+        'partial' => Sale::where('customer_id', $customer->id)->whereIn('payment_status', ['unpaid', 'partial'])->count(),
+    ];
+
+    // Calculate advance balance
+    $advanceBalance = $customer->open_balance < 0 ? abs($customer->open_balance) : 0;
+
+    // Calculate total money received from customer
+    $totalReceived = Payment::where('customer_id', $customer->id)
+        ->where('status', 'paid')
+        ->whereNotIn('remarks', ['INVOICE_DUE']) // Exclude due entries
+        ->sum('amount');
+
+    return view('customers.payments', compact(
+        'customer',
+        'invoices',
+        'transactions',
+        'invoiceStats',
+        'advanceBalance',
+        'totalReceived'
+    ));
+}
 }

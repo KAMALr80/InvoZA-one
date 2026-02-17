@@ -193,8 +193,10 @@
         </div>
 
         {{-- ================= PAYMENT DETAILS ================= --}}
-        <div style="background: #f8fafc; padding: 28px; border-radius: 16px; font-size: 15px; border: 1px solid #e5e7eb; margin-bottom: 32px;">
-            <h3 style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #374151; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; display: flex; align-items: center; gap: 10px;">
+        <div
+            style="background: #f8fafc; padding: 28px; border-radius: 16px; font-size: 15px; border: 1px solid #e5e7eb; margin-bottom: 32px;">
+            <h3
+                style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #374151; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; display: flex; align-items: center; gap: 10px;">
                 💳 Payment Details
             </h3>
 
@@ -202,7 +204,7 @@
                 // Calculate total paid for this invoice only - INCLUDE ADVANCE_USED
                 $totalPaid = $sale->payments
                     ->where('status', 'paid')
-                    ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED']) // FIXED: Added ADVANCE_USED
+                    ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
                     ->sum('amount');
 
                 $remaining = max(0, $sale->grand_total - $totalPaid);
@@ -215,16 +217,47 @@
 
                 // Check if this invoice has been marked as due
                 $hasDueRecord = $sale->payments->where('remarks', 'INVOICE_DUE')->isNotEmpty();
+
+                // Calculate advance generated from this invoice
+                $advanceGenerated = $sale->payments
+                    ->where('status', 'paid')
+                    ->whereIn('remarks', ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY'])
+                    ->sum('amount');
+
+                // Calculate advance used in this invoice
+                $advanceUsed = $sale->payments
+                    ->where('status', 'paid')
+                    ->where('remarks', 'ADVANCE_USED')
+                    ->sum('amount');
             @endphp
+
+            {{-- Success/Error Messages --}}
+            @if (session('success'))
+                <div
+                    style="background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">✅</span>
+                    <span>{!! session('success') !!}</span>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div
+                    style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">❌</span>
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
 
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px;">
                 <div>
                     <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Total Paid (This Invoice)</div>
-                    <div style="font-size: 20px; font-weight: 700; color: #059669;">₹ {{ number_format($totalPaid, 2) }}</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #059669;">₹ {{ number_format($totalPaid, 2) }}
+                    </div>
                 </div>
                 <div>
                     <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Remaining (This Invoice)</div>
-                    <div style="font-size: 20px; font-weight: 700; color: #dc2626;">₹ {{ number_format($remaining, 2) }}</div>
+                    <div style="font-size: 20px; font-weight: 700; color: #dc2626;">₹ {{ number_format($remaining, 2) }}
+                    </div>
                 </div>
                 <div>
                     <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Status</div>
@@ -235,7 +268,8 @@
             </div>
 
             @if ($sale->customer)
-                <div style="background: #ffffff; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                <div
+                    style="background: #ffffff; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
                     <h4 style="margin: 0 0 14px 0; font-size: 16px; font-weight: 600; color: #4b5563;">
                         👤 Customer Account Balance
                     </h4>
@@ -244,20 +278,23 @@
                         @if ($dueBalance > 0)
                             <div style="background:#fee2e2;padding:12px;border-radius:10px;">
                                 <div style="color:#6b7280; font-size:13px;">Total Due (All Invoices)</div>
-                                <div style="color:#b91c1c;font-weight:700;font-size:18px;">₹ {{ number_format($dueBalance, 2) }}</div>
+                                <div style="color:#b91c1c;font-weight:700;font-size:18px;">₹
+                                    {{ number_format($dueBalance, 2) }}</div>
                             </div>
                         @endif
 
                         @if ($advanceBalance > 0)
                             <div style="background:#dcfce7;padding:12px;border-radius:10px;">
                                 <div style="color:#6b7280; font-size:13px;">Advance Balance</div>
-                                <div style="color:#166534;font-weight:700;font-size:18px;">₹ {{ number_format($advanceBalance, 2) }}</div>
+                                <div style="color:#166534;font-weight:700;font-size:18px;">₹
+                                    {{ number_format($advanceBalance, 2) }}</div>
                             </div>
                         @endif
 
                         @if ($dueBalance == 0 && $advanceBalance == 0)
                             <div style="background:#f1f5f9;padding:12px;border-radius:10px; grid-column: span 2;">
-                                <div style="color:#475569;font-weight:600;text-align:center;">Account Clear - No Due or Advance</div>
+                                <div style="color:#475569;font-weight:600;text-align:center;">Account Clear - No Due or
+                                    Advance</div>
                             </div>
                         @endif
                     </div>
@@ -277,8 +314,27 @@
                             </div>
                         </div>
 
+                        @if ($advanceGenerated > 0)
+                            <div
+                                style="margin-top: 10px; padding: 8px; background: #dbeafe; border-radius: 8px; text-align: center;">
+                                <span style="color: #1e40af; font-weight: 600;">
+                                    💰 This invoice generated ₹{{ number_format($advanceGenerated, 2) }} advance
+                                </span>
+                            </div>
+                        @endif
+
+                        @if ($advanceUsed > 0)
+                            <div
+                                style="margin-top: 10px; padding: 8px; background: #ede9fe; border-radius: 8px; text-align: center;">
+                                <span style="color: #6d28d9; font-weight: 600;">
+                                    🔄 This invoice used ₹{{ number_format($advanceUsed, 2) }} advance from other invoices
+                                </span>
+                            </div>
+                        @endif
+
                         @if ($remaining > 0 && !$hasDueRecord)
-                            <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 8px; text-align: center;">
+                            <div
+                                style="margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 8px; text-align: center;">
                                 <span style="color: #856404; font-weight: 600;">
                                     ⚠️ This invoice has ₹{{ number_format($remaining, 2) }} due.
                                     Click "Mark as Due" to add to customer's balance.
@@ -287,7 +343,8 @@
                         @endif
 
                         @if ($hasDueRecord)
-                            <div style="margin-top: 10px; padding: 8px; background: #fee2e2; border-radius: 8px; text-align: center;">
+                            <div
+                                style="margin-top: 10px; padding: 8px; background: #fee2e2; border-radius: 8px; text-align: center;">
                                 <span style="color: #b91c1c; font-weight: 600;">
                                     📝 This invoice amount has been added to customer's due balance.
                                 </span>
@@ -295,7 +352,8 @@
                         @endif
 
                         @if ($isFullyPaid)
-                            <div style="margin-top: 10px; padding: 8px; background: #dcfce7; border-radius: 8px; text-align: center;">
+                            <div
+                                style="margin-top: 10px; padding: 8px; background: #dcfce7; border-radius: 8px; text-align: center;">
                                 <span style="color: #166534; font-weight: 600;">
                                     ✅ This invoice is fully paid!
                                 </span>
@@ -306,8 +364,10 @@
             @endif
 
             @if ($sale->payment_status === 'emi' && $sale->emiPlan)
-                <div style="background: #ffffff; padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
-                    <h4 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: #4b5563; display: flex; align-items: center; gap: 8px;">
+                <div
+                    style="background: #ffffff; padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                    <h4
+                        style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: #4b5563; display: flex; align-items: center; gap: 8px;">
                         📆 EMI Details
                     </h4>
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
@@ -325,7 +385,8 @@
                         </div>
                         <div>
                             <div style="color: #6b7280; font-size: 14px;">Status</div>
-                            <div style="font-weight: 600; color: {{ $sale->emiPlan->status === 'completed' ? '#16a34a' : ($sale->emiPlan->status === 'running' ? '#f59e0b' : '#dc2626') }};">
+                            <div
+                                style="font-weight: 600; color: {{ $sale->emiPlan->status === 'completed' ? '#16a34a' : ($sale->emiPlan->status === 'running' ? '#f59e0b' : '#dc2626') }};">
                                 {{ strtoupper($sale->emiPlan->status) }}
                             </div>
                         </div>
@@ -341,7 +402,8 @@
                     @endif
 
                     @if ($sale->emiPlan->status === 'completed')
-                        <div style="margin-top: 16px; padding: 12px; background: #dcfce7; border-radius: 8px; text-align: center; color: #166534; font-weight: 600;">
+                        <div
+                            style="margin-top: 16px; padding: 12px; background: #dcfce7; border-radius: 8px; text-align: center; color: #166534; font-weight: 600;">
                             ✅ EMI Completed – Invoice Fully Paid
                         </div>
                     @endif
@@ -350,9 +412,29 @@
 
             @if ($sale->payments->count() > 0)
                 <div>
-                    <h4 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: #4b5563; display: flex; align-items: center; gap: 8px;">
-                        📋 Payment History
-                    </h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #4b5563; display: flex; align-items: center; gap: 8px;">
+                            📋 Payment History ({{ $sale->payments->count() }} transactions)
+                        </h4>
+
+                        {{-- DELETE ALL BUTTON --}}
+                        @if($sale->payments->count() > 1)
+                            <form method="POST" action="{{ route('payments.delete-bulk', $sale->id) }}"
+                                  onsubmit="return confirmSmartDelete('{{ $sale->invoice_no }}', {{ $sale->payments->count() }}, {{ $sale->payments->sum('amount') }}, {{ $advanceGenerated }}, {{ $advanceUsed }})"
+                                  style="display: inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;"
+                                        onmouseover="this.style.background='#b91c1c'"
+                                        onmouseout="this.style.background='#dc2626'"
+                                        title="Smart Delete - Removes advance from other invoices">
+                                    🧠 Smart Delete All
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+
                     <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                         <thead>
                             <tr style="background: #f1f5f9;">
@@ -362,36 +444,106 @@
                                 <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">Type</th>
                                 <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">Status</th>
                                 <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: left;">Date</th>
+                                <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                // Calculate totals for summary
+                                $totalInvoicePayments = $sale->payments
+                                    ->where('status', 'paid')
+                                    ->whereIn('remarks', ['INVOICE', 'EMI_DOWN'])
+                                    ->sum('amount');
+
+                                $totalExcessPayments = $sale->payments
+                                    ->where('status', 'paid')
+                                    ->where('remarks', 'EXCESS_TO_ADVANCE')
+                                    ->sum('amount');
+
+                                $totalAdvanceUsed = $sale->payments
+                                    ->where('status', 'paid')
+                                    ->where('remarks', 'ADVANCE_USED')
+                                    ->sum('amount');
+
+                                $grandTotalPaid = $totalInvoicePayments + $totalExcessPayments + $totalAdvanceUsed;
+                            @endphp
+
+                            {{-- SUMMARY ROW --}}
+                            @if($grandTotalPaid > 0)
+                                <tr style="background: #f0f9ff; border-bottom: 2px solid #2563eb; font-weight: 700;">
+                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">—</td>
+                                    <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: 600;">TOTAL</td>
+                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: right; font-size: 16px; color: #2563eb;">
+                                        ₹ {{ number_format($grandTotalPaid, 2) }}
+                                    </td>
+                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;" colspan="4">
+                                        <span style="background: #2563eb; color: white; padding: 4px 12px; border-radius: 20px;">
+                                            Combined Total
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endif
+
                             @foreach ($sale->payments as $i => $payment)
                                 @php
-                                    $typeColor = match($payment->remarks) {
+                                    $typeColor = match ($payment->remarks) {
                                         'INVOICE', 'EMI_DOWN' => '#059669',
                                         'ADVANCE_USED' => '#8b5cf6',
                                         'EXCESS_TO_ADVANCE', 'ADVANCE_ONLY' => '#f59e0b',
                                         'INVOICE_DUE' => '#dc2626',
-                                        default => '#6b7280'
+                                        default => '#6b7280',
+                                    };
+
+                                    $effectText = match($payment->remarks) {
+                                        'INVOICE', 'EMI_DOWN' => 'Paid to invoice',
+                                        'ADVANCE_USED' => 'Used from advance',
+                                        'EXCESS_TO_ADVANCE' => 'Added to advance',
+                                        'ADVANCE_ONLY' => 'Pure advance',
+                                        'INVOICE_DUE' => 'Marked as due',
+                                        default => $payment->remarks
                                     };
                                 @endphp
                                 <tr>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">{{ $i + 1 }}</td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: 600;">{{ strtoupper($payment->method) }}</td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #059669;">
+                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">
+                                        {{ $i + 1 }}
+                                    </td>
+                                    <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: 600;">
+                                        {{ strtoupper($payment->method) }}
+                                    </td>
+                                    <td
+                                        style="padding: 12px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #059669;">
                                         ₹ {{ number_format($payment->amount, 2) }}
                                     </td>
                                     <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                        <span style="padding: 4px 12px; border-radius: 20px; font-weight: 600; background: #f3f4f6; color: {{ $typeColor }};">
+                                        <span
+                                            style="padding: 4px 12px; border-radius: 20px; font-weight: 600; background: #f3f4f6; color: {{ $typeColor }};">
                                             {{ str_replace('_', ' ', $payment->remarks) }}
                                         </span>
+                                        <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">{{ $effectText }}</div>
                                     </td>
                                     <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                        <span style="padding: 4px 12px; border-radius: 20px; font-weight: 600; background: {{ $payment->status === 'paid' ? '#dcfce7' : '#fef3c7' }}; color: {{ $payment->status === 'paid' ? '#166534' : '#92400e' }};">
+                                        <span
+                                            style="padding: 4px 12px; border-radius: 20px; font-weight: 600; background: {{ $payment->status === 'paid' ? '#dcfce7' : '#fef3c7' }}; color: {{ $payment->status === 'paid' ? '#166534' : '#92400e' }};">
                                             {{ ucfirst($payment->status) }}
                                         </span>
                                     </td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb;">{{ $payment->created_at->format('d M Y - h:i A') }}</td>
+                                    <td style="padding: 12px; border: 1px solid #e5e7eb;">
+                                        {{ $payment->created_at->format('d M Y - h:i A') }}
+                                    </td>
+                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">
+                                        <form method="POST" action="{{ route('payments.destroy', $payment->id) }}"
+                                              onsubmit="return confirmDelete('{{ $payment->remarks }}', {{ $payment->amount }}, '{{ $sale->invoice_no }}', {{ $advanceGenerated }}, {{ $advanceUsed }})"
+                                              style="display: inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    style="background: #fee2e2; color: #dc2626; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;"
+                                                    onmouseover="this.style.background='#fecaca'"
+                                                    onmouseout="this.style.background='#fee2e2'">
+                                                🗑️ Delete
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -401,13 +553,14 @@
 
             {{-- Action Buttons --}}
             @if ($remaining > 0 && $sale->payment_status !== 'emi')
-                <div style="margin-top: 24px; text-align: center; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <div
+                    style="margin-top: 24px; text-align: center; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                     <a href="{{ route('payments.create', $sale->id) }}"
                         style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
                         ➕ Add Payment
                     </a>
 
-                    @if(!$hasDueRecord)
+                    @if (!$hasDueRecord)
                         <form method="POST" action="{{ route('sales.mark-due', $sale->id) }}" style="display: inline;">
                             @csrf
                             <button type="submit"
@@ -422,7 +575,8 @@
 
             {{-- Show "Invoice Fully Paid" message when fully paid --}}
             @if ($isFullyPaid)
-                <div style="margin-top: 24px; text-align: center; background: #dcfce7; padding: 15px; border-radius: 12px;">
+                <div
+                    style="margin-top: 24px; text-align: center; background: #dcfce7; padding: 15px; border-radius: 12px;">
                     <span style="color: #166534; font-weight: 600; font-size: 16px;">
                         ✅ This invoice is fully paid. No further payments required.
                     </span>
@@ -431,7 +585,8 @@
 
             {{-- Show EMI specific message --}}
             @if ($sale->payment_status === 'emi')
-                <div style="margin-top: 24px; text-align: center; background: #fffbeb; padding: 15px; border-radius: 12px;">
+                <div
+                    style="margin-top: 24px; text-align: center; background: #fffbeb; padding: 15px; border-radius: 12px;">
                     <span style="color: #92400e; font-weight: 600; font-size: 16px;">
                         📆 This invoice is under EMI. Please pay monthly EMIs only.
                     </span>
@@ -446,3 +601,82 @@
         </div>
     </div>
 @endsection
+
+<script>
+function confirmSmartDelete(invoiceNo, transactionCount, totalAmount, advanceGenerated, advanceUsed) {
+    let message = `🧠 SMART DELETE\n\n`;
+    message += `Invoice: #${invoiceNo}\n`;
+    message += `Total Transactions: ${transactionCount}\n`;
+    message += `Total Amount: ₹${totalAmount.toFixed(2)}\n\n`;
+
+    if (advanceGenerated > 0) {
+        message += `💰 This invoice GENERATED ₹${advanceGenerated.toFixed(2)} ADVANCE\n`;
+        message += `📍 This advance was used in OTHER invoices\n\n`;
+    }
+
+    if (advanceUsed > 0) {
+        message += `🔄 This invoice USED ₹${advanceUsed.toFixed(2)} ADVANCE\n`;
+        message += `📍 This advance came from OTHER invoices\n\n`;
+    }
+
+    message += `📌 WHAT WILL HAPPEN:\n`;
+    message += `✅ This invoice → ALL transactions deleted (UNPAID)\n`;
+
+    if (advanceGenerated > 0) {
+        message += `✅ OTHER invoices → ADVANCE USED entries will be deleted\n`;
+        message += `✅ OTHER invoices → CASH payments will REMAIN\n`;
+        message += `✅ Advance balance will DECREASE by ₹${advanceGenerated.toFixed(2)}\n\n`;
+    }
+
+    if (advanceUsed > 0) {
+        message += `✅ Advance balance will INCREASE by ₹${advanceUsed.toFixed(2)}\n\n`;
+    }
+
+    message += `✅ All invoice statuses will be recalculated\n\n`;
+
+    message += `Are you sure you want to proceed?`;
+
+    return confirm(message);
+}
+
+function confirmDelete(remarks, amount, invoiceNo, advanceGenerated, advanceUsed) {
+    let message = `⚠️ DELETE TRANSACTION\n\n`;
+    message += `Type: ${remarks.replace(/_/g, ' ')}\n`;
+    message += `Amount: ₹${amount.toFixed(2)}\n`;
+    message += `Invoice: #${invoiceNo}\n\n`;
+
+    message += `📌 EFFECT ON BALANCE:\n`;
+
+    switch(remarks) {
+        case 'INVOICE':
+        case 'EMI_DOWN':
+            message += `• Invoice due will INCREASE by ₹${amount.toFixed(2)}\n`;
+            message += `• No effect on advance balance\n`;
+            break;
+
+        case 'EXCESS_TO_ADVANCE':
+            message += `• Advance balance will DECREASE by ₹${amount.toFixed(2)}\n`;
+            message += `• Other invoices using this advance will lose it\n`;
+            break;
+
+        case 'ADVANCE_USED':
+            message += `• Advance balance will INCREASE by ₹${amount.toFixed(2)}\n`;
+            message += `• Invoice due will INCREASE by ₹${amount.toFixed(2)}\n`;
+            message += `• The invoice that generated this advance gets it back\n`;
+            break;
+
+        case 'ADVANCE_ONLY':
+            message += `• Advance balance will DECREASE by ₹${amount.toFixed(2)}\n`;
+            break;
+
+        case 'INVOICE_DUE':
+            message += `• Customer due will DECREASE by ₹${amount.toFixed(2)}\n`;
+            break;
+    }
+
+    message += `\n⚠️ All related invoices will be recalculated.\n\n`;
+    message += `Are you sure?`;
+
+    return confirm(message);
+}
+</script>

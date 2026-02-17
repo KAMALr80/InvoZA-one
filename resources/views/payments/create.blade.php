@@ -89,7 +89,7 @@
                 </div>
             </div>
             @endif
-
+z
             {{-- Payment Form --}}
             <form method="POST" action="{{ route('payments.store') }}" id="paymentForm">
                 @csrf
@@ -133,16 +133,29 @@
                                 <input type="number" id="advanceUsed" name="advance_used" min="0" max="{{ $advanceBalance }}" step="0.01" value="0"
                                     style="width:100%;padding:15px;border:2px solid #86efac;border-radius:12px;font-size:18px;"
                                     placeholder="Enter amount">
+                                <div style="display:flex;gap:10px;margin-top:10px;">
+                                    <button type="button" class="advance-quick-btn" data-amount="{{ min($advanceBalance, $remaining) }}"
+                                        style="flex:1;padding:8px;background:#86efac;border:none;border-radius:8px;font-weight:600;cursor:pointer;">
+                                        Full (₹{{ number_format(min($advanceBalance, $remaining), 2) }})
+                                    </button>
+                                    <button type="button" class="advance-quick-btn" data-amount="{{ min($advanceBalance/2, $remaining) }}"
+                                        style="flex:1;padding:8px;background:#86efac;border:none;border-radius:8px;font-weight:600;cursor:pointer;">
+                                        50%
+                                    </button>
+                                </div>
                                 <p style="color:#166534;font-size:14px;margin-top:8px;">Remaining advance: ₹<span id="remainingAdvance">{{ number_format($advanceBalance, 2) }}</span></p>
                             </div>
                         </div>
                         @endif
 
-                        {{-- Cash Payment --}}
+                        {{-- Cash Payment with Auto-calculation --}}
                         <div style="margin-bottom:25px;">
                             <label style="font-weight:600;margin-bottom:10px;display:block;">💰 Cash/Other Payment Amount</label>
-                            <input type="number" name="payment_amount" id="paymentAmount" step="0.01" min="0" value="{{ $remaining > 0 ? $remaining : 0 }}"
-                                style="width:100%;padding:18px;border:2px solid #e2e8f0;border-radius:16px;font-size:20px;">
+                            <div style="display:flex;gap:10px;align-items:center;">
+                                <input type="number" name="payment_amount" id="paymentAmount" step="0.01" min="0" value="{{ $remaining > 0 ? $remaining : 0 }}"
+                                    style="flex:1;padding:18px;border:2px solid #e2e8f0;border-radius:16px;font-size:20px;">
+                                <span id="calculatedHint" style="background:#e2e8f0;padding:10px 15px;border-radius:12px;font-weight:600;display:none;"></span>
+                            </div>
 
                             {{-- Quick Buttons --}}
                             <div style="display:flex;gap:10px;margin-top:15px;">
@@ -296,8 +309,8 @@
 .method-card { transition: all 0.2s; }
 .method-card:hover { transform: translateY(-2px); }
 .tab-btn { transition: all 0.2s; }
-.quick-btn, .quick-advance { transition: all 0.2s; cursor: pointer; }
-.quick-btn:hover, .quick-advance:hover { background: #2563eb !important; color: white !important; }
+.quick-btn, .quick-advance, .advance-quick-btn { transition: all 0.2s; cursor: pointer; }
+.quick-btn:hover, .quick-advance:hover, .advance-quick-btn:hover { background: #2563eb !important; color: white !important; }
 input:focus, select:focus { outline: none; border-color: #2563eb !important; }
 </style>
 
@@ -321,6 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const remainingAdvance = document.getElementById('remainingAdvance');
     const paymentPreview = document.getElementById('paymentPreview');
     const paymentType = document.getElementById('payment_type');
+    const calculatedHint = document.getElementById('calculatedHint');
 
     const downPayment = document.getElementById('downPayment');
     const emiMonths = document.getElementById('emiMonths');
@@ -328,6 +342,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const advanceBalance = {{ $advanceBalance }};
     const dueAmount = {{ $remaining }};
+
+    // Auto-calculate cash amount when advance changes
+    function autoCalculateCash() {
+        if (useAdvanceCheckbox && useAdvanceCheckbox.checked) {
+            const advance = parseFloat(advanceUsed.value) || 0;
+            const remainingAfterAdvance = Math.max(0, dueAmount - advance);
+
+            // Show hint but don't auto-update the field (user can override)
+            if (remainingAfterAdvance >= 0) {
+                calculatedHint.textContent = `Suggested: ₹${remainingAfterAdvance.toFixed(2)}`;
+                calculatedHint.style.display = 'inline-block';
+            }
+        } else {
+            calculatedHint.style.display = 'none';
+        }
+    }
+
+    // Apply suggested amount
+    function applySuggestedAmount() {
+        if (useAdvanceCheckbox && useAdvanceCheckbox.checked) {
+            const advance = parseFloat(advanceUsed.value) || 0;
+            const suggested = Math.max(0, dueAmount - advance);
+            paymentAmount.value = suggested.toFixed(2);
+            updatePaymentPreview();
+        }
+    }
 
     // Tab Switching
     tabInvoice.addEventListener('click', function() {
@@ -431,7 +471,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Quick Advance Buttons
+    // Advance Quick Buttons
+    document.querySelectorAll('.advance-quick-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            advanceUsed.value = parseFloat(this.dataset.amount).toFixed(2);
+            // Trigger input event
+            const event = new Event('input', { bubbles: true });
+            advanceUsed.dispatchEvent(event);
+        });
+    });
+
+    // Quick Advance Buttons (Pure Advance)
     document.querySelectorAll('.quick-advance').forEach(btn => {
         btn.addEventListener('click', function() {
             document.getElementById('advanceAmount').value = this.dataset.amount;
@@ -444,8 +494,15 @@ document.addEventListener('DOMContentLoaded', function() {
             advanceUseBox.style.display = this.checked ? 'block' : 'none';
             if (!this.checked) {
                 advanceUsed.value = 0;
+                calculatedHint.style.display = 'none';
+            } else {
+                // Auto-set advance to either full available or remaining due
+                const suggestedAdvance = Math.min(advanceBalance, dueAmount);
+                advanceUsed.value = suggestedAdvance.toFixed(2);
             }
-            updatePaymentPreview();
+            // Trigger input to update calculations
+            const event = new Event('input', { bubbles: true });
+            advanceUsed.dispatchEvent(event);
         });
     }
 
@@ -453,20 +510,37 @@ document.addEventListener('DOMContentLoaded', function() {
     if (advanceUsed) {
         advanceUsed.addEventListener('input', function() {
             let val = parseFloat(this.value) || 0;
+
+            // Validate max
             if (val > advanceBalance) {
                 this.value = advanceBalance;
                 val = advanceBalance;
             }
+
+            // Update remaining advance display
             if (remainingAdvance) {
                 remainingAdvance.textContent = (advanceBalance - val).toFixed(2);
             }
+
+            // Auto-calculate suggested cash amount
+            autoCalculateCash();
+
+            // Update payment preview
             updatePaymentPreview();
         });
     }
 
     // Payment Amount Input
     if (paymentAmount) {
-        paymentAmount.addEventListener('input', updatePaymentPreview);
+        paymentAmount.addEventListener('input', function() {
+            updatePaymentPreview();
+        });
+    }
+
+    // Click on hint to apply suggested amount
+    if (calculatedHint) {
+        calculatedHint.addEventListener('click', applySuggestedAmount);
+        calculatedHint.style.cursor = 'pointer';
     }
 
     // EMI Calculator
@@ -500,11 +574,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         let html = '';
-        let statusClass = '';
 
         if (total < dueAmount) {
             paymentType.value = 'partial';
-            statusClass = 'warning';
             html = `
                 <div style="background:#fffbeb;padding:15px;border-radius:12px;">
                     <strong style="color:#92400e;">⚠️ Partial Payment</strong><br>
@@ -512,7 +584,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     Advance Used: ₹${advance.toFixed(2)}<br>
                     <strong>Total: ₹${total.toFixed(2)}</strong><br>
                     <strong style="color:#dc2626;">Remaining Due: ₹${(dueAmount - total).toFixed(2)}</strong>
-                    <br><small>Note: Remaining amount will need to be paid later.</small>
                 </div>
             `;
         } else if (total > dueAmount) {

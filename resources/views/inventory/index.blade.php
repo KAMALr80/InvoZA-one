@@ -432,6 +432,7 @@
                                     <input type="checkbox" id="selectAll"
                                         style="width: 18px; height: 18px; cursor: pointer;">
                                 </th>
+                                <th style="width: 70px;">Image</th>  <!-- New Image Column -->
                                 <th>Product Code</th>
                                 <th>Product Name</th>
                                 <th>Quantity</th>
@@ -449,6 +450,43 @@
                                             style="width: 18px; height: 18px; cursor: pointer;">
                                     </td>
 
+                                    <!-- Image Column -->
+                                    <td>
+                                        @if($p->image)
+                                            @php
+                                                $imageUrl = filter_var($p->image, FILTER_VALIDATE_URL)
+                                                    ? $p->image
+                                                    : asset('storage/'.$p->image);
+                                            @endphp
+                                            <div style="position: relative;">
+                                                <img src="{{ $imageUrl }}"
+                                                     alt="{{ $p->name }}"
+                                                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 10px; border: 2px solid #e5e7eb; transition: transform 0.3s; cursor: pointer;"
+                                                     onmouseover="this.style.transform='scale(1.1)'"
+                                                     onmouseout="this.style.transform='scale(1)'"
+                                                     onerror="this.onerror=null; this.src='{{ asset('images/no-image.png') }}'; this.style.opacity='0.5';">
+                                                @if(filter_var($p->image, FILTER_VALIDATE_URL))
+                                                    <span style="position: absolute; bottom: -2px; right: -2px; background: #8b5cf6; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid white;" title="External URL">🔗</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <div style="
+                                                width: 50px;
+                                                height: 50px;
+                                                background: #f3f4f6;
+                                                border-radius: 10px;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                                font-size: 24px;
+                                                color: #9ca3af;
+                                                border: 2px dashed #e5e7eb;
+                                            ">
+                                                📦
+                                            </div>
+                                        @endif
+                                    </td>
+
                                     <!-- Product Code -->
                                     <td>
                                         <div style="font-weight: 600; color: #374151; font-size: 14px;">
@@ -462,7 +500,7 @@
                                             {{ $p->name }}
                                         </div>
                                         @if ($p->description)
-                                            <div style="font-size: 13px; color: #6b7280; line-height: 1.4;">
+                                            <div style="font-size: 12px; color: #6b7280; line-height: 1.4; max-width: 200px;">
                                                 {{ Str::limit($p->description, 40) }}
                                             </div>
                                         @endif
@@ -511,7 +549,7 @@
                                                 font-weight: 600;
                                                 font-size: 13px;
                                             ">
-                                            {{ $p->category }}
+                                            {{ $p->category ?? 'Uncategorized' }}
                                         </div>
                                     </td>
 
@@ -591,7 +629,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7"
+                                    <td colspan="8"  <!-- Updated from 7 to 8 -->
                                         style="text-align: center; padding: 60px 20px; color: #6b7280; font-size: 16px;">
                                         <div
                                             style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
@@ -661,6 +699,28 @@
         @csrf
         <input type="hidden" name="product_ids" id="productIdsInput">
     </form>
+
+    <!-- Image Preview Modal -->
+    <div id="imageModal" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.8);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    " onclick="this.style.display='none'">
+        <img id="modalImage" src="" alt="Full size image" style="
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        ">
+    </div>
 @endsection
 
 @push('styles')
@@ -727,6 +787,7 @@
         #inventoryTable tbody td {
             padding: 15px;
             border-bottom: 1px solid #f3f4f6;
+            vertical-align: middle;
         }
 
         #inventoryTable tbody tr:hover {
@@ -750,6 +811,20 @@
             background: #4338ca !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);
+        }
+
+        /* Image hover effect */
+        .image-cell {
+            position: relative;
+        }
+
+        .image-cell img {
+            transition: all 0.3s ease;
+        }
+
+        .image-cell img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         /* Search and filter section responsive */
@@ -786,7 +861,7 @@
                         text: '📊 Excel',
                         className: 'btn-excel',
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5]
+                            columns: [2, 3, 4, 5, 6] // Exclude checkbox (0) and image (1)
                         }
                     },
                     {
@@ -794,7 +869,7 @@
                         text: '📄 PDF',
                         className: 'btn-pdf',
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5]
+                            columns: [2, 3, 4, 5, 6] // Exclude checkbox (0) and image (1)
                         }
                     },
                     {
@@ -802,7 +877,7 @@
                         text: '🖨️ Print',
                         className: 'btn-print',
                         exportOptions: {
-                            columns: [1, 2, 3, 4, 5]
+                            columns: [2, 3, 4, 5, 6] // Exclude checkbox (0) and image (1)
                         }
                     }
                 ],
@@ -812,7 +887,7 @@
                     [10, 25, 50, 100, "All"]
                 ],
                 order: [
-                    [1, 'asc']
+                    [2, 'asc'] // Sort by product code (index 2)
                 ],
                 language: {
                     search: "",
@@ -828,13 +903,19 @@
                         previous: "Previous"
                     }
                 },
-                columnDefs: [{
-                        targets: 0,
+                columnDefs: [
+                    {
+                        targets: 0, // Checkbox column
                         orderable: false,
                         searchable: false
                     },
                     {
-                        targets: 6,
+                        targets: 1, // Image column
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        targets: 7, // Actions column
                         orderable: false,
                         searchable: false
                     }
@@ -872,7 +953,7 @@
             // Category Filter
             $('#categoryFilter').on('change', function() {
                 var category = $(this).val();
-                table.column(5).search(category).draw();
+                table.column(6).search(category).draw(); // Category is now index 6
             });
 
             // Stock Filter
@@ -884,7 +965,7 @@
 
                 if (stockFilter !== '') {
                     $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                        var quantityCell = data[3];
+                        var quantityCell = data[4]; // Quantity is now index 4
                         var quantityMatch = quantityCell.match(/\d+/);
                         var quantity = quantityMatch ? parseInt(quantityMatch[0]) : 0;
 
@@ -929,6 +1010,21 @@
             $(document).on('change', '.product-checkbox', function() {
                 var allChecked = $('.product-checkbox:checked').length === $('.product-checkbox').length;
                 $('#selectAll').prop('checked', allChecked);
+            });
+
+            // Image click for full size preview
+            $(document).on('click', '#inventoryTable tbody img', function(e) {
+                e.stopPropagation();
+                var imgSrc = $(this).attr('src');
+                $('#modalImage').attr('src', imgSrc);
+                $('#imageModal').css('display', 'flex');
+            });
+
+            // Close modal with ESC key
+            $(document).keydown(function(e) {
+                if (e.key === "Escape") {
+                    $('#imageModal').hide();
+                }
             });
 
             // Barcode Form Submission

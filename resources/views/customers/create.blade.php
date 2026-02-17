@@ -474,97 +474,97 @@
         </div>
 
         <div class="form-footer">
-                <a href="{{ route('customers.index') }}" class="cancel-btn">
-                    <span>←</span>
-                    Cancel
-                </a>
-                <button type="submit" id="saveBtn" class="submit-btn">
-                    <span>💾</span>
-                    Save Customer
-                </button>
-            </div>
-        </form>
-    </div>
+                    <a href="{{ route('customers.index') }}" class="cancel-btn">
+                        <span>←</span>
+                        Cancel
+                    </a>
+                    <button type="submit" id="saveBtn" class="submit-btn">
+                        <span>💾</span>
+                        Save Customer
+                    </button>
+                </div>
+            </form>
+        </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('customerForm');
-            const saveBtn = document.getElementById('saveBtn');
-            const inputs = form.querySelectorAll('.form-input');
-            const addressTextarea = form.querySelector('textarea[name="address"]');
-            const addressCount = document.getElementById('addressCount');
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const form = document.getElementById('customerForm');
+                const saveBtn = document.getElementById('saveBtn');
+                const inputs = form.querySelectorAll('.form-input');
+                const addressTextarea = form.querySelector('textarea[name="address"]');
+                const addressCount = document.getElementById('addressCount');
 
-            // Real-time validation
-            inputs.forEach(input => {
-                const validationSuccess = input.parentNode.querySelector('.validation-icon.success');
-                const validationError = input.parentNode.querySelector('.validation-icon.error');
-                const errorMessage = input.parentNode.parentNode.querySelector('.error-message');
-
-                input.addEventListener('input', function() {
-                    validateField(this, validationSuccess, validationError, errorMessage);
-                });
-
-                input.addEventListener('blur', function() {
-                    validateField(this, validationSuccess, validationError, errorMessage);
-                });
-
-                // Validate on page load if there's existing value
-                if (input.value) {
-                    validateField(input, validationSuccess, validationError, errorMessage);
-                }
-            });
-
-            // Address character counter
-            if (addressTextarea && addressCount) {
-                addressTextarea.addEventListener('input', function() {
-                    const length = this.value.length;
-                    addressCount.textContent = length;
-
-                    if (length > 200) {
-                        this.value = this.value.substring(0, 200);
-                        addressCount.textContent = 200;
-                    }
-                });
-
-                // Initialize counter
-                addressCount.textContent = addressTextarea.value.length;
-            }
-
-            // Form submission
-            form.addEventListener('submit', function(e) {
-                let isValid = true;
-
-                // Validate all required fields
+                // Real-time validation
                 inputs.forEach(input => {
-                    if (input.hasAttribute('required') && !input.value.trim()) {
-                        isValid = false;
-                        input.classList.add('error');
-                        input.classList.remove('success');
+                    const validationSuccess = input.parentNode.querySelector('.validation-icon.success');
+                    const validationError = input.parentNode.querySelector('.validation-icon.error');
+                    const errorMessage = input.parentNode.parentNode.querySelector('.error-message');
 
-                        const validationSuccess = input.parentNode.querySelector(
-                            '.validation-icon.success');
-                        const validationError = input.parentNode.querySelector(
-                            '.validation-icon.error');
-                        const errorMessage = input.parentNode.parentNode.querySelector(
-                            '.error-message');
+                    input.addEventListener('input', function() {
+                        validateField(this, validationSuccess, validationError, errorMessage);
+                    });
 
-                        if (validationSuccess) validationSuccess.style.display = 'none';
-                        if (validationError) validationError.style.display = 'block';
-                        if (errorMessage && !errorMessage.classList.contains('show')) {
-                            errorMessage.textContent = 'This field is required';
-                            errorMessage.classList.add('show');
-                        }
+                    input.addEventListener('blur', function() {
+                        validateField(this, validationSuccess, validationError, errorMessage);
+                    });
+
+                    // Validate on page load if there's existing value
+                    if (input.value) {
+                        validateField(input, validationSuccess, validationError, errorMessage);
                     }
                 });
 
-                if (!isValid) {
-                    e.preventDefault();
-                    return;
+                // Address character counter
+                if (addressTextarea && addressCount) {
+                    addressTextarea.addEventListener('input', function() {
+                        const length = this.value.length;
+                        addressCount.textContent = length;
+
+                        if (length > 200) {
+                            this.value = this.value.substring(0, 200);
+                            addressCount.textContent = 200;
+                        }
+                    });
+
+                    // Initialize counter
+                    addressCount.textContent = addressTextarea.value.length;
                 }
 
-                // Show loading state
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = `
+                // Form submission
+                form.addEventListener('submit', function(e) {
+                    let isValid = true;
+
+                    // Validate all required fields
+                    inputs.forEach(input => {
+                        if (input.hasAttribute('required') && !input.value.trim()) {
+                            isValid = false;
+                            input.classList.add('error');
+                            input.classList.remove('success');
+
+                            const validationSuccess = input.parentNode.querySelector(
+                                '.validation-icon.success');
+                            const validationError = input.parentNode.querySelector(
+                                '.validation-icon.error');
+                            const errorMessage = input.parentNode.parentNode.querySelector(
+                                '.error-message');
+
+                            if (validationSuccess) validationSuccess.style.display = 'none';
+                            if (validationError) validationError.style.display = 'block';
+                            if (errorMessage && !errorMessage.classList.contains('show')) {
+                                errorMessage.textContent = 'This field is required';
+                                errorMessage.classList.add('show');
+                            }
+                        }
+                    });
+
+                    if (!isValid) {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    // Show loading state
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = `
                 <span style="
                     display: inline-block;
                     width: 20px;
@@ -577,99 +577,99 @@
                 Saving...
             `;
 
-                // Add spin animation
-                const style = document.createElement('style');
-                style.innerHTML = `
+                    // Add spin animation
+                    const style = document.createElement('style');
+                    style.innerHTML = `
                 @keyframes buttonSpin {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
                 }
             `;
-                document.head.appendChild(style);
+                    document.head.appendChild(style);
+                });
+
+                // Validation function
+                function validateField(input, successIcon, errorIcon, errorMessage) {
+                    const value = input.value.trim();
+                    let isValid = true;
+                    let message = '';
+
+                    // Clear previous states
+                    input.classList.remove('error', 'success');
+                    if (successIcon) successIcon.style.display = 'none';
+                    if (errorIcon) errorIcon.style.display = 'none';
+                    if (errorMessage) errorMessage.classList.remove('show');
+
+                    // Required validation
+                    if (input.hasAttribute('required') && !value) {
+                        isValid = false;
+                        message = 'This field is required';
+                    }
+
+                    // Email validation
+                    if (input.type === 'email' && value) {
+                        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                        if (!emailRegex.test(value)) {
+                            isValid = false;
+                            message = 'Please enter a valid email address';
+                        }
+                    }
+
+                    // Mobile validation
+                    if (input.name === 'mobile' && value) {
+                        const mobileRegex = /^[0-9]{10}$/;
+                        if (!mobileRegex.test(value)) {
+                            isValid = false;
+                            message = 'Please enter a valid 10-digit mobile number';
+                        }
+                    }
+
+                    // GST validation
+                    if (input.name === 'gst_no' && value) {
+                        const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+                        if (!gstRegex.test(value)) {
+                            isValid = false;
+                            message = 'Please enter a valid 15-character GSTIN';
+                        }
+                    }
+
+                    // Update UI based on validation
+                    if (isValid && value) {
+                        input.classList.add('success');
+                        if (successIcon) successIcon.style.display = 'block';
+                    } else if (!isValid) {
+                        input.classList.add('error');
+                        if (errorIcon) errorIcon.style.display = 'block';
+                        if (errorMessage && message) {
+                            errorMessage.textContent = message;
+                            errorMessage.classList.add('show');
+                        }
+                    }
+
+                    return isValid;
+                }
+
+                // Auto-format mobile number
+                const mobileInput = form.querySelector('input[name="mobile"]');
+                if (mobileInput) {
+                    mobileInput.addEventListener('input', function() {
+                        // Remove non-numeric characters
+                        this.value = this.value.replace(/\D/g, '');
+
+                        // Limit to 10 digits
+                        if (this.value.length > 10) {
+                            this.value = this.value.substring(0, 10);
+                        }
+                    });
+                }
+
+                // Auto-format GST (uppercase)
+                const gstInput = form.querySelector('input[name="gst_no"]');
+                if (gstInput) {
+                    gstInput.addEventListener('input', function() {
+                        this.value = this.value.toUpperCase();
+                    });
+                }
             });
-
-            // Validation function
-            function validateField(input, successIcon, errorIcon, errorMessage) {
-                const value = input.value.trim();
-                let isValid = true;
-                let message = '';
-
-                // Clear previous states
-                input.classList.remove('error', 'success');
-                if (successIcon) successIcon.style.display = 'none';
-                if (errorIcon) errorIcon.style.display = 'none';
-                if (errorMessage) errorMessage.classList.remove('show');
-
-                // Required validation
-                if (input.hasAttribute('required') && !value) {
-                    isValid = false;
-                    message = 'This field is required';
-                }
-
-                // Email validation
-                if (input.type === 'email' && value) {
-                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                    if (!emailRegex.test(value)) {
-                        isValid = false;
-                        message = 'Please enter a valid email address';
-                    }
-                }
-
-                // Mobile validation
-                if (input.name === 'mobile' && value) {
-                    const mobileRegex = /^[0-9]{10}$/;
-                    if (!mobileRegex.test(value)) {
-                        isValid = false;
-                        message = 'Please enter a valid 10-digit mobile number';
-                    }
-                }
-
-                // GST validation
-                if (input.name === 'gst_no' && value) {
-                    const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-                    if (!gstRegex.test(value)) {
-                        isValid = false;
-                        message = 'Please enter a valid 15-character GSTIN';
-                    }
-                }
-
-                // Update UI based on validation
-                if (isValid && value) {
-                    input.classList.add('success');
-                    if (successIcon) successIcon.style.display = 'block';
-                } else if (!isValid) {
-                    input.classList.add('error');
-                    if (errorIcon) errorIcon.style.display = 'block';
-                    if (errorMessage && message) {
-                        errorMessage.textContent = message;
-                        errorMessage.classList.add('show');
-                    }
-                }
-
-                return isValid;
-            }
-
-            // Auto-format mobile number
-            const mobileInput = form.querySelector('input[name="mobile"]');
-            if (mobileInput) {
-                mobileInput.addEventListener('input', function() {
-                    // Remove non-numeric characters
-                    this.value = this.value.replace(/\D/g, '');
-
-                    // Limit to 10 digits
-                    if (this.value.length > 10) {
-                        this.value = this.value.substring(0, 10);
-                    }
-                });
-            }
-
-            // Auto-format GST (uppercase)
-            const gstInput = form.querySelector('input[name="gst_no"]');
-            if (gstInput) {
-                gstInput.addEventListener('input', function() {
-                    this.value = this.value.toUpperCase();
-                });
-            }
-        });
-    </script>
+        </script>
 @endsection

@@ -590,12 +590,7 @@
             });
         }
     </script>
-{{--
-    <!--
-        LARAVEL BLADE DIRECTIVES – FULLY FUNCTIONAL
-        {{ route('register') }}, {{ route('login') }}, @csrf, old('name'), etc.
-        x-input-error components will work with custom error-message class
-    --> --}}
+
 
 </body>
 </html>

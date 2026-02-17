@@ -433,7 +433,7 @@
             border: 1.5px solid #e5e7eb;
             border-radius: 12px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            max-height: 300px;
+            max-height: 350px;
             overflow-y: auto;
             z-index: 1000;
         }
@@ -869,6 +869,58 @@
             pointer-events: none;
         }
 
+        /* Product Image Styles */
+        .product-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 2px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .product-image-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .product-image-sm {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid #e5e7eb;
+            background: #f8fafc;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .product-info {
+            flex: 1;
+        }
+
+        .product-price {
+            background: #10b981;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
         /* Toast Notifications */
         .toast-notification {
             position: fixed;
@@ -1128,6 +1180,21 @@
                 customerModal: document.getElementById('customerModal'),
                 saveCustomerBtn: document.getElementById('saveCustomerBtn')
             };
+
+            // ========== HELPER FUNCTION TO GET IMAGE URL ==========
+            function getProductImageUrl(product) {
+                if (!product.image) {
+                    return null;
+                }
+
+                // Check if it's a URL
+                if (product.image.startsWith('http://') || product.image.startsWith('https://')) {
+                    return product.image;
+                }
+
+                // Local storage image
+                return `/storage/${product.image}`;
+            }
 
             // ========== INITIALIZATION ==========
             function init() {
@@ -1434,25 +1501,34 @@
                 cursor: pointer;
                 border-bottom: ${index === filteredProducts.length - 1 ? 'none' : '1px solid #f1f5f9'};
                 transition: all 0.2s;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
             `;
 
+                    const imageUrl = getProductImageUrl(p);
+
                     item.innerHTML = `
-                <div>
-                    <div style="font-weight: 600; color: #374151; margin-bottom: 4px;">${escapeHTML(p.name)}</div>
-                    <div style="font-size: 13px; color: #64748b;">Code: ${escapeHTML(p.product_code || 'N/A')}</div>
-                </div>
-                <div style="
-                    background: #10b981;
-                    color: white;
-                    padding: 6px 12px;
-                    border-radius: 8px;
-                    font-weight: 700;
-                    font-size: 15px;
-                ">
-                    ₹${parseFloat(p.price || 0).toFixed(2)}
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    ${imageUrl ?
+                        `<img src="${imageUrl}" alt="${escapeHTML(p.name)}" class="product-image" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                        ''
+                    }
+                    <div class="product-image-placeholder" style="${imageUrl ? 'display: none;' : 'display: flex;'}">
+                        ${escapeHTML(p.name?.charAt(0) || 'P')}
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #374151; margin-bottom: 4px;">${escapeHTML(p.name)}</div>
+                        <div style="font-size: 12px; color: #64748b;">Code: ${escapeHTML(p.product_code || 'N/A')}</div>
+                    </div>
+                    <div style="
+                        background: #10b981;
+                        color: white;
+                        padding: 6px 12px;
+                        border-radius: 8px;
+                        font-weight: 700;
+                        font-size: 14px;
+                        white-space: nowrap;
+                    ">
+                        ₹${parseFloat(p.price || 0).toFixed(2)}
+                    </div>
                 </div>
             `;
 
@@ -1519,6 +1595,8 @@
             }
 
             function getProductRowHTML(p, rowId) {
+                const imageUrl = getProductImageUrl(p);
+
                 return `
             <tr data-pid="${p.id}" id="${rowId}" style="
                 border-bottom: 1px solid #e5e7eb;
@@ -1527,21 +1605,16 @@
             ">
                 <td style="padding: 20px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="
-                            width: 40px;
-                            height: 40px;
-                            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-                            border-radius: 10px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            color: white;
-                            font-weight: 600;
-                            font-size: 14px;
-                        ">${escapeHTML(p.name?.charAt(0) || 'P')}</div>
+                        ${imageUrl ?
+                            `<img src="${imageUrl}" alt="${escapeHTML(p.name)}" class="product-image-sm" onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">` :
+                            ''
+                        }
+                        <div class="product-image-placeholder" style="${imageUrl ? 'display: none; width: 30px; height: 30px;' : 'display: flex; width: 30px; height: 30px;'}">
+                            ${escapeHTML(p.name?.charAt(0) || 'P')}
+                        </div>
                         <div>
                             <div style="font-weight: 600; color: #374151;">${escapeHTML(p.name || 'Product')}</div>
-                            <div style="font-size: 13px; color: #64748b;">PRD${p.id || ''}</div>
+                            <div style="font-size: 12px; color: #64748b;">Code: ${escapeHTML(p.product_code || 'N/A')}</div>
                         </div>
                     </div>
                     <input type="hidden" name="items[product_id][]" value="${escapeHTML(p.id)}">
