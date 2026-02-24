@@ -2,17 +2,20 @@ FROM php:8.2-cli
 
 WORKDIR /var/www
 
+# Install system dependencies including GD
 RUN apt-get update && apt-get install -y \
     git unzip curl libzip-dev zip \
     libonig-dev libxml2-dev \
+    libpng-dev libjpeg-dev libfreetype6-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
-    pdo pdo_mysql zip mbstring bcmath
+    pdo pdo_mysql zip mbstring bcmath gd
 
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY . .
 
-# Copy env safely
 RUN cp .env.example .env || true
 
 RUN composer install --no-dev --no-interaction --prefer-dist
