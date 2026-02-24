@@ -1,682 +1,1465 @@
+{{-- D:\smartErp\resources\views\sales\show.blade.php --}}
 @extends('layouts.app')
 
+@section('page-title', 'Invoice #' . $sale->invoice_no)
+
 @section('content')
-    <div
-        style="max-width: 900px; margin: 40px auto; background: #ffffff; padding: 40px; border-radius: 24px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08); font-family: 'Inter', 'Segoe UI', -apple-system, sans-serif; border: 1px solid rgba(229, 231, 235, 0.8);">
+    <style>
+        /* ================= PROFESSIONAL DESIGN SYSTEM ================= */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --purple: #7c3aed;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
 
-        {{-- ================= HEADER ================= --}}
-        <div
-            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #f1f5f9;">
-            <div>
-                <h2
-                    style="margin: 0; font-size: 32px; font-weight: 800; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px;">
-                    📄 Invoice
-                </h2>
-                <div style="color: #6b7280; font-size: 15px; margin-top: 6px; display: flex; align-items: center; gap: 8px;">
-                    <span
-                        style="background: #f3f4f6; padding: 4px 12px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #374151;">
-                        #{{ $sale->invoice_no }}
-                    </span>
-                    <span style="color: #9ca3af;">•</span>
-                    <span>{{ \Carbon\Carbon::parse($sale->created_at)->format('M d, Y - h:i A') }}</span>
-                </div>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f1f5f9;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* ================= CONTAINER ================= */
+        .invoice-wrapper {
+            min-height: 100vh;
+            background: #f1f5f9;
+            padding: 2rem 1rem;
+        }
+
+        .invoice-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        /* ================= HEADER ================= */
+        .invoice-header {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            padding: 2rem;
+            color: white;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .invoice-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .invoice-subtitle {
+            margin-top: 0.5rem;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .header-btn:hover {
+            background: white;
+            color: #0f172a;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.paid {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-badge.partial {
+            background: var(--warning);
+            color: white;
+        }
+
+        .status-badge.unpaid {
+            background: var(--danger);
+            color: white;
+        }
+
+        .status-badge.emi {
+            background: var(--purple);
+            color: white;
+        }
+
+        /* ================= CUSTOMER SECTION ================= */
+        .customer-section {
+            padding: 1.5rem 2rem;
+            background: var(--bg-light);
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+        }
+
+        .customer-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .customer-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .customer-detail {
+            margin-top: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ================= WALLET CARDS ================= */
+        .wallet-grid {
+            padding: 1.5rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .wallet-card {
+            background: var(--bg-light);
+            padding: 1.25rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .wallet-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .wallet-card.advance {
+            background: #f0fdf4;
+            border-color: #86efac;
+        }
+
+        .wallet-card.due {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .wallet-card.net {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .wallet-card.excess {
+            background: #f3e8ff;
+            border-color: #c4b5fd;
+        }
+
+        .wallet-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .wallet-amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .wallet-amount.advance {
+            color: var(--success);
+        }
+
+        .wallet-amount.due {
+            color: var(--danger);
+        }
+
+        .wallet-amount.net {
+            color: var(--primary);
+        }
+
+        .wallet-amount.excess {
+            color: var(--purple);
+        }
+
+        .wallet-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ================= ITEMS TABLE ================= */
+        .items-section {
+            padding: 1.5rem 2rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            font-size: 0.95rem;
+        }
+
+        .items-table th {
+            background: var(--bg-light);
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .items-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .items-table tbody tr:hover {
+            background: var(--bg-light);
+        }
+
+        /* ================= SUMMARY BOX ================= */
+        .summary-box {
+            background: var(--bg-light);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            margin-top: 1.25rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .grand-total {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 2px solid var(--border);
+        }
+
+        .grand-total .amount {
+            color: var(--primary);
+        }
+
+        /* ================= PAYMENT SUMMARY CARDS ================= */
+        .payment-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .payment-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .payment-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .payment-card.total {
+            border-left: 4px solid #1e293b;
+        }
+
+        .payment-card.paid {
+            border-left: 4px solid var(--success);
+        }
+
+        .payment-card.invoice {
+            border-left: 4px solid var(--primary);
+        }
+
+        .payment-card.wallet {
+            border-left: 4px solid var(--purple);
+        }
+
+        .payment-card.advance {
+            border-left: 4px solid var(--purple);
+            background: #f3e8ff;
+        }
+
+        .payment-card.remaining {
+            border-left: 4px solid var(--warning);
+        }
+
+        .payment-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .payment-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .payment-value.total {
+            color: #1e293b;
+        }
+
+        .payment-value.paid {
+            color: var(--success);
+        }
+
+        .payment-value.invoice {
+            color: var(--primary);
+        }
+
+        .payment-value.wallet {
+            color: var(--purple);
+        }
+
+        .payment-value.advance {
+            color: var(--purple);
+        }
+
+        .payment-value.remaining {
+            color: var(--warning);
+        }
+
+        .payment-sub {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        /* ================= PAYMENT HISTORY TABLE ================= */
+        .payments-section {
+            padding: 1.5rem 2rem;
+            background: var(--bg-light);
+            border-top: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .payments-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            font-size: 0.95rem;
+        }
+
+        .payments-table th {
+            background: #f1f5f9;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .payments-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .payments-table tbody tr:hover {
+            background: var(--bg-light);
+        }
+
+        /* ================= BADGES ================= */
+        .type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .type-badge.invoice {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .type-badge.advance-only {
+            background: #f3e8ff;
+            color: #6d28d9;
+        }
+
+        .type-badge.advance-used {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .type-badge.excess {
+            background: #f3e8ff;
+            color: #6d28d9;
+        }
+
+        .type-badge.emi {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        /* ================= ACTION BUTTONS ================= */
+        .btn-sm {
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #475569;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .btn-sm:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-warning:hover {
+            background: var(--warning);
+            color: white;
+            border-color: var(--warning);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary-lg {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary-lg:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary-lg {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.75rem 2rem;
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary-lg:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        /* ================= EMI SECTION ================= */
+        .emi-section {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #fffbeb;
+            border-radius: var(--radius-lg);
+            border: 1px solid #fcd34d;
+        }
+
+        .emi-title {
+            margin: 0 0 1rem 0;
+            color: #92400e;
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .emi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .emi-item {
+            background: white;
+            padding: 0.75rem;
+            border-radius: var(--radius-md);
+            border: 1px solid #fed7aa;
+        }
+
+        .emi-label {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .emi-value {
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        .emi-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .emi-status.running {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .emi-status.completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* ================= SUMMARY NOTE ================= */
+        .summary-note {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            border: 1px solid var(--border);
+        }
+
+        /* ================= EMPTY STATE ================= */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: var(--radius-lg);
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        /* ================= FOOTER ================= */
+        .invoice-footer {
+            padding: 1.25rem 2rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ================= UTILITY CLASSES ================= */
+        .text-right {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .fw-bold {
+            font-weight: 700;
+        }
+
+        .fw-semibold {
+            font-weight: 600;
+        }
+
+        .text-success {
+            color: var(--success);
+        }
+
+        .text-danger {
+            color: var(--danger);
+        }
+
+        .text-primary {
+            color: var(--primary);
+        }
+
+        .text-purple {
+            color: var(--purple);
+        }
+
+        /* ================= TOAST NOTIFICATION ================= */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid;
+            display: none;
+            z-index: 9999;
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ================= LOADING OVERLAY ================= */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ================= RESPONSIVE ================= */
+        @media (max-width: 1024px) {
+            .wallet-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .payment-summary-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .emi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .customer-section {
+                grid-template-columns: 1fr;
+            }
+
+            .wallet-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .payment-summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .invoice-header {
+                padding: 1.5rem;
+            }
+
+            .customer-section {
+                padding: 1.5rem;
+            }
+
+            .wallet-grid {
+                padding: 1.5rem;
+            }
+
+            .items-section {
+                padding: 1.5rem;
+            }
+
+            .payments-section {
+                padding: 1.5rem;
+            }
+
+            .emi-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .payment-summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-primary-lg,
+            .btn-secondary-lg {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* ================= PRINT STYLES ================= */
+        @media print {
+
+            .no-print,
+            .btn-sm,
+            .header-btn,
+            .btn-primary-lg,
+            .btn-secondary-lg,
+            .toast,
+            .loading-overlay {
+                display: none !important;
+            }
+
+            .invoice-container {
+                box-shadow: none;
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .status-badge {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .wallet-card {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+
+    <div class="invoice-wrapper">
+        <div class="invoice-container">
+            {{-- Loading Overlay --}}
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner"></div>
+                <div class="loading-text">Processing...</div>
             </div>
 
-            <div style="display: flex; gap: 12px;">
-                <a href="{{ route('sales.invoice', $sale->id) }}" target="_blank"
-                    style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2); border: 1px solid rgba(255, 255, 255, 0.1);"
-                    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(16, 185, 129, 0.3)';"
-                    onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(16, 185, 129, 0.2)';">
-                    🖨️ Print Invoice
-                </a>
-
-                <a href="{{ route('sales.index') }}"
-                    style="background: linear-gradient(135deg, #4b5563 0%, #374151 100%); color: #fff; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(55, 65, 81, 0.2);"
-                    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(55, 65, 81, 0.3)';"
-                    onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(55, 65, 81, 0.2)';">
-                    ← Back to Sales
-                </a>
-            </div>
-        </div>
-
-        {{-- ================= STATUS BADGE ================= --}}
-        @php
-            $statusColor = match ($sale->payment_status) {
-                'paid' => '#16a34a',
-                'partial' => '#f59e0b',
-                'emi' => '#6366f1',
-                default => '#dc2626',
-            };
-        @endphp
-        <div
-            style="margin-bottom: 30px; display: inline-block; padding: 8px 20px; border-radius: 20px; background: {{ $statusColor }}; color: white; font-weight: 700; letter-spacing: 1px; font-size: 14px;">
-            {{ strtoupper($sale->payment_status) }}
-        </div>
-
-        {{-- ================= CUSTOMER INFO ================= --}}
-        <div
-            style="background: #f8fafc; padding: 28px; border-radius: 16px; margin-bottom: 32px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; font-size: 15px; border: 1px solid #e5e7eb;">
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <div
-                    style="color: #6366f1; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-                    👤 Customer
-                </div>
-                <div style="font-size: 18px; color: #111827; font-weight: 700;">
-                    {{ $sale->customer->name ?? 'Walk-in Customer' }}</div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <div
-                    style="color: #6366f1; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-                    📅 Invoice Date
-                </div>
-                <div style="font-size: 18px; color: #111827; font-weight: 700;">
-                    {{ \Carbon\Carbon::parse($sale->sale_date)->format('d M, Y') }}</div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <div
-                    style="color: #6366f1; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-                    📱 Mobile
-                </div>
-                <div style="font-size: 16px; color: #111827; font-weight: 600;">{{ $sale->customer->mobile ?? 'N/A' }}</div>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <div
-                    style="color: #6366f1; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
-                    ✉️ Email
-                </div>
-                <div style="font-size: 16px; color: #111827; font-weight: 600;">{{ $sale->customer->email ?? '-' }}</div>
-            </div>
-        </div>
-
-        {{-- ================= ITEMS TABLE ================= --}}
-        <div style="margin-bottom: 32px;">
-            <div
-                style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: white; padding: 18px 24px; border-radius: 12px 12px 0 0; font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 10px;">
-                🛒 Items Purchased
-            </div>
-
-            <table
-                style="width: 100%; border-collapse: collapse; font-size: 15px; border-radius: 0 0 12px 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb; border-top: none;">
-                <thead>
-                    <tr style="background: #f8fafc;">
-                        <th
-                            style="padding: 18px 20px; border-bottom: 2px solid #e5e7eb; text-align: center; color: #4b5563; font-weight: 700;">
-                            #</th>
-                        <th
-                            style="padding: 18px 20px; border-bottom: 2px solid #e5e7eb; text-align: left; color: #4b5563; font-weight: 700;">
-                            Product</th>
-                        <th
-                            style="padding: 18px 20px; border-bottom: 2px solid #e5e7eb; text-align: right; color: #4b5563; font-weight: 700;">
-                            Price</th>
-                        <th
-                            style="padding: 18px 20px; border-bottom: 2px solid #e5e7eb; text-align: center; color: #4b5563; font-weight: 700;">
-                            Qty</th>
-                        <th
-                            style="padding: 18px 20px; border-bottom: 2px solid #e5e7eb; text-align: right; color: #4b5563; font-weight: 700;">
-                            Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($sale->items as $i => $item)
-                        <tr style="background: {{ $i % 2 == 0 ? '#ffffff' : '#fafafa' }}; transition: all 0.2s ease;"
-                            onmouseover="this.style.backgroundColor='#f8fafc';"
-                            onmouseout="this.style.backgroundColor='{{ $i % 2 == 0 ? '#ffffff' : '#fafafa' }}';">
-                            <td
-                                style="padding: 16px 20px; text-align: center; color: #6b7280; font-weight: 500; border-right: 1px solid #f1f5f9;">
-                                {{ $i + 1 }}
-                            </td>
-                            <td style="padding: 16px 20px; font-weight: 600; color: #374151;">
-                                {{ $item->product->name ?? 'Product Deleted' }}
-                            </td>
-                            <td
-                                style="padding: 16px 20px; text-align: right; color: #059669; font-weight: 600; font-family: 'JetBrains Mono', monospace;">
-                                ₹ {{ number_format($item->price, 2) }}
-                            </td>
-                            <td style="padding: 16px 20px; text-align: center; color: #4b5563; font-weight: 500;">
-                                <span
-                                    style="background: #dbeafe; color: #1d4ed8; padding: 4px 12px; border-radius: 20px; font-weight: 600;">
-                                    {{ $item->quantity }}
-                                </span>
-                            </td>
-                            <td
-                                style="padding: 16px 20px; text-align: right; color: #1d4ed8; font-weight: 700; font-family: 'JetBrains Mono', monospace;">
-                                ₹ {{ number_format($item->total, 2) }}
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        {{-- ================= TOTALS ================= --}}
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 32px;">
-            <div></div>
-
-            <div
-                style="background: #f8fafc; padding: 28px; border-radius: 16px; font-size: 15px; border: 1px solid #e5e7eb;">
-                <h3
-                    style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #374151; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb;">
-                    💰 Summary
-                </h3>
-
-                <div style="display: flex; justify-content: space-between; margin-bottom: 14px; padding: 10px 0;">
-                    <span style="color: #6b7280;">Sub Total</span>
-                    <b style="color: #4b5563; font-family: 'JetBrains Mono', monospace;">₹
-                        {{ number_format($sale->sub_total, 2) }}</b>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; margin-bottom: 14px; padding: 10px 0;">
-                    <span style="color: #6b7280;">Discount</span>
-                    <b style="color: #dc2626; font-family: 'JetBrains Mono', monospace;">- ₹
-                        {{ number_format($sale->discount, 2) }}</b>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; margin-bottom: 14px; padding: 10px 0;">
-                    <span style="color: #6b7280;">Tax</span>
-                    <b style="color: #ea580c;">{{ $sale->tax }}%</b>
-                </div>
-
-                <hr style="border: none; border-top: 2px dashed #e5e7eb; margin: 20px 0;">
-
-                <div
-                    style="display: flex; justify-content: space-between; padding: 20px 0; background: #f0f9ff; margin: -28px; margin-top: 10px; padding: 20px 28px; border-radius: 0 0 16px 16px; align-items: center;">
-                    <span style="font-size: 18px; font-weight: 800; color: #075985;">Grand Total</span>
-                    <span
-                        style="font-size: 28px; font-weight: 900; color: #1e40af; font-family: 'JetBrains Mono', monospace;">
-                        ₹ {{ number_format($sale->grand_total, 2) }}
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        {{-- ================= PAYMENT DETAILS ================= --}}
-        <div
-            style="background: #f8fafc; padding: 28px; border-radius: 16px; font-size: 15px; border: 1px solid #e5e7eb; margin-bottom: 32px;">
-            <h3
-                style="margin: 0 0 20px 0; font-size: 18px; font-weight: 700; color: #374151; padding-bottom: 12px; border-bottom: 2px solid #e5e7eb; display: flex; align-items: center; gap: 10px;">
-                💳 Payment Details
-            </h3>
-
-            @php
-                // Calculate total paid for this invoice only - INCLUDE ADVANCE_USED
-                $totalPaid = $sale->payments
-                    ->where('status', 'paid')
-                    ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
-                    ->sum('amount');
-
-                $remaining = max(0, $sale->grand_total - $totalPaid);
-                $isFullyPaid = $remaining <= 0;
-
-                // Get customer balance
-                $customerBalance = $sale->customer ? $sale->customer->open_balance : 0;
-                $advanceBalance = $customerBalance < 0 ? abs($customerBalance) : 0;
-                $dueBalance = $customerBalance > 0 ? $customerBalance : 0;
-
-                // Check if this invoice has been marked as due
-                $hasDueRecord = $sale->payments->where('remarks', 'INVOICE_DUE')->isNotEmpty();
-
-                // Calculate advance generated from this invoice
-                $advanceGenerated = $sale->payments
-                    ->where('status', 'paid')
-                    ->whereIn('remarks', ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY'])
-                    ->sum('amount');
-
-                // Calculate advance used in this invoice
-                $advanceUsed = $sale->payments
-                    ->where('status', 'paid')
-                    ->where('remarks', 'ADVANCE_USED')
-                    ->sum('amount');
-            @endphp
-
-            {{-- Success/Error Messages --}}
-            @if (session('success'))
-                <div
-                    style="background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 20px;">✅</span>
-                    <span>{!! session('success') !!}</span>
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div
-                    style="background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 20px;">❌</span>
-                    <span>{{ session('error') }}</span>
-                </div>
-            @endif
-
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px;">
-                <div>
-                    <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Total Paid (This Invoice)</div>
-                    <div style="font-size: 20px; font-weight: 700; color: #059669;">₹ {{ number_format($totalPaid, 2) }}
+            {{-- ================= INVOICE HEADER ================= --}}
+            <div class="invoice-header">
+                <div class="header-content">
+                    <div>
+                        <h1 class="invoice-title">INVOICE</h1>
+                        <div class="invoice-subtitle">#{{ $sale->invoice_no }}</div>
                     </div>
-                </div>
-                <div>
-                    <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Remaining (This Invoice)</div>
-                    <div style="font-size: 20px; font-weight: 700; color: #dc2626;">₹ {{ number_format($remaining, 2) }}
-                    </div>
-                </div>
-                <div>
-                    <div style="color: #6b7280; font-size: 14px; margin-bottom: 4px;">Status</div>
-                    <div style="font-size: 20px; font-weight: 700; color: {{ $statusColor }};">
-                        {{ strtoupper($sale->payment_status) }}
-                    </div>
-                </div>
-            </div>
-
-            @if ($sale->customer)
-                <div
-                    style="background: #ffffff; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
-                    <h4 style="margin: 0 0 14px 0; font-size: 16px; font-weight: 600; color: #4b5563;">
-                        👤 Customer Account Balance
-                    </h4>
-
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px;">
-                        @if ($dueBalance > 0)
-                            <div style="background:#fee2e2;padding:12px;border-radius:10px;">
-                                <div style="color:#6b7280; font-size:13px;">Total Due (All Invoices)</div>
-                                <div style="color:#b91c1c;font-weight:700;font-size:18px;">₹
-                                    {{ number_format($dueBalance, 2) }}</div>
-                            </div>
-                        @endif
-
-                        @if ($advanceBalance > 0)
-                            <div style="background:#dcfce7;padding:12px;border-radius:10px;">
-                                <div style="color:#6b7280; font-size:13px;">Advance Balance</div>
-                                <div style="color:#166534;font-weight:700;font-size:18px;">₹
-                                    {{ number_format($advanceBalance, 2) }}</div>
-                            </div>
-                        @endif
-
-                        @if ($dueBalance == 0 && $advanceBalance == 0)
-                            <div style="background:#f1f5f9;padding:12px;border-radius:10px; grid-column: span 2;">
-                                <div style="color:#475569;font-weight:600;text-align:center;">Account Clear - No Due or
-                                    Advance</div>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- Current Invoice Status --}}
-                    <div style="background: #f8fafc; padding: 15px; border-radius: 10px; margin-top: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <span style="color: #4b5563; font-weight: 600;">Current Invoice:</span>
-                                <span style="color: #1f2937;"> #{{ $sale->invoice_no }}</span>
-                            </div>
-                            <div>
-                                <span style="color: #6b7280;">Paid: </span>
-                                <span style="color: #059669; font-weight: 600;">₹ {{ number_format($totalPaid, 2) }}</span>
-                                <span style="color: #6b7280; margin-left: 10px;">Due: </span>
-                                <span style="color: #dc2626; font-weight: 600;">₹ {{ number_format($remaining, 2) }}</span>
-                            </div>
+                    <div style="display: flex; gap: 0.75rem; align-items: center;">
+                        <div class="status-badge {{ $sale->payment_status }}">
+                            {{ strtoupper($sale->payment_status) }}
                         </div>
-
-                        @if ($advanceGenerated > 0)
-                            <div
-                                style="margin-top: 10px; padding: 8px; background: #dbeafe; border-radius: 8px; text-align: center;">
-                                <span style="color: #1e40af; font-weight: 600;">
-                                    💰 This invoice generated ₹{{ number_format($advanceGenerated, 2) }} advance
-                                </span>
-                            </div>
-                        @endif
-
-                        @if ($advanceUsed > 0)
-                            <div
-                                style="margin-top: 10px; padding: 8px; background: #ede9fe; border-radius: 8px; text-align: center;">
-                                <span style="color: #6d28d9; font-weight: 600;">
-                                    🔄 This invoice used ₹{{ number_format($advanceUsed, 2) }} advance from other invoices
-                                </span>
-                            </div>
-                        @endif
-
-                        @if ($remaining > 0 && !$hasDueRecord)
-                            <div
-                                style="margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 8px; text-align: center;">
-                                <span style="color: #856404; font-weight: 600;">
-                                    ⚠️ This invoice has ₹{{ number_format($remaining, 2) }} due.
-                                    Click "Mark as Due" to add to customer's balance.
-                                </span>
-                            </div>
-                        @endif
-
-                        @if ($hasDueRecord)
-                            <div
-                                style="margin-top: 10px; padding: 8px; background: #fee2e2; border-radius: 8px; text-align: center;">
-                                <span style="color: #b91c1c; font-weight: 600;">
-                                    📝 This invoice amount has been added to customer's due balance.
-                                </span>
-                            </div>
-                        @endif
-
-                        @if ($isFullyPaid)
-                            <div
-                                style="margin-top: 10px; padding: 8px; background: #dcfce7; border-radius: 8px; text-align: center;">
-                                <span style="color: #166534; font-weight: 600;">
-                                    ✅ This invoice is fully paid!
-                                </span>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-            @if ($sale->payment_status === 'emi' && $sale->emiPlan)
-                <div
-                    style="background: #ffffff; padding: 16px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
-                    <h4
-                        style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: #4b5563; display: flex; align-items: center; gap: 8px;">
-                        📆 EMI Details
-                    </h4>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                        <div>
-                            <div style="color: #6b7280; font-size: 14px;">Total Amount</div>
-                            <div style="font-weight: 600;">₹ {{ number_format($sale->emiPlan->total_amount, 2) }}</div>
-                        </div>
-                        <div>
-                            <div style="color: #6b7280; font-size: 14px;">Down Payment</div>
-                            <div style="font-weight: 600;">₹ {{ number_format($sale->emiPlan->down_payment, 2) }}</div>
-                        </div>
-                        <div>
-                            <div style="color: #6b7280; font-size: 14px;">Monthly EMI</div>
-                            <div style="font-weight: 600;">₹ {{ number_format($sale->emiPlan->emi_amount, 2) }}</div>
-                        </div>
-                        <div>
-                            <div style="color: #6b7280; font-size: 14px;">Status</div>
-                            <div
-                                style="font-weight: 600; color: {{ $sale->emiPlan->status === 'completed' ? '#16a34a' : ($sale->emiPlan->status === 'running' ? '#f59e0b' : '#dc2626') }};">
-                                {{ strtoupper($sale->emiPlan->status) }}
-                            </div>
-                        </div>
-                    </div>
-
-                    @if ($sale->emiPlan->status === 'running')
-                        <div style="margin-top: 20px; text-align: center;">
-                            <a href="{{ route('emi.show', $sale->emiPlan->id) }}"
-                                style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: white; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
-                                💳 Pay EMI Now
+                        <div class="header-actions">
+                            <button class="header-btn" onclick="copyInvoiceNo()" title="Copy Invoice Number">
+                                📋 Copy
+                            </button>
+                            <a href="{{ route('sales.print', $sale->id) }}" class="header-btn" target="_blank"
+                                title="Print Invoice">
+                                🖨️ Print
+                            </a>
+                            <a href="{{ route('sales.invoice', $sale->id) }}" class="header-btn" target="_blank"
+                                title="Download PDF">
+                                📥 PDF
                             </a>
                         </div>
-                    @endif
+                    </div>
+                </div>
+            </div>
 
-                    @if ($sale->emiPlan->status === 'completed')
-                        <div
-                            style="margin-top: 16px; padding: 12px; background: #dcfce7; border-radius: 8px; text-align: center; color: #166534; font-weight: 600;">
-                            ✅ EMI Completed – Invoice Fully Paid
+            {{-- ================= CUSTOMER DETAILS ================= --}}
+            <div class="customer-section">
+                <div>
+                    <div class="customer-label">Bill To</div>
+                    <div class="customer-value">{{ $sale->customer->name ?? 'Walk-in Customer' }}</div>
+                    @if ($sale->customer)
+                        <div class="customer-detail">
+                            <div>📱 {{ $sale->customer->mobile ?? 'N/A' }}</div>
+                            <div>✉️ {{ $sale->customer->email ?? 'N/A' }}</div>
+                            @if ($sale->customer->address)
+                                <div>📍 {{ $sale->customer->address }}</div>
+                            @endif
                         </div>
                     @endif
                 </div>
-            @endif
-
-            @if ($sale->payments->count() > 0)
                 <div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h4 style="margin: 0; font-size: 16px; font-weight: 600; color: #4b5563; display: flex; align-items: center; gap: 8px;">
-                            📋 Payment History ({{ $sale->payments->count() }} transactions)
-                        </h4>
+                    <div class="customer-label">Invoice Details</div>
+                    <div class="customer-value">
+                        Date: {{ \Carbon\Carbon::parse($sale->sale_date)->format('d M, Y') }}
+                    </div>
+                    <div class="customer-detail">
+                        <div>📅 Created: {{ $sale->created_at->format('d M Y h:i A') }}</div>
+                        <div>🆔 Invoice #{{ $sale->invoice_no }}</div>
+                    </div>
+                </div>
+            </div>
 
-                        {{-- DELETE ALL BUTTON --}}
-                        @if($sale->payments->count() > 1)
-                            <form method="POST" action="{{ route('payments.delete-bulk', $sale->id) }}"
-                                  onsubmit="return confirmSmartDelete('{{ $sale->invoice_no }}', {{ $sale->payments->count() }}, {{ $sale->payments->sum('amount') }}, {{ $advanceGenerated }}, {{ $advanceUsed }})"
-                                  style="display: inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        style="background: #dc2626; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 8px;"
-                                        onmouseover="this.style.background='#b91c1c'"
-                                        onmouseout="this.style.background='#dc2626'"
-                                        title="Smart Delete - Removes advance from other invoices">
-                                    🧠 Smart Delete All
-                                </button>
-                            </form>
-                        @endif
+            {{-- ================= WALLET BALANCE ================= --}}
+            @if ($sale->customer)
+                @php
+                    $customer = $sale->customer;
+                    $latestWallet = \App\Models\CustomerWallet::where('customer_id', $customer->id)
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+                    $walletBalance = $latestWallet ? $latestWallet->balance : 0;
+
+                    $allPayments = $sale->payments->where('status', 'paid');
+                    $totalReceived = $allPayments->sum('amount');
+                    $invoicePayments = $allPayments->whereIn('remarks', ['INVOICE', 'EMI_DOWN'])->sum('amount');
+                    $walletUsed = $allPayments->where('remarks', 'ADVANCE_USED')->sum('amount');
+                    $advancePayments = $allPayments
+                        ->whereIn('remarks', ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD'])
+                        ->sum('amount');
+                    $appliedToInvoice = $invoicePayments + $walletUsed;
+                    $remainingDue = max(0, $sale->grand_total - $appliedToInvoice);
+                    $excessAmount = max(0, $totalReceived - $sale->grand_total);
+                    $netPosition = $totalReceived - $sale->grand_total;
+                @endphp
+
+                <div class="wallet-grid">
+                    <div class="wallet-card advance">
+                        <div class="wallet-label">Wallet Balance</div>
+                        <div class="wallet-amount advance">₹{{ number_format($walletBalance, 2) }}</div>
+                        <div class="wallet-sub">Available advance</div>
                     </div>
 
-                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <div class="wallet-card {{ $excessAmount > 0 ? 'excess' : ($remainingDue > 0 ? 'due' : 'advance') }}">
+                        <div class="wallet-label">Invoice Status</div>
+                        <div
+                            class="wallet-amount {{ $excessAmount > 0 ? 'excess' : ($remainingDue > 0 ? 'due' : 'advance') }}">
+                            @if ($excessAmount > 0)
+                                ₹{{ number_format($excessAmount, 2) }} Excess
+                            @elseif($remainingDue > 0)
+                                ₹{{ number_format($remainingDue, 2) }} Due
+                            @else
+                                Fully Paid
+                            @endif
+                        </div>
+                        <div class="wallet-sub">
+                            @if ($excessAmount > 0)
+                                Will be added to wallet
+                            @elseif($remainingDue > 0)
+                                Remaining to pay
+                            @else
+                                Invoice settled
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="wallet-card net">
+                        <div class="wallet-label">Total Received</div>
+                        <div class="wallet-amount net">₹{{ number_format($totalReceived, 2) }}</div>
+                        <div class="wallet-sub">
+                            @if ($invoicePayments > 0)
+                                Invoice: ₹{{ number_format($invoicePayments, 2) }}
+                            @endif
+                            @if ($walletUsed > 0)
+                                | Wallet: ₹{{ number_format($walletUsed, 2) }}
+                            @endif
+                            @if ($advancePayments > 0)
+                                | Advance: ₹{{ number_format($advancePayments, 2) }}
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="wallet-card {{ $netPosition > 0 ? 'advance' : ($netPosition < 0 ? 'due' : 'net') }}">
+                        <div class="wallet-label">Net Position</div>
+                        <div class="wallet-amount {{ $netPosition > 0 ? 'advance' : ($netPosition < 0 ? 'due' : 'net') }}">
+                            @if ($netPosition > 0)
+                                +₹{{ number_format($netPosition, 2) }} (Advance)
+                            @elseif($netPosition < 0)
+                                -₹{{ number_format(abs($netPosition), 2) }} (Due)
+                            @else
+                                Clear
+                            @endif
+                        </div>
+                        <div class="wallet-sub">Received vs Invoice</div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- ================= ITEMS TABLE ================= --}}
+            <div class="items-section">
+                <h3 class="section-title">🛒 Items Purchased</h3>
+
+                <table class="items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Product</th>
+                            <th class="text-right">Price</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($sale->items as $index => $item)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $item->product->name ?? 'Product Deleted' }}</td>
+                                <td class="text-right">₹{{ number_format($item->price, 2) }}</td>
+                                <td class="text-center">{{ $item->quantity }}</td>
+                                <td class="text-right fw-bold">₹{{ number_format($item->total, 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+                {{-- Summary with all totals --}}
+                <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem; margin-top: 1.25rem;">
+                    <div></div>
+                    <div class="summary-box">
+                        <div class="summary-row">
+                            <span class="summary-label">Subtotal:</span>
+                            <span class="summary-value">₹{{ number_format($sale->sub_total, 2) }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Discount:</span>
+                            <span class="summary-value">- ₹{{ number_format($sale->discount, 2) }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">Tax ({{ $sale->tax }}%):</span>
+                            <span class="summary-value">+ ₹{{ number_format($sale->tax_amount, 2) }}</span>
+                        </div>
+                        <div class="grand-total">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Grand Total:</span>
+                                <span class="amount">₹{{ number_format($sale->grand_total, 2) }}</span>
+                            </div>
+                        </div>
+
+                        {{-- Payment Summary inside items section --}}
+                        <div style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 2px dashed var(--border);">
+                            <div class="summary-row text-success">
+                                <span class="summary-label">Total Received:</span>
+                                <span class="summary-value">₹{{ number_format($totalReceived, 2) }}</span>
+                            </div>
+                            <div class="summary-row text-primary">
+                                <span class="summary-label">Applied to Invoice:</span>
+                                <span class="summary-value">₹{{ number_format($appliedToInvoice, 2) }}</span>
+                            </div>
+                            @if ($advancePayments > 0)
+                                <div class="summary-row text-purple">
+                                    <span class="summary-label">Advance Payment:</span>
+                                    <span class="summary-value">₹{{ number_format($advancePayments, 2) }}</span>
+                                </div>
+                            @endif
+                            @if ($excessAmount > 0)
+                                <div class="summary-row text-purple">
+                                    <span class="summary-label">Excess (to Wallet):</span>
+                                    <span class="summary-value">₹{{ number_format($excessAmount, 2) }}</span>
+                                </div>
+                            @endif
+                            @if ($remainingDue > 0)
+                                <div class="summary-row text-danger">
+                                    <span class="summary-label">Remaining Due:</span>
+                                    <span class="summary-value">₹{{ number_format($remainingDue, 2) }}</span>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ================= PAYMENT HISTORY ================= --}}
+            <div class="payments-section">
+                <div class="section-header">
+                    <h3 class="section-title" style="margin-bottom: 0;">💳 Payment History</h3>
+                    @if ($sale->payments->count() > 0)
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <span style="background: #f1f5f9; padding: 0.5rem 1rem; border-radius: 2rem; font-weight: 600;">
+                                Total: ₹{{ number_format($totalReceived, 2) }}
+                            </span>
+                            @if ($sale->payments->count() > 1)
+                                <button type="button" class="btn-sm btn-danger"
+                                    onclick="bulkDeletePayments({{ $sale->id }}, '{{ $sale->invoice_no }}', {{ $totalReceived }})">
+                                    🗑️ Delete All ({{ $sale->payments->count() }})
+                                </button>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Payment Summary Cards --}}
+                <div class="payment-summary-grid">
+                    <div class="payment-card total">
+                        <div class="payment-label">Grand Total</div>
+                        <div class="payment-value total">₹{{ number_format($sale->grand_total, 2) }}</div>
+                        <div class="payment-sub">Invoice amount</div>
+                    </div>
+
+                    <div class="payment-card paid">
+                        <div class="payment-label">Total Received</div>
+                        <div class="payment-value paid">₹{{ number_format($totalReceived, 2) }}</div>
+                        <div class="payment-sub">{{ $sale->payments->count() }} transaction(s)</div>
+                    </div>
+
+                    <div class="payment-card invoice">
+                        <div class="payment-label">Applied to Invoice</div>
+                        <div class="payment-value invoice">₹{{ number_format($appliedToInvoice, 2) }}</div>
+                        <div class="payment-sub">Invoice + Wallet used</div>
+                    </div>
+
+                    @if ($advancePayments > 0)
+                        <div class="payment-card advance">
+                            <div class="payment-label">Advance Payments</div>
+                            <div class="payment-value advance">₹{{ number_format($advancePayments, 2) }}</div>
+                            <div class="payment-sub">Added to wallet</div>
+                        </div>
+                    @endif
+
+                    @if ($excessAmount > 0)
+                        <div class="payment-card advance">
+                            <div class="payment-label">Excess Amount</div>
+                            <div class="payment-value advance">₹{{ number_format($excessAmount, 2) }}</div>
+                            <div class="payment-sub">Will go to wallet</div>
+                        </div>
+                    @elseif($remainingDue > 0)
+                        <div class="payment-card remaining">
+                            <div class="payment-label">Remaining Due</div>
+                            <div class="payment-value remaining">₹{{ number_format($remainingDue, 2) }}</div>
+                            <div class="payment-sub">Balance to pay</div>
+                        </div>
+                    @else
+                        <div class="payment-card paid">
+                            <div class="payment-label">Status</div>
+                            <div class="payment-value paid">PAID</div>
+                            <div class="payment-sub">Invoice settled</div>
+                        </div>
+                    @endif
+                </div>
+
+                @if ($sale->payments->count() > 0)
+                    <table class="payments-table">
                         <thead>
-                            <tr style="background: #f1f5f9;">
-                                <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">#</th>
-                                <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: left;">Method</th>
-                                <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: right;">Amount</th>
-                                <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">Type</th>
-                                <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">Status</th>
-                                <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: left;">Date</th>
-                                <th style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">Action</th>
+                            <tr>
+                                <th>Date</th>
+                                <th>Method</th>
+                                <th class="text-right">Amount</th>
+                                <th>Type</th>
+                                <th>Applied To / Source</th>
+                                <th>Reference</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @php
-                                // Calculate totals for summary
-                                $totalInvoicePayments = $sale->payments
-                                    ->where('status', 'paid')
-                                    ->whereIn('remarks', ['INVOICE', 'EMI_DOWN'])
-                                    ->sum('amount');
-
-                                $totalExcessPayments = $sale->payments
-                                    ->where('status', 'paid')
-                                    ->where('remarks', 'EXCESS_TO_ADVANCE')
-                                    ->sum('amount');
-
-                                $totalAdvanceUsed = $sale->payments
-                                    ->where('status', 'paid')
-                                    ->where('remarks', 'ADVANCE_USED')
-                                    ->sum('amount');
-
-                                $grandTotalPaid = $totalInvoicePayments + $totalExcessPayments + $totalAdvanceUsed;
-                            @endphp
-
-                            {{-- SUMMARY ROW --}}
-                            @if($grandTotalPaid > 0)
-                                <tr style="background: #f0f9ff; border-bottom: 2px solid #2563eb; font-weight: 700;">
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">—</td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: 600;">TOTAL</td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: right; font-size: 16px; color: #2563eb;">
-                                        ₹ {{ number_format($grandTotalPaid, 2) }}
-                                    </td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;" colspan="4">
-                                        <span style="background: #2563eb; color: white; padding: 4px 12px; border-radius: 20px;">
-                                            Combined Total
-                                        </span>
-                                    </td>
-                                </tr>
-                            @endif
-
-                            @foreach ($sale->payments as $i => $payment)
+                            @foreach ($sale->payments->sortByDesc('created_at') as $payment)
                                 @php
-                                    $typeColor = match ($payment->remarks) {
-                                        'INVOICE', 'EMI_DOWN' => '#059669',
-                                        'ADVANCE_USED' => '#8b5cf6',
-                                        'EXCESS_TO_ADVANCE', 'ADVANCE_ONLY' => '#f59e0b',
-                                        'INVOICE_DUE' => '#dc2626',
-                                        default => '#6b7280',
+                                    $typeClass = match ($payment->remarks) {
+                                        'EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD' => 'advance-only',
+                                        'ADVANCE_USED' => 'advance-used',
+                                        'INVOICE' => 'invoice',
+                                        'EMI_DOWN' => 'emi',
+                                        default => 'invoice',
+                                    };
+                                    $typeLabel = match ($payment->remarks) {
+                                        'EXCESS_TO_ADVANCE' => '💰 Excess to Wallet',
+                                        'ADVANCE_ONLY' => '💰 Advance Only',
+                                        'WALLET_ADD' => '💰 Wallet Add',
+                                        'ADVANCE_USED' => '🔄 Wallet Used',
+                                        'INVOICE' => '📄 Invoice Payment',
+                                        'EMI_DOWN' => '📊 EMI Down',
+                                        default => $payment->remarks,
+                                    };
+                                    $appliedText = match ($payment->remarks) {
+                                        'EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD' => 'Added to wallet',
+                                        'ADVANCE_USED' => 'Applied to invoice',
+                                        'INVOICE', 'EMI_DOWN' => 'Applied to invoice',
+                                        default => '—',
                                     };
 
-                                    $effectText = match($payment->remarks) {
-                                        'INVOICE', 'EMI_DOWN' => 'Paid to invoice',
-                                        'ADVANCE_USED' => 'Used from advance',
-                                        'EXCESS_TO_ADVANCE' => 'Added to advance',
-                                        'ADVANCE_ONLY' => 'Pure advance',
-                                        'INVOICE_DUE' => 'Marked as due',
-                                        default => $payment->remarks
-                                    };
+                                    // 🔥 FIND SOURCE INVOICE FOR ADVANCE_USED
+                                    $sourceInvoice = null;
+                                    if ($payment->remarks === 'ADVANCE_USED' && $payment->source_wallet_id) {
+                                        $sourcePayment = \App\Models\Payment::where(
+                                            'wallet_id',
+                                            $payment->source_wallet_id,
+                                        )
+                                            ->whereIn('remarks', ['EXCESS_TO_ADVANCE', 'WALLET_ADD'])
+                                            ->first();
+                                        if ($sourcePayment && $sourcePayment->sale) {
+                                            $sourceInvoice = $sourcePayment->sale->invoice_no;
+                                        }
+                                    }
                                 @endphp
                                 <tr>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                        {{ $i + 1 }}
+                                    <td>{{ $payment->created_at->format('d M Y') }}<br><small>{{ $payment->created_at->format('h:i A') }}</small>
                                     </td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; font-weight: 600;">
-                                        {{ strtoupper($payment->method) }}
+                                    <td>
+                                        <span style="text-transform: uppercase;">{{ $payment->method }}</span>
+                                        @if ($payment->transaction_id)
+                                            <br><small
+                                                style="color: var(--text-muted);">{{ $payment->transaction_id }}</small>
+                                        @endif
                                     </td>
-                                    <td
-                                        style="padding: 12px; border: 1px solid #e5e7eb; text-align: right; font-weight: 600; color: #059669;">
-                                        ₹ {{ number_format($payment->amount, 2) }}
+                                    <td class="text-right fw-bold text-success">+
+                                        ₹{{ number_format($payment->amount, 2) }}</td>
+                                    <td><span class="type-badge {{ $typeClass }}">{{ $typeLabel }}</span></td>
+                                    <td>
+                                        <small
+                                            style="color: {{ in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD']) ? '#7c3aed' : '#2563eb' }};">
+                                            {{ $appliedText }}
+                                        </small>
+                                        @if ($sourceInvoice)
+                                            <br><small style="color: #6d28d9; font-weight:500;">⬅️ From Invoice
+                                                #{{ $sourceInvoice }}</small>
+                                        @elseif ($payment->remarks == 'ADVANCE_USED' && $payment->source_wallet_id)
+                                            <br><small style="color: #6d28d9;">From Wallet
+                                                #{{ $payment->source_wallet_id }}</small>
+                                        @endif
                                     </td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                        <span
-                                            style="padding: 4px 12px; border-radius: 20px; font-weight: 600; background: #f3f4f6; color: {{ $typeColor }};">
-                                            {{ str_replace('_', ' ', $payment->remarks) }}
-                                        </span>
-                                        <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">{{ $effectText }}</div>
-                                    </td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                        <span
-                                            style="padding: 4px 12px; border-radius: 20px; font-weight: 600; background: {{ $payment->status === 'paid' ? '#dcfce7' : '#fef3c7' }}; color: {{ $payment->status === 'paid' ? '#166534' : '#92400e' }};">
-                                            {{ ucfirst($payment->status) }}
-                                        </span>
-                                    </td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb;">
-                                        {{ $payment->created_at->format('d M Y - h:i A') }}
-                                    </td>
-                                    <td style="padding: 12px; border: 1px solid #e5e7eb; text-align: center;">
-                                        <form method="POST" action="{{ route('payments.destroy', $payment->id) }}"
-                                              onsubmit="return confirmDelete('{{ $payment->remarks }}', {{ $payment->amount }}, '{{ $sale->invoice_no }}', {{ $advanceGenerated }}, {{ $advanceUsed }})"
-                                              style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    style="background: #fee2e2; color: #dc2626; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;"
-                                                    onmouseover="this.style.background='#fecaca'"
-                                                    onmouseout="this.style.background='#fee2e2'">
-                                                🗑️ Delete
-                                            </button>
-                                        </form>
+                                    <td><small>{{ $payment->transaction_id ?? '—' }}</small></td>
+                                    <td class="text-center">
+                                        <button class="btn-sm btn-danger"
+                                            onclick="deletePayment({{ $payment->id }}, {{ $payment->amount }})">
+                                            Delete
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
-                </div>
-            @endif
 
-            {{-- Action Buttons --}}
-            @if ($remaining > 0 && $sale->payment_status !== 'emi')
-                <div
-                    style="margin-top: 24px; text-align: center; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <a href="{{ route('payments.create', $sale->id) }}"
-                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s ease;">
-                        ➕ Add Payment
-                    </a>
+                    {{-- Summary Note --}}
+                    <div class="summary-note">
+                        <strong>Payment Summary:</strong><br>
+                        • Total amount received: <span
+                            class="fw-bold text-success">₹{{ number_format($totalReceived, 2) }}</span><br>
+                        • Applied to this invoice: <span
+                            class="fw-bold text-primary">₹{{ number_format($appliedToInvoice, 2) }}</span><br>
+                        @if ($advancePayments > 0)
+                            • Advance payments: <span
+                                class="fw-bold text-purple">₹{{ number_format($advancePayments, 2) }}</span> (added to
+                            wallet)<br>
+                        @endif
+                        @if ($excessAmount > 0)
+                            • Excess amount: <span
+                                class="fw-bold text-purple">₹{{ number_format($excessAmount, 2) }}</span> will be added to
+                            wallet<br>
+                        @endif
+                        @if ($remainingDue > 0)
+                            • Remaining due: <span
+                                class="fw-bold text-danger">₹{{ number_format($remainingDue, 2) }}</span><br>
+                        @else
+                            • Invoice status: <span class="fw-bold text-success">FULLY PAID</span><br>
+                        @endif
+                    </div>
+                @else
+                    <div class="empty-state">
+                        <div class="empty-icon">💰</div>
+                        <div class="empty-title">No payments recorded yet</div>
+                        <div class="empty-text">Total amount due: ₹{{ number_format($sale->grand_total, 2) }}</div>
+                    </div>
+                @endif
 
-                    @if (!$hasDueRecord)
-                        <form method="POST" action="{{ route('sales.mark-due', $sale->id) }}" style="display: inline;">
-                            @csrf
-                            <button type="submit"
-                                style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 14px 28px; border-radius: 12px; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.3s ease;"
-                                onclick="return confirm('Mark this invoice as due? This will add ₹{{ number_format($remaining, 2) }} to customer\'s balance.')">
-                                📝 Mark as Due
-                            </button>
-                        </form>
+                {{-- Action Buttons --}}
+                <div class="action-buttons">
+                    @if ($remainingDue > 0 || $sale->payment_status == 'unpaid')
+                        <a href="{{ route('payments.create', $sale->id) }}" class="btn-primary-lg">➕ Add Payment</a>
                     @endif
+                    @if ($sale->payment_status != 'paid' && $sale->payment_status != 'emi')
+                        <a href="{{ route('sales.edit', $sale->id) }}" class="btn-secondary-lg">✏️ Edit Invoice</a>
+                    @endif
+                    <a href="{{ route('customers.payments', $sale->customer_id) }}" class="btn-secondary-lg">👤 Customer
+                        History</a>
                 </div>
-            @endif
 
-            {{-- Show "Invoice Fully Paid" message when fully paid --}}
-            @if ($isFullyPaid)
-                <div
-                    style="margin-top: 24px; text-align: center; background: #dcfce7; padding: 15px; border-radius: 12px;">
-                    <span style="color: #166534; font-weight: 600; font-size: 16px;">
-                        ✅ This invoice is fully paid. No further payments required.
-                    </span>
-                </div>
-            @endif
+                {{-- EMI Details --}}
+                @if ($sale->payment_status === 'emi' && $sale->emiPlan)
+                    <div class="emi-section">
+                        <h4 class="emi-title">📆 EMI Details</h4>
+                        <div class="emi-grid">
+                            <div class="emi-item">
+                                <div class="emi-label">Total Amount</div>
+                                <div class="emi-value">₹{{ number_format($sale->emiPlan->total_amount, 2) }}</div>
+                            </div>
+                            <div class="emi-item">
+                                <div class="emi-label">Down Payment</div>
+                                <div class="emi-value">₹{{ number_format($sale->emiPlan->down_payment, 2) }}</div>
+                            </div>
+                            <div class="emi-item">
+                                <div class="emi-label">Monthly EMI</div>
+                                <div class="emi-value">₹{{ number_format($sale->emiPlan->emi_amount, 2) }}</div>
+                            </div>
+                            <div class="emi-item">
+                                <div class="emi-label">Status</div>
+                                <div class="emi-value">
+                                    <span class="emi-status {{ $sale->emiPlan->status }}">
+                                        {{ ucfirst($sale->emiPlan->status) }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="emi-item">
+                                <div class="emi-label">Total Months</div>
+                                <div class="emi-value">{{ $sale->emiPlan->months }} Months</div>
+                            </div>
+                            <div class="emi-item">
+                                <div class="emi-label">Total Payable</div>
+                                <div class="emi-value">
+                                    ₹{{ number_format($sale->emiPlan->emi_amount * $sale->emiPlan->months, 2) }}</div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
 
-            {{-- Show EMI specific message --}}
-            @if ($sale->payment_status === 'emi')
-                <div
-                    style="margin-top: 24px; text-align: center; background: #fffbeb; padding: 15px; border-radius: 12px;">
-                    <span style="color: #92400e; font-weight: 600; font-size: 16px;">
-                        📆 This invoice is under EMI. Please pay monthly EMIs only.
-                    </span>
-                </div>
-            @endif
-        </div>
-
-        {{-- ================= FOOTER ================= --}}
-        <div
-            style="margin-top: 40px; text-align: center; color: #9ca3af; font-size: 13px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
-            Thank you for your business! • This is a computer-generated invoice
+            {{-- ================= FOOTER ================= --}}
+            <div class="invoice-footer">
+                This is a computer-generated invoice • Thank you for your business!
+            </div>
         </div>
     </div>
+
+    {{-- ================= TOAST NOTIFICATION ================= --}}
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = msg;
+            toast.className = 'toast ' + type;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        function copyInvoiceNo() {
+            navigator.clipboard.writeText('{{ $sale->invoice_no }}')
+                .then(() => showToast('✅ Invoice number copied!', 'success'))
+                .catch(() => showToast('❌ Failed to copy', 'error'));
+        }
+
+        function deletePayment(id, amount) {
+            if (!confirm(`Delete payment of ₹${amount}?`)) return;
+            showLoading();
+            fetch(`/payments/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(r => r.json())
+                .then(d => {
+                    hideLoading();
+                    if (d.success) {
+                        showToast('✅ Deleted!');
+                        setTimeout(() => location.reload(), 1500);
+                    } else showToast('❌ ' + d.message, 'error');
+                })
+                .catch(() => {
+                    hideLoading();
+                    showToast('❌ Error', 'error');
+                });
+        }
+
+        function bulkDeletePayments(id, no, amount) {
+            if (!confirm(`Delete all payments for #${no} (₹${amount})?`)) return;
+            showLoading();
+            fetch(`/payments/bulk/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                })
+                .then(r => r.json())
+                .then(d => {
+                    hideLoading();
+                    if (d.success) {
+                        showToast('✅ Deleted!');
+                        setTimeout(() => location.reload(), 2000);
+                    } else showToast('❌ ' + d.message, 'error');
+                })
+                .catch(() => {
+                    hideLoading();
+                    showToast('❌ Error', 'error');
+                });
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+    </script>
 @endsection
-
-<script>
-function confirmSmartDelete(invoiceNo, transactionCount, totalAmount, advanceGenerated, advanceUsed) {
-    let message = `🧠 SMART DELETE\n\n`;
-    message += `Invoice: #${invoiceNo}\n`;
-    message += `Total Transactions: ${transactionCount}\n`;
-    message += `Total Amount: ₹${totalAmount.toFixed(2)}\n\n`;
-
-    if (advanceGenerated > 0) {
-        message += `💰 This invoice GENERATED ₹${advanceGenerated.toFixed(2)} ADVANCE\n`;
-        message += `📍 This advance was used in OTHER invoices\n\n`;
-    }
-
-    if (advanceUsed > 0) {
-        message += `🔄 This invoice USED ₹${advanceUsed.toFixed(2)} ADVANCE\n`;
-        message += `📍 This advance came from OTHER invoices\n\n`;
-    }
-
-    message += `📌 WHAT WILL HAPPEN:\n`;
-    message += `✅ This invoice → ALL transactions deleted (UNPAID)\n`;
-
-    if (advanceGenerated > 0) {
-        message += `✅ OTHER invoices → ADVANCE USED entries will be deleted\n`;
-        message += `✅ OTHER invoices → CASH payments will REMAIN\n`;
-        message += `✅ Advance balance will DECREASE by ₹${advanceGenerated.toFixed(2)}\n\n`;
-    }
-
-    if (advanceUsed > 0) {
-        message += `✅ Advance balance will INCREASE by ₹${advanceUsed.toFixed(2)}\n\n`;
-    }
-
-    message += `✅ All invoice statuses will be recalculated\n\n`;
-
-    message += `Are you sure you want to proceed?`;
-
-    return confirm(message);
-}
-
-function confirmDelete(remarks, amount, invoiceNo, advanceGenerated, advanceUsed) {
-    let message = `⚠️ DELETE TRANSACTION\n\n`;
-    message += `Type: ${remarks.replace(/_/g, ' ')}\n`;
-    message += `Amount: ₹${amount.toFixed(2)}\n`;
-    message += `Invoice: #${invoiceNo}\n\n`;
-
-    message += `📌 EFFECT ON BALANCE:\n`;
-
-    switch(remarks) {
-        case 'INVOICE':
-        case 'EMI_DOWN':
-            message += `• Invoice due will INCREASE by ₹${amount.toFixed(2)}\n`;
-            message += `• No effect on advance balance\n`;
-            break;
-
-        case 'EXCESS_TO_ADVANCE':
-            message += `• Advance balance will DECREASE by ₹${amount.toFixed(2)}\n`;
-            message += `• Other invoices using this advance will lose it\n`;
-            break;
-
-        case 'ADVANCE_USED':
-            message += `• Advance balance will INCREASE by ₹${amount.toFixed(2)}\n`;
-            message += `• Invoice due will INCREASE by ₹${amount.toFixed(2)}\n`;
-            message += `• The invoice that generated this advance gets it back\n`;
-            break;
-
-        case 'ADVANCE_ONLY':
-            message += `• Advance balance will DECREASE by ₹${amount.toFixed(2)}\n`;
-            break;
-
-        case 'INVOICE_DUE':
-            message += `• Customer due will DECREASE by ₹${amount.toFixed(2)}\n`;
-            break;
-    }
-
-    message += `\n⚠️ All related invoices will be recalculated.\n\n`;
-    message += `Are you sure?`;
-
-    return confirm(message);
-}
-</script>

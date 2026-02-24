@@ -1149,6 +1149,103 @@
                 customerTimer: null
             };
 
+
+// ========== LOAD CUSTOMER FROM URL ==========
+// ========== LOAD CUSTOMER FROM URL ==========
+function loadCustomerFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const customerId = urlParams.get('customer_id');
+    const customerName = urlParams.get('customer_name');
+
+    // Don't load if no parameters or if customer is already selected
+    if (!customerId || !customerName || state.isCustomerSelected) {
+        return;
+    }
+
+    // Show loading state in customer search
+    if (elements.customerSearch) {
+        elements.customerSearch.value = 'Loading customer...';
+        elements.customerSearch.disabled = true;
+    }
+
+    // Create customer object with basic info
+    const customer = {
+        id: customerId,
+        name: decodeURIComponent(customerName),
+        mobile: 'Fetching...',
+        email: 'Fetching...'
+    };
+
+    // First select the customer with basic info
+    selectCustomer(customer);
+
+    // Show loading toast
+    showToast('Loading customer details...', 'info');
+
+    // Then fetch full customer details in background
+    fetch(`/customers/${customerId}/details`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        }
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+    })
+    .then(data => {
+        if (data.customer) {
+            // Update with full details
+            if (elements.selectedCustomerMobileText) {
+                elements.selectedCustomerMobileText.textContent = data.customer.mobile || 'Not provided';
+            }
+            if (elements.selectedCustomerEmailText) {
+                elements.selectedCustomerEmailText.textContent = data.customer.email || 'Not provided';
+            }
+
+            // Update customer search with actual name (in case it was loading)
+            if (elements.customerSearch) {
+                elements.customerSearch.value = data.customer.name;
+                elements.customerSearch.disabled = false;
+            }
+
+            // Show success toast
+            showToast(`Customer "${data.customer.name}" loaded successfully`, 'success');
+        } else {
+            throw new Error('Customer data not found');
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching customer details:', error);
+
+        // Keep basic info but show error state
+        if (elements.selectedCustomerMobileText) {
+            elements.selectedCustomerMobileText.textContent = 'Failed to load';
+            elements.selectedCustomerMobileText.style.color = '#dc2626';
+        }
+        if (elements.selectedCustomerEmailText) {
+            elements.selectedCustomerEmailText.textContent = 'Failed to load';
+            elements.selectedCustomerEmailText.style.color = '#dc2626';
+        }
+
+        // Re-enable customer search
+        if (elements.customerSearch) {
+            elements.customerSearch.disabled = false;
+        }
+
+        // Show error toast
+        showToast('Failed to load customer details. Please search manually.', 'error');
+    })
+    .finally(() => {
+        // Ensure search is enabled even if something goes wrong
+        if (elements.customerSearch) {
+            elements.customerSearch.disabled = false;
+        }
+    });
+}
+
             // ========== DOM ELEMENTS ==========
             const elements = {
                 // Customer elements
@@ -1200,6 +1297,7 @@
             function init() {
                 disableBarcodeScanner();
                 attachEventListeners();
+                loadCustomerFromUrl();
                 updateUIState();
             }
 
@@ -1371,42 +1469,73 @@
                 updateUIState();
             }
 
-            function clearCustomerSelection() {
-                // Clear customer data
-                if (elements.customerSearch) {
-                    elements.customerSearch.value = '';
-                    elements.customerSearch.style.borderColor = '#d1d5db';
-                }
-                if (elements.customerIdInput) elements.customerIdInput.value = '';
+           // ========== CLEAR CUSTOMER SELECTION ==========
+function clearCustomerSelection() {
+    // Clear customer search input and styling
+    if (elements.customerSearch) {
+        elements.customerSearch.value = '';
+        elements.customerSearch.style.borderColor = '#d1d5db';
+    }
 
-                state.isCustomerSelected = false;
+    // Clear hidden customer ID input
+    if (elements.customerIdInput) {
+        elements.customerIdInput.value = '';
+    }
 
-                // Hide customer info and clear button
-                if (elements.selectedCustomerInfo) elements.selectedCustomerInfo.style.display = 'none';
-                if (elements.clearCustomerContainer) elements.clearCustomerContainer.style.display = 'none';
+    // Update state
+    state.isCustomerSelected = false;
 
-                // Disable product search and clear products
-                disableProductSearch();
-                clearAllProducts();
+    // Hide selected customer info card
+    if (elements.selectedCustomerInfo) {
+        elements.selectedCustomerInfo.style.display = 'none';
+    }
 
-                // Disable barcode scanner
-                disableBarcodeScanner();
+    // Hide clear customer button
+    if (elements.clearCustomerContainer) {
+        elements.clearCustomerContainer.style.display = 'none';
+    }
 
-                // Focus back on customer search
-                if (elements.customerSearch) elements.customerSearch.focus();
+    // Disable product search and clear any existing products
+    disableProductSearch();
+    clearAllProducts();
 
-                // Show message
-                if (elements.customerStatus) {
-                    elements.customerStatus.textContent = 'Please select a customer first';
-                    elements.customerStatus.style.color = '#dc2626';
-                }
+    // Disable barcode scanner
+    disableBarcodeScanner();
 
-                // Update UI state
-                updateUIState();
+    // Focus back on customer search for better UX
+    if (elements.customerSearch) {
+        elements.customerSearch.focus();
+    }
 
-                showToast('Customer selection cleared', 'info');
-            }
+    // Update customer status message
+    if (elements.customerStatus) {
+        elements.customerStatus.textContent = 'Please select a customer first';
+        elements.customerStatus.style.color = '#dc2626';
+    }
 
+    // IMPORTANT: Remove customer_id and customer_name from URL
+    // so that page reload doesn't reselect the customer
+    removeCustomerFromUrl();
+
+    // Update UI state (items status, etc.)
+    updateUIState();
+
+    // Show toast notification
+    showToast('Customer selection cleared', 'info');
+}
+// ========== REMOVE CUSTOMER FROM URL ==========
+function removeCustomerFromUrl() {
+    // Get current URL
+    const url = new URL(window.location.href);
+
+    // Remove customer_id and customer_name parameters
+    url.searchParams.delete('customer_id');
+    url.searchParams.delete('customer_name');
+
+    // Update URL without reloading the page
+    // replaceState ensures back button behavior remains intact
+    window.history.replaceState({}, '', url.toString());
+}
             function handleCustomerBlur() {
                 setTimeout(() => {
                     if (state.isCustomerSelected && !isInputFieldActive()) {

@@ -1,15 +1,859 @@
 @extends('layouts.app')
 
+@section('page-title', 'Record Payment - Invoice #' . $sale->invoice_no)
+
 @section('content')
-<div style="min-height:100vh;background:#f3f4f6;padding:30px 20px;font-family:system-ui,-apple-system,sans-serif;">
-    <div style="max-width:800px;margin:auto;">
+<style>
+    /* ================= PROFESSIONAL DESIGN SYSTEM ================= */
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --success: #16a34a;
+        --danger: #dc2626;
+        --warning: #d97706;
+        --purple: #7c3aed;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --bg-light: #f8fafc;
+        --bg-white: #ffffff;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-xl: 16px;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background: #f1f5f9;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        color: var(--text-main);
+        line-height: 1.5;
+    }
+
+    /* ================= CONTAINER ================= */
+    .payment-wrapper {
+        min-height: 100vh;
+        background: #f1f5f9;
+        padding: 2rem 1rem;
+    }
+
+    .payment-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    /* ================= ALERTS ================= */
+    .alert {
+        padding: 1rem 1.25rem;
+        border-radius: var(--radius-md);
+        margin-bottom: 1.5rem;
+        border-left: 4px solid;
+        font-size: 0.95rem;
+    }
+
+    .alert-error {
+        background: #fef2f2;
+        border-left-color: var(--danger);
+    }
+
+    .alert-error ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .alert-error li {
+        color: #991b1b;
+    }
+
+    .alert-success {
+        background: #f0fdf4;
+        border-left-color: var(--success);
+    }
+
+    .alert-success p {
+        color: #166534;
+        margin: 0;
+    }
+
+    /* ================= MAIN CARD ================= */
+    .card {
+        background: var(--bg-white);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+    }
+
+    /* ================= HEADER ================= */
+    .card-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+        padding: 2rem;
+        color: white;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .header-subtitle {
+        margin-top: 0.5rem;
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+
+    .status-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1.25rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        backdrop-filter: blur(4px);
+    }
+
+    /* ================= SUMMARY CARDS ================= */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        padding: 1.5rem 2rem;
+        background: var(--bg-light);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .summary-card {
+        background: var(--bg-white);
+        padding: 1.25rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .summary-label {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .summary-value.primary {
+        color: var(--primary);
+    }
+
+    .summary-value.success {
+        color: var(--success);
+    }
+
+    .summary-value.danger {
+        color: var(--danger);
+    }
+
+    /* ================= CUSTOMER INFO ================= */
+    .customer-info {
+        padding: 1.25rem 2rem;
+        background: var(--bg-white);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .customer-details {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1.25rem;
+    }
+
+    .customer-avatar {
+        width: 3rem;
+        height: 3rem;
+        background: var(--bg-light);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .customer-name {
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    .customer-mobile {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+    }
+
+    .balance-badge {
+        padding: 0.75rem 1.25rem;
+        border-radius: 2rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .balance-wallet {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .balance-due {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .balance-net {
+        background: #f1f5f9;
+        color: var(--text-main);
+        border: 1px solid var(--border);
+    }
+
+    /* ================= FORM SECTION ================= */
+    .form-section {
+        padding: 2rem;
+    }
+
+    /* ================= TABS ================= */
+    .tabs {
+        display: flex;
+        gap: 0.5rem;
+        background: var(--bg-light);
+        padding: 0.375rem;
+        border-radius: var(--radius-lg);
+        margin-bottom: 2rem;
+        border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 0.875rem;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: transparent;
+        color: var(--text-muted);
+    }
+
+    .tab-btn.active {
+        background: var(--primary);
+        color: white;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .tab-btn:hover:not(.active) {
+        background: #e2e8f0;
+    }
+
+    /* ================= WALLET SECTION ================= */
+    .wallet-section {
+        background: #f0fdf4;
+        border: 1px solid #86efac;
+        border-radius: var(--radius-lg);
+        padding: 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .wallet-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .wallet-title {
+        color: #166534;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .wallet-balance {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--success);
+    }
+
+    .wallet-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        border: 1px solid #86efac;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .wallet-toggle input {
+        width: 1rem;
+        height: 1rem;
+        cursor: pointer;
+    }
+
+    .wallet-input-group {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px dashed #86efac;
+    }
+
+    .wallet-input-group.hidden {
+        display: none;
+    }
+
+    .wallet-input {
+        width: 100%;
+        padding: 0.875rem;
+        border: 1px solid #86efac;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+    .wallet-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .wallet-quick-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .wallet-quick-btn {
+        flex: 1;
+        padding: 0.5rem;
+        background: #86efac;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .wallet-quick-btn:hover {
+        background: var(--success);
+        color: white;
+    }
+
+    .wallet-remaining {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.75rem;
+        background: var(--bg-white);
+        padding: 0.75rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.95rem;
+    }
+
+    /* ================= PAYMENT INPUT ================= */
+    .payment-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .payment-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+        color: var(--text-main);
+    }
+
+    .payment-input-wrapper {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .payment-input {
+        flex: 1;
+        padding: 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 1.125rem;
+        transition: border-color 0.2s;
+    }
+
+    .payment-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .payment-hint {
+        background: #e2e8f0;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: none;
+    }
+
+    .payment-hint.visible {
+        display: inline-block;
+    }
+
+    .quick-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .quick-btn {
+        flex: 1;
+        padding: 0.75rem;
+        background: #e2e8f0;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .quick-btn:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    /* ================= PREVIEW ================= */
+    .preview-box {
+        background: var(--bg-light);
+        padding: 1.25rem;
+        border-radius: var(--radius-lg);
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border);
+        display: none;
+    }
+
+    .preview-box.visible {
+        display: block;
+    }
+
+    .preview-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .preview-header.partial {
+        color: #92400e;
+    }
+
+    .preview-header.full {
+        color: var(--success);
+    }
+
+    .preview-header.excess {
+        color: var(--success);
+    }
+
+    .preview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .preview-item .label {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .preview-item .value {
+        font-size: 1.125rem;
+        font-weight: 700;
+    }
+
+    .preview-item .value.wallet {
+        color: var(--success);
+    }
+
+    .preview-divider {
+        border-top: 2px dashed var(--border);
+        padding-top: 1rem;
+    }
+
+    .preview-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.25rem;
+    }
+
+    .preview-row .label {
+        font-weight: 600;
+    }
+
+    .preview-row .value {
+        font-weight: 700;
+    }
+
+    .preview-row.due .value {
+        color: var(--danger);
+    }
+
+    .preview-row.excess .value {
+        color: var(--success);
+    }
+
+    /* ================= ADVANCE SECTION ================= */
+    .advance-section {
+        background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        color: white;
+    }
+
+    .advance-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .advance-description {
+        margin-bottom: 1.5rem;
+        opacity: 0.9;
+        font-size: 0.95rem;
+    }
+
+    .advance-input {
+        width: 100%;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: var(--radius-md);
+        font-size: 1.125rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        transition: all 0.2s;
+    }
+
+    .advance-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .advance-input:focus {
+        outline: none;
+        border-color: white;
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .advance-quick-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .advance-quick-btn {
+        flex: 1;
+        min-width: 80px;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: var(--radius-md);
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .advance-quick-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .advance-preview {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .advance-preview.visible {
+        display: block;
+    }
+
+    /* ================= PAYMENT METHODS ================= */
+    .methods-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 2rem 0 1rem;
+        color: var(--text-main);
+    }
+
+    .methods-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .method-card {
+        border: 1px solid var(--border);
+        padding: 1rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+        background: white;
+    }
+
+    .method-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .method-card.active {
+        border-color: var(--primary);
+        background: #eff6ff;
+    }
+
+    .method-card.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .method-card input[type="radio"] {
+        display: none;
+    }
+
+    .method-icon {
+        font-size: 1.75rem;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .method-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    /* ================= EMI SECTION ================= */
+    .emi-section {
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .emi-title {
+        margin: 0 0 1.25rem;
+        color: #92400e;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .emi-field {
+        margin-bottom: 1rem;
+    }
+
+    .emi-label {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        display: block;
+        color: #92400e;
+    }
+
+    .emi-input,
+    .emi-select {
+        width: 100%;
+        padding: 0.875rem;
+        border: 1px solid #fcd34d;
+        border-radius: var(--radius-md);
+        transition: border-color 0.2s;
+    }
+
+    .emi-input:focus,
+    .emi-select:focus {
+        outline: none;
+        border-color: var(--warning);
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+    }
+
+    .emi-input[readonly] {
+        background: #fef9c3;
+        font-weight: 600;
+    }
+
+    /* ================= FORM FIELDS ================= */
+    .form-field {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        display: block;
+        color: var(--text-main);
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 0.875rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        transition: border-color 0.2s;
+        font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    /* ================= SUBMIT BUTTON ================= */
+    .submit-btn {
+        width: 100%;
+        padding: 1.25rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 1.125rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 1rem;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .back-link {
+        text-align: center;
+        margin-top: 1.25rem;
+    }
+
+    .back-link a {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.95rem;
+    }
+
+    .back-link a:hover {
+        color: var(--primary);
+    }
+
+    /* ================= UTILITY CLASSES ================= */
+    .text-right {
+        text-align: right;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .fw-bold {
+        font-weight: 700;
+    }
+
+    .fw-semibold {
+        font-weight: 600;
+    }
+
+    /* ================= RESPONSIVE ================= */
+    @media (max-width: 768px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .customer-details {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .methods-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .wallet-quick-buttons,
+        .quick-buttons {
+            flex-wrap: wrap;
+        }
+
+        .wallet-quick-btn,
+        .quick-btn {
+            min-width: 120px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .methods-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<div class="payment-wrapper">
+    <div class="payment-container">
 
         {{-- Error Messages --}}
         @if ($errors->any())
-            <div style="background:#fee2e2;border-left:4px solid #dc2626;padding:16px 20px;border-radius:12px;margin-bottom:24px;">
-                <ul style="margin:0;padding-left:20px;">
+            <div class="alert alert-error">
+                <ul>
                     @foreach ($errors->all() as $error)
-                        <li style="color:#991b1b;">{{ $error }}</li>
+                        <li>{{ $error }}</li>
                     @endforeach
                 </ul>
             </div>
@@ -17,79 +861,89 @@
 
         {{-- Success Messages --}}
         @if (session('success'))
-            <div style="background:#dcfce7;border-left:4px solid #16a34a;padding:16px 20px;border-radius:12px;margin-bottom:24px;">
-                <p style="color:#166534;margin:0;">{{ session('success') }}</p>
+            <div class="alert alert-success">
+                <p>{{ session('success') }}</p>
             </div>
         @endif
 
         {{-- Main Card --}}
-        <div style="background:white;border-radius:28px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);overflow:hidden;">
+        <div class="card">
 
             {{-- Header --}}
-            <div style="background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);padding:30px;color:white;">
-                <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="card-header">
+                <div class="header-content">
                     <div>
-                        <h1 style="margin:0;font-size:28px;font-weight:700;">💳 Record Payment</h1>
-                        <p style="margin:8px 0 0;opacity:0.9;">Invoice #{{ $sale->invoice_no }}</p>
+                        <h1 class="header-title">💳 Record Payment</h1>
+                        <p class="header-subtitle">Invoice #{{ $sale->invoice_no }}</p>
                     </div>
-                    <div style="background:rgba(255,255,255,0.2);padding:8px 20px;border-radius:40px;font-weight:600;">
+                    <div class="status-badge">
                         {{ strtoupper($sale->payment_status) }}
                     </div>
                 </div>
             </div>
 
             {{-- Summary Cards --}}
-            <div style="padding:30px;background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
-                    <div style="background:white;padding:20px;border-radius:18px;">
-                        <div style="color:#64748b;font-size:14px;">Grand Total</div>
-                        <div style="font-size:24px;font-weight:700;">₹ {{ number_format($sale->grand_total, 2) }}</div>
-                    </div>
-                    <div style="background:white;padding:20px;border-radius:18px;">
-                        <div style="color:#64748b;font-size:14px;">Paid Amount</div>
-                        <div style="font-size:24px;font-weight:700;color:#059669;">₹ {{ number_format($paidAmount, 2) }}</div>
-                    </div>
-                    <div style="background:white;padding:20px;border-radius:18px;">
-                        <div style="color:#64748b;font-size:14px;">Due Amount</div>
-                        <div style="font-size:24px;font-weight:700;color:#dc2626;">₹ {{ number_format($remaining, 2) }}</div>
-                    </div>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Grand Total</div>
+                    <div class="summary-value primary">₹{{ number_format($sale->grand_total, 2) }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Paid Amount</div>
+                    <div class="summary-value success">₹{{ number_format($paidAmount, 2) }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Due Amount</div>
+                    <div class="summary-value danger">₹{{ number_format($remaining, 2) }}</div>
                 </div>
             </div>
 
-            {{-- Customer Balance --}}
-            @if($sale->customer)
-            <div style="padding:20px 30px;background:white;border-bottom:1px solid #e2e8f0;">
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <div style="display:flex;align-items:center;gap:15px;">
-                        <div style="width:50px;height:50px;background:#f1f5f9;border-radius:16px;display:flex;align-items:center;justify-content:center;">
-                            <span style="font-size:24px;">👤</span>
+            {{-- Customer Info --}}
+            @if ($sale->customer)
+                <div class="customer-info">
+                    <div class="customer-details">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="customer-avatar">
+                                <span>👤</span>
+                            </div>
+                            <div>
+                                <div class="customer-name">{{ $sale->customer->name }}</div>
+                                <div class="customer-mobile">{{ $sale->customer->mobile ?? '' }}</div>
+                            </div>
                         </div>
-                        <div>
-                            <div style="color:#0f172a;font-weight:600;">{{ $sale->customer->name }}</div>
-                            <div style="color:#64748b;font-size:13px;">{{ $sale->customer->mobile ?? '' }}</div>
+
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            @if ($walletBalance > 0)
+                                <div class="balance-badge balance-wallet">
+                                    <span>💰</span>
+                                    <span>Wallet: ₹{{ number_format($walletBalance, 2) }}</span>
+                                </div>
+                            @endif
+
+                            @if ($dueBalance > 0)
+                                <div class="balance-badge balance-due">
+                                    <span>⚠️</span>
+                                    <span>Due: ₹{{ number_format($dueBalance, 2) }}</span>
+                                </div>
+                            @endif
+
+                            <div class="balance-badge balance-net">
+                                <span>📊</span>
+                                <span>
+                                    @if ($openBalance > 0)
+                                        Due: ₹{{ number_format($openBalance, 2) }}
+                                    @elseif($openBalance < 0)
+                                        Advance: ₹{{ number_format(abs($openBalance), 2) }}
+                                    @else
+                                        Clear (₹0)
+                                    @endif
+                                </span>
+                            </div>
                         </div>
                     </div>
-
-                    @if($advanceBalance > 0)
-                        <div style="background:#dcfce7;padding:10px 20px;border-radius:40px;">
-                            <div style="color:#64748b;font-size:12px;">Advance Balance</div>
-                            <div style="color:#059669;font-weight:700;font-size:20px;">₹ {{ number_format($advanceBalance, 2) }}</div>
-                        </div>
-                    @elseif($dueBalance > 0)
-                        <div style="background:#fee2e2;padding:10px 20px;border-radius:40px;">
-                            <div style="color:#64748b;font-size:12px;">Previous Due</div>
-                            <div style="color:#b91c1c;font-weight:700;font-size:20px;">₹ {{ number_format($dueBalance, 2) }}</div>
-                        </div>
-                    @else
-                        <div style="background:#f1f5f9;padding:10px 20px;border-radius:40px;">
-                            <div style="color:#64748b;font-size:12px;">Account</div>
-                            <div style="color:#475569;font-weight:700;">Clear</div>
-                        </div>
-                    @endif
                 </div>
-            </div>
             @endif
-z
+
             {{-- Payment Form --}}
             <form method="POST" action="{{ route('payments.store') }}" id="paymentForm">
                 @csrf
@@ -97,207 +951,212 @@ z
                 <input type="hidden" name="payment_type" id="payment_type" value="full">
                 <input type="hidden" name="is_advance_only" id="is_advance_only" value="0">
 
-                <div style="padding:30px;">
+                <div class="form-section">
 
-                    {{-- Payment Type Tabs --}}
-                    <div style="display:flex;gap:10px;background:#f1f5f9;padding:6px;border-radius:14px;margin-bottom:30px;">
-                        <button type="button" class="tab-btn active" id="tabInvoice"
-                            style="flex:1;padding:14px;border:none;border-radius:12px;font-weight:600;cursor:pointer;background:#2563eb;color:white;">
-                            🧾 Invoice Payment
-                        </button>
-                        <button type="button" class="tab-btn" id="tabAdvance"
-                            style="flex:1;padding:14px;border:none;border-radius:12px;font-weight:600;cursor:pointer;background:transparent;color:#475569;">
-                            👛 Pure Advance
-                        </button>
+                    {{-- Tabs --}}
+                    <div class="tabs">
+                        <button type="button" class="tab-btn active" id="tabInvoice">🧾 Invoice Payment</button>
+                        <button type="button" class="tab-btn" id="tabAdvance">👛 Add to Wallet</button>
                     </div>
 
-                    {{-- Invoice Payment Section --}}
+                    {{-- Invoice Section --}}
                     <div id="invoiceSection">
 
-                        {{-- Advance Usage Section --}}
-                        @if($advanceBalance > 0)
-                        <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:20px;padding:20px;margin-bottom:30px;">
-                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:15px;">
-                                <div>
-                                    <div style="color:#166534;font-weight:600;">Available Advance</div>
-                                    <div style="font-size:28px;font-weight:800;color:#059669;">₹ {{ number_format($advanceBalance, 2) }}</div>
+                        {{-- Wallet Usage --}}
+                        @if ($walletBalance > 0)
+                            <div class="wallet-section">
+                                <div class="wallet-header">
+                                    <div>
+                                        <div class="wallet-title">💰 Wallet Balance Available</div>
+                                        <div class="wallet-balance">₹{{ number_format($walletBalance, 2) }}</div>
+                                    </div>
+                                    <label class="wallet-toggle">
+                                        <input type="checkbox" id="useWalletCheckbox">
+                                        <span>Use from Wallet</span>
+                                    </label>
                                 </div>
-                                <label style="display:flex;align-items:center;gap:10px;background:white;padding:10px 20px;border-radius:40px;cursor:pointer;">
-                                    <input type="checkbox" id="useAdvanceCheckbox" style="width:18px;height:18px;">
-                                    <span style="font-weight:600;">Use Advance</span>
-                                </label>
-                            </div>
 
-                            <div id="advanceUseBox" style="display:none;margin-top:15px;">
-                                <label style="font-weight:600;color:#166534;margin-bottom:8px;display:block;">Amount to use from advance</label>
-                                <input type="number" id="advanceUsed" name="advance_used" min="0" max="{{ $advanceBalance }}" step="0.01" value="0"
-                                    style="width:100%;padding:15px;border:2px solid #86efac;border-radius:12px;font-size:18px;"
-                                    placeholder="Enter amount">
-                                <div style="display:flex;gap:10px;margin-top:10px;">
-                                    <button type="button" class="advance-quick-btn" data-amount="{{ min($advanceBalance, $remaining) }}"
-                                        style="flex:1;padding:8px;background:#86efac;border:none;border-radius:8px;font-weight:600;cursor:pointer;">
-                                        Full (₹{{ number_format(min($advanceBalance, $remaining), 2) }})
-                                    </button>
-                                    <button type="button" class="advance-quick-btn" data-amount="{{ min($advanceBalance/2, $remaining) }}"
-                                        style="flex:1;padding:8px;background:#86efac;border:none;border-radius:8px;font-weight:600;cursor:pointer;">
-                                        50%
-                                    </button>
+                                <div id="walletUseBox" class="wallet-input-group hidden">
+                                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Amount to
+                                        use</label>
+                                    <input type="number" id="walletAmount" name="wallet_used" min="0"
+                                        max="{{ $walletBalance }}" step="0.01" value="0" class="wallet-input"
+                                        placeholder="Enter amount">
+
+                                    <div class="wallet-quick-buttons">
+                                        <button type="button" class="wallet-quick-btn"
+                                            data-wallet-amount="{{ min($walletBalance, $remaining) }}">
+                                            Full (₹{{ number_format(min($walletBalance, $remaining), 2) }})
+                                        </button>
+                                        <button type="button" class="wallet-quick-btn"
+                                            data-wallet-amount="{{ min($walletBalance / 2, $remaining) }}">
+                                            50%
+                                        </button>
+                                    </div>
+
+                                    <div class="wallet-remaining">
+                                        <span>Remaining in wallet:</span>
+                                        <span class="fw-bold"
+                                            id="remainingWallet">₹{{ number_format($walletBalance, 2) }}</span>
+                                    </div>
                                 </div>
-                                <p style="color:#166534;font-size:14px;margin-top:8px;">Remaining advance: ₹<span id="remainingAdvance">{{ number_format($advanceBalance, 2) }}</span></p>
                             </div>
-                        </div>
                         @endif
 
-                        {{-- Cash Payment with Auto-calculation --}}
-                        <div style="margin-bottom:25px;">
-                            <label style="font-weight:600;margin-bottom:10px;display:block;">💰 Cash/Other Payment Amount</label>
-                            <div style="display:flex;gap:10px;align-items:center;">
-                                <input type="number" name="payment_amount" id="paymentAmount" step="0.01" min="0" value="{{ $remaining > 0 ? $remaining : 0 }}"
-                                    style="flex:1;padding:18px;border:2px solid #e2e8f0;border-radius:16px;font-size:20px;">
-                                <span id="calculatedHint" style="background:#e2e8f0;padding:10px 15px;border-radius:12px;font-weight:600;display:none;"></span>
+                        {{-- Cash Payment --}}
+                        <div class="payment-group">
+                            <label class="payment-label">💰 Cash/Other Payment</label>
+                            <div class="payment-input-wrapper">
+                                <input type="number" name="payment_amount" id="paymentAmount" step="0.01"
+                                    min="0" value="{{ $remaining > 0 ? $remaining : 0 }}" class="payment-input">
+                                <span id="calculatedHint" class="payment-hint"></span>
                             </div>
 
-                            {{-- Quick Buttons --}}
-                            <div style="display:flex;gap:10px;margin-top:15px;">
-                                <button type="button" class="quick-btn" data-amount="{{ $remaining }}"
-                                    style="flex:1;padding:12px;background:#e2e8f0;border:none;border-radius:12px;font-weight:600;cursor:pointer;">
+                            <div class="quick-buttons">
+                                <button type="button" class="quick-btn" data-amount="{{ $remaining }}">
                                     Full (₹{{ number_format($remaining, 2) }})
                                 </button>
-                                <button type="button" class="quick-btn" data-amount="{{ $remaining/2 }}"
-                                    style="flex:1;padding:12px;background:#e2e8f0;border:none;border-radius:12px;font-weight:600;cursor:pointer;">
-                                    50%
-                                </button>
-                                <button type="button" class="quick-btn" data-amount="0"
-                                    style="flex:1;padding:12px;background:#e2e8f0;border:none;border-radius:12px;font-weight:600;cursor:pointer;">
-                                    Zero
-                                </button>
+                                <button type="button" class="quick-btn"
+                                    data-amount="{{ $remaining / 2 }}">50%</button>
+                                <button type="button" class="quick-btn" data-amount="0">Zero</button>
                             </div>
                         </div>
 
-                        {{-- Payment Preview --}}
-                        <div id="paymentPreview" style="background:#f8fafc;padding:20px;border-radius:16px;margin-bottom:25px;display:none;"></div>
+                        {{-- Preview --}}
+                        <div id="paymentPreview" class="preview-box"></div>
+
+                        {{-- Wallet Stats --}}
+                        <div id="walletStats" class="wallet-section" style="display: none;">
+                            <h4 style="margin: 0 0 0.75rem;">Wallet Summary</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                <div>
+                                    <span style="color: var(--text-muted);">Balance:</span>
+                                    <span class="fw-bold"
+                                        id="walletBalanceDisplay">₹{{ number_format($walletBalance, 2) }}</span>
+                                </div>
+                                <div>
+                                    <span style="color: var(--text-muted);">Due:</span>
+                                    <span class="fw-bold"
+                                        id="invoiceDueDisplay">₹{{ number_format($remaining, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Pure Advance Section --}}
-                    <div id="advanceSection" style="display:none;">
-                        <div style="background:linear-gradient(135deg,#8b5cf6 0%,#6366f1 100%);padding:30px;border-radius:20px;color:white;">
-                            <h3 style="margin:0 0 20px;">👛 Add to Advance Balance</h3>
+                    {{-- Advance Section --}}
+                    <div id="advanceSection" style="display: none;">
+                        <div class="advance-section">
+                            <h3 class="advance-title">👛 Add Money to Wallet</h3>
+                            <p class="advance-description">This amount will be added as advance</p>
 
-                            <label style="display:block;margin-bottom:10px;">Enter Amount</label>
-                            <input type="number" name="advance_amount" id="advanceAmount" step="0.01" min="1"
-                                style="width:100%;padding:18px;border:2px solid rgba(255,255,255,0.3);border-radius:16px;font-size:20px;background:rgba(255,255,255,0.1);color:white;"
-                                placeholder="Enter amount">
+                            <div>
+                                <input type="number" name="advance_amount" id="advanceAmount" step="0.01"
+                                    min="1" class="advance-input" placeholder="Enter amount">
 
-                            <div style="display:flex;gap:10px;margin-top:15px;">
-                                <button type="button" class="quick-advance" data-amount="1000"
-                                    style="flex:1;padding:12px;background:rgba(255,255,255,0.2);border:none;border-radius:12px;color:white;font-weight:600;cursor:pointer;">
-                                    ₹1,000
-                                </button>
-                                <button type="button" class="quick-advance" data-amount="2000"
-                                    style="flex:1;padding:12px;background:rgba(255,255,255,0.2);border:none;border-radius:12px;color:white;font-weight:600;cursor:pointer;">
-                                    ₹2,000
-                                </button>
-                                <button type="button" class="quick-advance" data-amount="5000"
-                                    style="flex:1;padding:12px;background:rgba(255,255,255,0.2);border:none;border-radius:12px;color:white;font-weight:600;cursor:pointer;">
-                                    ₹5,000
-                                </button>
+                                <div class="advance-quick-buttons">
+                                    <button type="button" class="advance-quick-btn"
+                                        data-advance="1000">₹1,000</button>
+                                    <button type="button" class="advance-quick-btn"
+                                        data-advance="2000">₹2,000</button>
+                                    <button type="button" class="advance-quick-btn"
+                                        data-advance="5000">₹5,000</button>
+                                    <button type="button" class="advance-quick-btn"
+                                        data-advance="10000">₹10,000</button>
+                                </div>
+                            </div>
+
+                            <div id="advancePreview" class="advance-preview">
+                                <!-- Preview -->
                             </div>
                         </div>
                     </div>
 
                     {{-- Payment Methods --}}
-                    <h3 style="margin:30px 0 20px;">💳 Payment Method</h3>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:25px;">
+                    <h3 class="methods-title">💳 Payment Method</h3>
+                    <div class="methods-grid">
 
-                        <label class="method-card active" data-method="cash"
-                            style="border:2px solid #2563eb;padding:20px;border-radius:16px;cursor:pointer;text-align:center;background:#eff6ff;">
-                            <input type="radio" name="method" value="cash" checked style="display:none;">
-                            <span style="font-size:32px;display:block;">💵</span>
-                            <span style="font-weight:600;">Cash</span>
+                        <label class="method-card active" data-method="cash">
+                            <input type="radio" name="method" value="cash" checked>
+                            <span class="method-icon">💵</span>
+                            <span class="method-name">Cash</span>
                         </label>
 
-                        <label class="method-card" data-method="upi"
-                            style="border:2px solid #e2e8f0;padding:20px;border-radius:16px;cursor:pointer;text-align:center;">
-                            <input type="radio" name="method" value="upi" style="display:none;">
-                            <span style="font-size:32px;display:block;">📱</span>
-                            <span style="font-weight:600;">UPI</span>
+                        <label class="method-card" data-method="upi">
+                            <input type="radio" name="method" value="upi">
+                            <span class="method-icon">📱</span>
+                            <span class="method-name">UPI</span>
                         </label>
 
-                        <label class="method-card" data-method="card"
-                            style="border:2px solid #e2e8f0;padding:20px;border-radius:16px;cursor:pointer;text-align:center;">
-                            <input type="radio" name="method" value="card" style="display:none;">
-                            <span style="font-size:32px;display:block;">💳</span>
-                            <span style="font-weight:600;">Card</span>
+                        <label class="method-card" data-method="card">
+                            <input type="radio" name="method" value="card">
+                            <span class="method-icon">💳</span>
+                            <span class="method-name">Card</span>
                         </label>
 
-                        <label class="method-card" data-method="net_banking"
-                            style="border:2px solid #e2e8f0;padding:20px;border-radius:16px;cursor:pointer;text-align:center;">
-                            <input type="radio" name="method" value="net_banking" style="display:none;">
-                            <span style="font-size:32px;display:block;">🏦</span>
-                            <span style="font-weight:600;">Net Banking</span>
+                        <label class="method-card" data-method="net_banking">
+                            <input type="radio" name="method" value="net_banking">
+                            <span class="method-icon">🏦</span>
+                            <span class="method-name">Net Banking</span>
                         </label>
 
-                        <label class="method-card" data-method="emi"
-                            style="border:2px solid #e2e8f0;padding:20px;border-radius:16px;cursor:pointer;text-align:center;">
-                            <input type="radio" name="method" value="emi" style="display:none;">
-                            <span style="font-size:32px;display:block;">📆</span>
-                            <span style="font-weight:600;">EMI</span>
+                        <label class="method-card" data-method="emi">
+                            <input type="radio" name="method" value="emi">
+                            <span class="method-icon">📆</span>
+                            <span class="method-name">EMI</span>
                         </label>
 
-                        <label class="method-card" data-method="advance"
-                            style="border:2px solid #e2e8f0;padding:20px;border-radius:16px;cursor:pointer;text-align:center;">
-                            <input type="radio" name="method" value="advance" style="display:none;">
-                            <span style="font-size:32px;display:block;">👛</span>
-                            <span style="font-weight:600;">Advance</span>
+                        <label class="method-card" data-method="wallet">
+                            <input type="radio" name="method" value="wallet">
+                            <span class="method-icon">👛</span>
+                            <span class="method-name">Wallet</span>
                         </label>
                     </div>
 
                     {{-- EMI Section --}}
-                    <div id="emiSection" style="display:none;background:#fffbeb;border:2px solid #fcd34d;border-radius:20px;padding:25px;margin-bottom:25px;">
-                        <h4 style="margin:0 0 20px;color:#92400e;">📆 EMI Setup</h4>
+                    <div id="emiSection" class="emi-section" style="display: none;">
+                        <h4 class="emi-title">📆 EMI Setup</h4>
 
-                        <div style="margin-bottom:15px;">
-                            <label style="font-weight:600;margin-bottom:8px;display:block;">Down Payment</label>
-                            <input type="number" id="downPayment" name="down_payment" min="1" max="{{ $remaining - 1 }}" step="0.01"
-                                style="width:100%;padding:15px;border:2px solid #fcd34d;border-radius:12px;">
+                        <div class="emi-field">
+                            <label class="emi-label">Down Payment</label>
+                            <input type="number" id="downPayment" name="down_payment" min="1"
+                                max="{{ $remaining - 1 }}" step="0.01" class="emi-input">
                         </div>
 
-                        <div style="margin-bottom:15px;">
-                            <label style="font-weight:600;margin-bottom:8px;display:block;">EMI Months</label>
-                            <select id="emiMonths" name="emi_months" style="width:100%;padding:15px;border:2px solid #fcd34d;border-radius:12px;">
+                        <div class="emi-field">
+                            <label class="emi-label">EMI Months</label>
+                            <select id="emiMonths" name="emi_months" class="emi-select">
                                 <option value="">Select</option>
-                                @foreach([3,6,9,12,18,24] as $month)
+                                @foreach ([3, 6, 9, 12, 18, 24] as $month)
                                     <option value="{{ $month }}">{{ $month }} Months</option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <div>
-                            <label style="font-weight:600;margin-bottom:8px;display:block;">Monthly EMI</label>
-                            <input type="number" id="emiAmount" name="emi_amount" readonly
-                                style="width:100%;padding:15px;border:2px solid #fcd34d;border-radius:12px;background:#fef9c3;font-weight:600;">
+                        <div class="emi-field">
+                            <label class="emi-label">Monthly EMI</label>
+                            <input type="number" id="emiAmount" name="emi_amount" readonly class="emi-input">
                         </div>
                     </div>
 
                     {{-- Transaction Details --}}
-                    <div style="margin-bottom:25px;">
-                        <label style="font-weight:600;margin-bottom:8px;display:block;">Transaction Reference (Optional)</label>
-                        <input type="text" name="transaction_id" style="width:100%;padding:15px;border:2px solid #e2e8f0;border-radius:12px;">
+                    <div class="form-field">
+                        <label class="form-label">Transaction Reference (Optional)</label>
+                        <input type="text" name="transaction_id" class="form-input"
+                            placeholder="e.g., UPI Ref No">
                     </div>
 
-                    <div style="margin-bottom:25px;">
-                        <label style="font-weight:600;margin-bottom:8px;display:block;">Remarks (Optional)</label>
-                        <textarea name="remarks" rows="2" style="width:100%;padding:15px;border:2px solid #e2e8f0;border-radius:12px;"></textarea>
+                    <div class="form-field">
+                        <label class="form-label">Remarks (Optional)</label>
+                        <textarea name="remarks" class="form-textarea" placeholder="Add notes..."></textarea>
                     </div>
 
-                    {{-- Submit Button --}}
-                    <button type="submit" id="submitBtn"
-                        style="width:100%;padding:20px;background:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);color:white;border:none;border-radius:16px;font-size:18px;font-weight:700;cursor:pointer;">
+                    {{-- Submit --}}
+                    <button type="submit" id="submitBtn" class="submit-btn">
                         <span id="submitBtnText">💰 Process Payment</span>
                     </button>
 
-                    <div style="text-align:center;margin-top:20px;">
-                        <a href="{{ route('sales.show', $sale->id) }}" style="color:#64748b;">← Back to Invoice</a>
+                    <div class="back-link">
+                        <a href="{{ route('sales.show', $sale->id) }}">← Back to Invoice</a>
                     </div>
                 </div>
             </form>
@@ -305,367 +1164,352 @@ z
     </div>
 </div>
 
-<style>
-.method-card { transition: all 0.2s; }
-.method-card:hover { transform: translateY(-2px); }
-.tab-btn { transition: all 0.2s; }
-.quick-btn, .quick-advance, .advance-quick-btn { transition: all 0.2s; cursor: pointer; }
-.quick-btn:hover, .quick-advance:hover, .advance-quick-btn:hover { background: #2563eb !important; color: white !important; }
-input:focus, select:focus { outline: none; border-color: #2563eb !important; }
-</style>
-
+@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM Elements
+        const invoiceSection = document.getElementById('invoiceSection');
+        const advanceSection = document.getElementById('advanceSection');
+        const tabInvoice = document.getElementById('tabInvoice');
+        const tabAdvance = document.getElementById('tabAdvance');
+        const isAdvanceOnly = document.getElementById('is_advance_only');
 
-    // DOM Elements
-    const invoiceSection = document.getElementById('invoiceSection');
-    const advanceSection = document.getElementById('advanceSection');
-    const tabInvoice = document.getElementById('tabInvoice');
-    const tabAdvance = document.getElementById('tabAdvance');
-    const isAdvanceOnly = document.getElementById('is_advance_only');
+        const methodCards = document.querySelectorAll('.method-card');
+        const emiSection = document.getElementById('emiSection');
 
-    const methodCards = document.querySelectorAll('.method-card');
-    const emiSection = document.getElementById('emiSection');
+        const paymentAmount = document.getElementById('paymentAmount');
+        const useWalletCheckbox = document.getElementById('useWalletCheckbox');
+        const walletAmount = document.getElementById('walletAmount');
+        const walletUseBox = document.getElementById('walletUseBox');
+        const remainingWallet = document.getElementById('remainingWallet');
+        const paymentPreview = document.getElementById('paymentPreview');
+        const paymentType = document.getElementById('payment_type');
+        const calculatedHint = document.getElementById('calculatedHint');
+        const walletStats = document.getElementById('walletStats');
+        const walletBalanceDisplay = document.getElementById('walletBalanceDisplay');
+        const invoiceDueDisplay = document.getElementById('invoiceDueDisplay');
+        const advancePreview = document.getElementById('advancePreview');
+        const advanceAmount = document.getElementById('advanceAmount');
 
-    const paymentAmount = document.getElementById('paymentAmount');
-    const advanceUsed = document.getElementById('advanceUsed');
-    const useAdvanceCheckbox = document.getElementById('useAdvanceCheckbox');
-    const advanceUseBox = document.getElementById('advanceUseBox');
-    const remainingAdvance = document.getElementById('remainingAdvance');
-    const paymentPreview = document.getElementById('paymentPreview');
-    const paymentType = document.getElementById('payment_type');
-    const calculatedHint = document.getElementById('calculatedHint');
+        const downPayment = document.getElementById('downPayment');
+        const emiMonths = document.getElementById('emiMonths');
+        const emiAmount = document.getElementById('emiAmount');
 
-    const downPayment = document.getElementById('downPayment');
-    const emiMonths = document.getElementById('emiMonths');
-    const emiAmount = document.getElementById('emiAmount');
+        const walletBalance = {{ $walletBalance }};
+        const dueAmount = {{ $remaining }};
+        const openBalance = {{ $openBalance ?? 0 }};
 
-    const advanceBalance = {{ $advanceBalance }};
-    const dueAmount = {{ $remaining }};
-
-    // Auto-calculate cash amount when advance changes
-    function autoCalculateCash() {
-        if (useAdvanceCheckbox && useAdvanceCheckbox.checked) {
-            const advance = parseFloat(advanceUsed.value) || 0;
-            const remainingAfterAdvance = Math.max(0, dueAmount - advance);
-
-            // Show hint but don't auto-update the field (user can override)
-            if (remainingAfterAdvance >= 0) {
-                calculatedHint.textContent = `Suggested: ₹${remainingAfterAdvance.toFixed(2)}`;
-                calculatedHint.style.display = 'inline-block';
-            }
-        } else {
-            calculatedHint.style.display = 'none';
+        // Show wallet stats
+        if (walletBalance > 0) {
+            walletStats.style.display = 'block';
         }
-    }
 
-    // Apply suggested amount
-    function applySuggestedAmount() {
-        if (useAdvanceCheckbox && useAdvanceCheckbox.checked) {
-            const advance = parseFloat(advanceUsed.value) || 0;
-            const suggested = Math.max(0, dueAmount - advance);
-            paymentAmount.value = suggested.toFixed(2);
-            updatePaymentPreview();
-        }
-    }
-
-    // Tab Switching
-    tabInvoice.addEventListener('click', function() {
-        tabInvoice.style.background = '#2563eb';
-        tabInvoice.style.color = 'white';
-        tabAdvance.style.background = 'transparent';
-        tabAdvance.style.color = '#475569';
-
-        invoiceSection.style.display = 'block';
-        advanceSection.style.display = 'none';
-        isAdvanceOnly.value = '0';
-
-        // Enable all payment methods
-        document.querySelectorAll('input[name="method"]').forEach(r => r.disabled = false);
-
-        // Reset method selection to cash if advance was selected
-        const advanceRadio = document.querySelector('input[name="method"][value="advance"]');
-        if (advanceRadio && advanceRadio.checked) {
-            document.querySelector('input[name="method"][value="cash"]').checked = true;
-            // Update UI
-            methodCards.forEach(c => {
-                if (c.dataset.method === 'cash') {
-                    c.style.borderColor = '#2563eb';
-                    c.style.background = '#eff6ff';
-                } else {
-                    c.style.borderColor = '#e2e8f0';
-                    c.style.background = 'white';
+        // Auto-calculate cash
+        function autoCalculateCash() {
+            if (useWalletCheckbox?.checked) {
+                const wallet = parseFloat(walletAmount.value) || 0;
+                const remaining = Math.max(0, dueAmount - wallet);
+                if (remaining >= 0) {
+                    calculatedHint.textContent = `Suggested: ₹${remaining.toFixed(2)}`;
+                    calculatedHint.classList.add('visible');
                 }
-            });
-        }
-    });
-
-    tabAdvance.addEventListener('click', function() {
-        tabAdvance.style.background = '#2563eb';
-        tabAdvance.style.color = 'white';
-        tabInvoice.style.background = 'transparent';
-        tabInvoice.style.color = '#475569';
-
-        invoiceSection.style.display = 'none';
-        advanceSection.style.display = 'block';
-        isAdvanceOnly.value = '1';
-
-        // Set method to advance
-        document.querySelector('input[name="method"][value="advance"]').checked = true;
-        document.querySelectorAll('input[name="method"]').forEach(r => {
-            if (r.value !== 'advance') r.disabled = true;
-        });
-
-        // Update method UI
-        methodCards.forEach(c => {
-            if (c.dataset.method === 'advance') {
-                c.style.borderColor = '#2563eb';
-                c.style.background = '#eff6ff';
             } else {
-                c.style.borderColor = '#e2e8f0';
-                c.style.background = 'white';
+                calculatedHint.classList.remove('visible');
+            }
+        }
+
+        // Apply suggested amount
+        function applySuggestedAmount() {
+            if (useWalletCheckbox?.checked) {
+                const wallet = parseFloat(walletAmount.value) || 0;
+                const suggested = Math.max(0, dueAmount - wallet);
+                paymentAmount.value = suggested.toFixed(2);
+                updatePaymentPreview();
+            }
+        }
+
+        // Tab Switching
+        tabInvoice.addEventListener('click', () => {
+            tabInvoice.classList.add('active');
+            tabAdvance.classList.remove('active');
+            invoiceSection.style.display = 'block';
+            advanceSection.style.display = 'none';
+            isAdvanceOnly.value = '0';
+
+            document.querySelectorAll('input[name="method"]').forEach(r => r.disabled = false);
+            methodCards.forEach(c => c.classList.remove('disabled'));
+
+            const walletRadio = document.querySelector('input[name="method"][value="wallet"]');
+            if (walletRadio?.checked) {
+                document.querySelector('input[name="method"][value="cash"]').checked = true;
+                document.querySelector('[data-method="cash"]').classList.add('active');
+                document.querySelector('[data-method="wallet"]').classList.remove('active');
             }
         });
 
-        // Hide EMI section if visible
-        emiSection.style.display = 'none';
-    });
+        tabAdvance.addEventListener('click', () => {
+            tabAdvance.classList.add('active');
+            tabInvoice.classList.remove('active');
+            invoiceSection.style.display = 'none';
+            advanceSection.style.display = 'block';
+            isAdvanceOnly.value = '1';
 
-    // Payment Method Selection
-    methodCards.forEach(card => {
-        card.addEventListener('click', function() {
-            if (this.querySelector('input').disabled) return;
-
-            const method = this.dataset.method;
-
-            // Update radio
-            this.querySelector('input').checked = true;
-
-            // Update UI
-            methodCards.forEach(c => {
-                if (c === this) {
-                    c.style.borderColor = '#2563eb';
-                    c.style.background = '#eff6ff';
-                } else {
-                    c.style.borderColor = '#e2e8f0';
-                    c.style.background = 'white';
+            document.querySelector('input[name="method"][value="wallet"]').checked = true;
+            document.querySelectorAll('input[name="method"]').forEach(r => {
+                if (r.value !== 'wallet') {
+                    r.disabled = true;
+                    r.closest('.method-card').classList.add('disabled');
                 }
             });
 
-            // Show/hide EMI section
-            emiSection.style.display = method === 'emi' ? 'block' : 'none';
+            methodCards.forEach(c => {
+                if (c.dataset.method === 'wallet') {
+                    c.classList.add('active');
+                } else {
+                    c.classList.remove('active');
+                }
+            });
 
-            // If EMI is selected, hide advance usage section (EMI can't use advance)
-            if (method === 'emi' && useAdvanceCheckbox) {
-                useAdvanceCheckbox.checked = false;
-                if (advanceUseBox) advanceUseBox.style.display = 'none';
-            }
+            emiSection.style.display = 'none';
+            updateAdvancePreview();
         });
-    });
 
-    // Quick Amount Buttons
-    document.querySelectorAll('.quick-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            paymentAmount.value = parseFloat(this.dataset.amount).toFixed(2);
-            updatePaymentPreview();
+        // Method Selection
+        methodCards.forEach(card => {
+            card.addEventListener('click', function() {
+                if (this.classList.contains('disabled')) return;
+
+                const method = this.dataset.method;
+                this.querySelector('input').checked = true;
+
+                methodCards.forEach(c => {
+                    c.classList.toggle('active', c === this);
+                });
+
+                emiSection.style.display = method === 'emi' ? 'block' : 'none';
+
+                if (method === 'emi' && useWalletCheckbox) {
+                    useWalletCheckbox.checked = false;
+                    walletUseBox?.classList.add('hidden');
+                }
+            });
         });
-    });
 
-    // Advance Quick Buttons
-    document.querySelectorAll('.advance-quick-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            advanceUsed.value = parseFloat(this.dataset.amount).toFixed(2);
-            // Trigger input event
-            const event = new Event('input', { bubbles: true });
-            advanceUsed.dispatchEvent(event);
+        // Quick Buttons
+        document.querySelectorAll('.quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                paymentAmount.value = parseFloat(btn.dataset.amount).toFixed(2);
+                updatePaymentPreview();
+            });
         });
-    });
 
-    // Quick Advance Buttons (Pure Advance)
-    document.querySelectorAll('.quick-advance').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.getElementById('advanceAmount').value = this.dataset.amount;
+        document.querySelectorAll('.wallet-quick-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                walletAmount.value = parseFloat(btn.dataset.walletAmount).toFixed(2);
+                walletAmount.dispatchEvent(new Event('input', {
+                    bubbles: true
+                }));
+            });
         });
-    });
 
-    // Use Advance Checkbox
-    if (useAdvanceCheckbox) {
-        useAdvanceCheckbox.addEventListener('change', function() {
-            advanceUseBox.style.display = this.checked ? 'block' : 'none';
+        document.querySelectorAll('.quick-advance').forEach(btn => {
+            btn.addEventListener('click', () => {
+                advanceAmount.value = btn.dataset.advance;
+                updateAdvancePreview();
+            });
+        });
+
+        // Wallet Checkbox
+        useWalletCheckbox?.addEventListener('change', function() {
+            walletUseBox.classList.toggle('hidden', !this.checked);
             if (!this.checked) {
-                advanceUsed.value = 0;
-                calculatedHint.style.display = 'none';
+                walletAmount.value = 0;
+                calculatedHint.classList.remove('visible');
+                paymentAmount.value = dueAmount.toFixed(2);
             } else {
-                // Auto-set advance to either full available or remaining due
-                const suggestedAdvance = Math.min(advanceBalance, dueAmount);
-                advanceUsed.value = suggestedAdvance.toFixed(2);
+                const suggested = Math.min(walletBalance, dueAmount);
+                walletAmount.value = suggested.toFixed(2);
             }
-            // Trigger input to update calculations
-            const event = new Event('input', { bubbles: true });
-            advanceUsed.dispatchEvent(event);
+            walletAmount.dispatchEvent(new Event('input', {
+                bubbles: true
+            }));
         });
-    }
 
-    // Advance Used Input
-    if (advanceUsed) {
-        advanceUsed.addEventListener('input', function() {
-            let val = parseFloat(this.value) || 0;
+        // Wallet Amount Input
+        walletAmount?.addEventListener('input', function() {
+            let val = Math.min(parseFloat(this.value) || 0, walletBalance);
+            this.value = val;
 
-            // Validate max
-            if (val > advanceBalance) {
-                this.value = advanceBalance;
-                val = advanceBalance;
+            if (remainingWallet) {
+                remainingWallet.textContent = '₹' + (walletBalance - val).toFixed(2);
+            }
+            if (walletBalanceDisplay) {
+                walletBalanceDisplay.textContent = '₹' + (walletBalance - val).toFixed(2);
             }
 
-            // Update remaining advance display
-            if (remainingAdvance) {
-                remainingAdvance.textContent = (advanceBalance - val).toFixed(2);
-            }
-
-            // Auto-calculate suggested cash amount
             autoCalculateCash();
-
-            // Update payment preview
             updatePaymentPreview();
         });
-    }
 
-    // Payment Amount Input
-    if (paymentAmount) {
-        paymentAmount.addEventListener('input', function() {
-            updatePaymentPreview();
-        });
-    }
+        // Payment Amount Input
+        paymentAmount?.addEventListener('input', updatePaymentPreview);
 
-    // Click on hint to apply suggested amount
-    if (calculatedHint) {
-        calculatedHint.addEventListener('click', applySuggestedAmount);
-        calculatedHint.style.cursor = 'pointer';
-    }
+        // Hint Click
+        calculatedHint?.addEventListener('click', applySuggestedAmount);
 
-    // EMI Calculator
-    function calculateEMI() {
-        const down = parseFloat(downPayment.value) || 0;
-        const months = parseInt(emiMonths.value) || 0;
+        // Advance Amount
+        advanceAmount?.addEventListener('input', updateAdvancePreview);
 
-        if (down > 0 && months > 0 && down < dueAmount) {
-            const remaining = dueAmount - down;
-            const monthly = remaining / months;
-            emiAmount.value = monthly.toFixed(2);
-            paymentAmount.value = down;
-            updatePaymentPreview();
-        }
-    }
-
-    if (downPayment) downPayment.addEventListener('input', calculateEMI);
-    if (emiMonths) emiMonths.addEventListener('change', calculateEMI);
-
-    // Payment Preview
-    function updatePaymentPreview() {
-        const cash = parseFloat(paymentAmount.value) || 0;
-        const advance = (useAdvanceCheckbox && useAdvanceCheckbox.checked) ?
-            (parseFloat(advanceUsed.value) || 0) : 0;
-
-        const total = cash + advance;
-
-        if (total <= 0) {
-            paymentPreview.style.display = 'none';
-            return;
-        }
-
-        let html = '';
-
-        if (total < dueAmount) {
-            paymentType.value = 'partial';
-            html = `
-                <div style="background:#fffbeb;padding:15px;border-radius:12px;">
-                    <strong style="color:#92400e;">⚠️ Partial Payment</strong><br>
-                    Cash Payment: ₹${cash.toFixed(2)}<br>
-                    Advance Used: ₹${advance.toFixed(2)}<br>
-                    <strong>Total: ₹${total.toFixed(2)}</strong><br>
-                    <strong style="color:#dc2626;">Remaining Due: ₹${(dueAmount - total).toFixed(2)}</strong>
-                </div>
-            `;
-        } else if (total > dueAmount) {
-            paymentType.value = 'excess';
-            const excess = total - dueAmount;
-            html = `
-                <div style="background:#f0fdf4;padding:15px;border-radius:12px;">
-                    <strong style="color:#166534;">💰 Excess Payment</strong><br>
-                    Cash Payment: ₹${cash.toFixed(2)}<br>
-                    Advance Used: ₹${advance.toFixed(2)}<br>
-                    <strong>Total: ₹${total.toFixed(2)}</strong><br>
-                    Invoice Paid: ₹${dueAmount.toFixed(2)}<br>
-                    <strong style="color:#059669;">Excess to Advance: ₹${excess.toFixed(2)}</strong>
-                </div>
-            `;
-        } else {
-            paymentType.value = 'full';
-            html = `
-                <div style="background:#f0fdf4;padding:15px;border-radius:12px;">
-                    <strong style="color:#166534;">✅ Full Payment</strong><br>
-                    Cash Payment: ₹${cash.toFixed(2)}<br>
-                    Advance Used: ₹${advance.toFixed(2)}<br>
-                    <strong>Total: ₹${total.toFixed(2)}</strong><br>
-                    Invoice will be marked as PAID
-                </div>
-            `;
-        }
-
-        paymentPreview.style.display = 'block';
-        paymentPreview.innerHTML = html;
-    }
-
-    // Initial preview
-    if (dueAmount > 0) {
-        updatePaymentPreview();
-    }
-
-    // Form Submit Handler
-    document.getElementById('paymentForm').addEventListener('submit', function(e) {
-        const isAdvance = isAdvanceOnly.value === '1';
-        const method = document.querySelector('input[name="method"]:checked')?.value;
-
-        if (isAdvance) {
-            const amount = parseFloat(document.getElementById('advanceAmount').value) || 0;
-            if (amount <= 0) {
-                e.preventDefault();
-                alert('Please enter advance amount');
-                return false;
-            }
-        } else if (method === 'emi') {
+        // EMI Calculator
+        function calculateEMI() {
             const down = parseFloat(downPayment.value) || 0;
-            const months = emiMonths.value;
+            const months = parseInt(emiMonths.value) || 0;
 
-            if (down <= 0) {
-                e.preventDefault();
-                alert('Please enter down payment amount');
-                return false;
-            }
-            if (!months) {
-                e.preventDefault();
-                alert('Please select EMI months');
-                return false;
-            }
-            if (down >= dueAmount) {
-                e.preventDefault();
-                alert('Down payment cannot be equal to or greater than remaining amount');
-                return false;
-            }
-        } else {
-            const cash = parseFloat(paymentAmount.value) || 0;
-            const advance = (useAdvanceCheckbox && useAdvanceCheckbox.checked) ?
-                (parseFloat(advanceUsed.value) || 0) : 0;
-
-            if (cash <= 0 && advance <= 0) {
-                e.preventDefault();
-                alert('Please enter payment amount or use advance');
-                return false;
+            if (down > 0 && months > 0 && down < dueAmount) {
+                const monthly = (dueAmount - down) / months;
+                emiAmount.value = monthly.toFixed(2);
+                paymentAmount.value = down;
+                updatePaymentPreview();
             }
         }
 
-        return true;
+        downPayment?.addEventListener('input', calculateEMI);
+        emiMonths?.addEventListener('change', calculateEMI);
+
+        // Payment Preview
+        function updatePaymentPreview() {
+            const cash = parseFloat(paymentAmount.value) || 0;
+            const wallet = useWalletCheckbox?.checked ? (parseFloat(walletAmount.value) || 0) : 0;
+            const total = cash + wallet;
+
+            if (total <= 0) {
+                paymentPreview.classList.remove('visible');
+                return;
+            }
+
+            let html = '';
+            let previewClass = '';
+
+            if (total < dueAmount) {
+                paymentType.value = 'partial';
+                previewClass = 'partial';
+                html = `
+        <div class="preview-header ${previewClass}">
+            <span>⚠️</span> <strong>Partial Payment</strong>
+        </div>
+        <div class="preview-grid">
+            <div><span class="label">Cash:</span> <span class="value">₹${cash.toFixed(2)}</span></div>
+            <div><span class="label">Wallet:</span> <span class="value wallet">₹${wallet.toFixed(2)}</span></div>
+        </div>
+        <div class="preview-divider">
+            <div class="preview-row"><span>Total Paid:</span> <span>₹${total.toFixed(2)}</span></div>
+            <div class="preview-row due"><span>Remaining:</span> <span>₹${(dueAmount - total).toFixed(2)}</span></div>
+        </div>
+    `;
+            } else if (total > dueAmount) {
+                paymentType.value = 'excess';
+                previewClass = 'excess';
+                const excess = total - dueAmount;
+                html = `
+        <div class="preview-header ${previewClass}">
+            <span>💰</span> <strong>Excess Payment</strong>
+        </div>
+        <div class="preview-grid">
+            <div><span class="label">Cash:</span> <span class="value">₹${cash.toFixed(2)}</span></div>
+            <div><span class="label">Wallet:</span> <span class="value wallet">₹${wallet.toFixed(2)}</span></div>
+        </div>
+        <div class="preview-divider">
+            <div class="preview-row"><span>Total Paid:</span> <span>₹${total.toFixed(2)}</span></div>
+            <div class="preview-row"><span>Invoice:</span> <span>₹${dueAmount.toFixed(2)}</span></div>
+            <div class="preview-row excess"><span>Excess to Wallet:</span> <span>+₹${excess.toFixed(2)}</span></div>
+        </div>
+    `;
+            } else {
+                paymentType.value = 'full';
+                previewClass = 'full';
+                html = `
+        <div class="preview-header ${previewClass}">
+            <span>✅</span> <strong>Full Payment</strong>
+        </div>
+        <div class="preview-grid">
+            <div><span class="label">Cash:</span> <span class="value">₹${cash.toFixed(2)}</span></div>
+            <div><span class="label">Wallet:</span> <span class="value wallet">₹${wallet.toFixed(2)}</span></div>
+        </div>
+        <div class="preview-divider">
+            <div class="preview-row"><span>Total Paid:</span> <span>₹${total.toFixed(2)}</span></div>
+            <div class="preview-row"><span>Status:</span> <span class="success">PAID</span></div>
+        </div>
+    `;
+            }
+
+            paymentPreview.innerHTML = html;
+            paymentPreview.classList.add('visible');
+        }
+
+        // Advance Preview
+        function updateAdvancePreview() {
+            const amount = parseFloat(advanceAmount.value) || 0;
+            if (amount > 0) {
+                advancePreview.classList.add('visible');
+                advancePreview.innerHTML = `
+        <strong>💰 Preview:</strong><br>
+        Amount: ₹${amount.toFixed(2)} will be added to wallet
+    `;
+            } else {
+                advancePreview.classList.remove('visible');
+            }
+        }
+
+        // Initial preview
+        if (dueAmount > 0) updatePaymentPreview();
+
+        // Form Submit
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            const isAdvance = isAdvanceOnly.value === '1';
+            const method = document.querySelector('input[name="method"]:checked')?.value;
+
+            if (isAdvance) {
+                const amount = parseFloat(advanceAmount.value) || 0;
+                if (amount <= 0) {
+                    e.preventDefault();
+                    alert('Please enter amount to add to wallet');
+                    return false;
+                }
+                if (!confirm(`Add ₹${amount.toFixed(2)} to wallet?`)) {
+                    e.preventDefault();
+                    return false;
+                }
+            } else if (method === 'emi') {
+                const down = parseFloat(downPayment.value) || 0;
+                const months = emiMonths.value;
+
+                if (down <= 0 || !months) {
+                    e.preventDefault();
+                    alert('Please complete EMI details');
+                    return false;
+                }
+                if (down >= dueAmount) {
+                    e.preventDefault();
+                    alert('Down payment must be less than due amount');
+                    return false;
+                }
+            } else {
+                const cash = parseFloat(paymentAmount.value) || 0;
+                const wallet = useWalletCheckbox?.checked ? (parseFloat(walletAmount.value) || 0) : 0;
+
+                if (cash <= 0 && wallet <= 0) {
+                    e.preventDefault();
+                    alert('Please enter payment amount');
+                    return false;
+                }
+                if (wallet > walletBalance) {
+                    e.preventDefault();
+                    alert('Insufficient wallet balance');
+                    return false;
+                }
+            }
+        });
     });
-});
 </script>
+@endpush
 @endsection

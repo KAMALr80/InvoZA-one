@@ -33,11 +33,11 @@ class CustomerController extends Controller
         }
 
         $customers = Customer::where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('mobile', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('gst_no', 'like', "%{$search}%");
-            })
+            $q->where('name', 'like', "%{$search}%")
+                ->orWhere('mobile', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('gst_no', 'like', "%{$search}%");
+        })
             ->latest()
             ->limit(20)
             ->get([
@@ -70,7 +70,7 @@ class CustomerController extends Controller
             'mobile' => 'required|string|max:20|unique:customers,mobile',
             'email'  => 'nullable|email|unique:customers,email',
             'gst_no' => 'nullable|string|max:20',
-            'address'=> 'nullable|string',
+            'address' => 'nullable|string',
         ]);
 
         Customer::create([
@@ -107,7 +107,7 @@ class CustomerController extends Controller
             'mobile' => 'required|string|max:20|unique:customers,mobile,' . $customer->id,
             'email'  => 'nullable|email|unique:customers,email,' . $customer->id,
             'gst_no' => 'nullable|string|max:20',
-            'address'=> 'nullable|string',
+            'address' => 'nullable|string',
         ]);
 
         $customer->update([
@@ -167,7 +167,6 @@ class CustomerController extends Controller
                 'customer' => $customer,
                 'message'  => 'Customer created successfully'
             ]);
-
         } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
@@ -183,7 +182,7 @@ class CustomerController extends Controller
     {
         $sales = $customer->sales()
             ->with('items.product')
-             ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return view('customers.sales', compact('customer', 'sales'));
@@ -191,42 +190,63 @@ class CustomerController extends Controller
 
 
 
-public function payments(Customer $customer)
+    public function payments(Customer $customer)
+    {
+        // Get all invoices for this customer with pagination
+        $invoices = Sale::where('customer_id', $customer->id)
+            ->orderBy('sale_date', 'desc')
+            ->paginate(10, ['*'], 'invoices_page');
+
+        // Get all transactions for this customer with eager loading
+        $transactions = Payment::with('sale')
+            ->where('customer_id', $customer->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20, ['*'], 'transactions_page');
+
+        // Calculate invoice statistics
+        $invoiceStats = [
+            'total' => Sale::where('customer_id', $customer->id)->count(),
+            'paid' => Sale::where('customer_id', $customer->id)->where('payment_status', 'paid')->count(),
+            'partial' => Sale::where('customer_id', $customer->id)->whereIn('payment_status', ['unpaid', 'partial'])->count(),
+        ];
+
+        // Calculate advance balance
+        $advanceBalance = $customer->open_balance < 0 ? abs($customer->open_balance) : 0;
+
+        // Calculate total money received from customer
+        $totalReceived = Payment::where('customer_id', $customer->id)
+            ->where('status', 'paid')
+            ->whereNotIn('remarks', ['INVOICE_DUE']) // Exclude due entries
+            ->sum('amount');
+
+        return view('customers.payments', compact(
+            'customer',
+            'invoices',
+            'transactions',
+            'invoiceStats',
+            'advanceBalance',
+            'totalReceived'
+        ));
+    }
+  public function getDetails($id)
 {
-    // Get all invoices for this customer with pagination
-    $invoices = Sale::where('customer_id', $customer->id)
-        ->orderBy('sale_date', 'desc')
-        ->paginate(10, ['*'], 'invoices_page');
-
-    // Get all transactions for this customer with eager loading
-    $transactions = Payment::with('sale')
-        ->where('customer_id', $customer->id)
-        ->orderBy('created_at', 'desc')
-        ->paginate(20, ['*'], 'transactions_page');
-
-    // Calculate invoice statistics
-    $invoiceStats = [
-        'total' => Sale::where('customer_id', $customer->id)->count(),
-        'paid' => Sale::where('customer_id', $customer->id)->where('payment_status', 'paid')->count(),
-        'partial' => Sale::where('customer_id', $customer->id)->whereIn('payment_status', ['unpaid', 'partial'])->count(),
-    ];
-
-    // Calculate advance balance
-    $advanceBalance = $customer->open_balance < 0 ? abs($customer->open_balance) : 0;
-
-    // Calculate total money received from customer
-    $totalReceived = Payment::where('customer_id', $customer->id)
-        ->where('status', 'paid')
-        ->whereNotIn('remarks', ['INVOICE_DUE']) // Exclude due entries
-        ->sum('amount');
-
-    return view('customers.payments', compact(
-        'customer',
-        'invoices',
-        'transactions',
-        'invoiceStats',
-        'advanceBalance',
-        'totalReceived'
-    ));
+    try {
+        $customer = Customer::findOrFail($id);
+        return response()->json([
+            'success' => true,
+            'customer' => [
+                'id' => $customer->id,
+                'name' => $customer->name,
+                'mobile' => $customer->mobile,
+                'email' => $customer->email,
+                'address' => $customer->address
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Customer not found'
+        ], 404);
+    }
 }
 }

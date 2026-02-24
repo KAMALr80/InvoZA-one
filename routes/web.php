@@ -23,9 +23,10 @@ use App\Http\Controllers\Purchases\PurchaseController;
 use App\Http\Controllers\Customers\CustomerController;
 use App\Http\Controllers\Reports\ReportController;
 
-// Payments
+// Payments & Wallet
 use App\Http\Controllers\Payments\PaymentController;
 use App\Http\Controllers\Payments\EmiPaymentController;
+use App\Http\Controllers\CustomerWalletController;
 
 // Auth
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -40,13 +41,13 @@ use App\Http\Controllers\AiAssistantController;
 | Public Routes
 |--------------------------------------------------------------------------
 */
+
 Route::get('/', fn() => redirect('/login'));
 
 // Test Mail Route
 Route::get('/test-mail', function () {
-    Mail::raw('Hello Kamalsinh 👋 Mailtrap bilkul sahi kaam kar raha hai!', function ($message) {
-        $message->to('test@demo.com')
-            ->subject('Mailtrap Sandbox Test');
+    Mail::raw('Hello 👋 Mailtrap test successful!', function ($message) {
+        $message->to('test@demo.com')->subject('Mailtrap Test');
     });
     return 'Mail sent successfully!';
 });
@@ -95,12 +96,10 @@ Route::middleware('auth')->group(function () {
             abort(403);
         });
 
-        // Staff Attendance
         Route::get('/my', [AttendanceController::class, 'myAttendance'])->name('my');
         Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('checkin');
         Route::post('/check-out', [AttendanceController::class, 'checkOut'])->name('checkout');
 
-        // HR/Admin Attendance Management
         Route::middleware('hr')->group(function () {
             Route::get('/manage', [AttendanceController::class, 'manage'])->name('manage');
             Route::get('/mark', [AttendanceController::class, 'markAttendance'])->name('mark');
@@ -112,11 +111,9 @@ Route::middleware('auth')->group(function () {
 
     /* ================= LEAVES ================= */
     Route::prefix('leaves')->name('leaves.')->group(function () {
-        // Staff Leaves
         Route::get('/my', [LeaveController::class, 'myLeaves'])->name('my');
         Route::post('/apply', [LeaveController::class, 'apply'])->name('apply');
 
-        // HR/Admin Leave Management
         Route::middleware('hr')->group(function () {
             Route::get('/manage', [LeaveController::class, 'manage'])->name('manage');
             Route::post('/{leave}/approve', [LeaveController::class, 'approve'])->name('approve');
@@ -146,8 +143,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
         Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
         Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
-
-        // Additional Inventory Routes
         Route::get('/search', [InventoryController::class, 'ajaxSearch'])->name('ajax.search');
         Route::post('/{id}/update-quantity', [InventoryController::class, 'updateQuantity'])->name('update.quantity');
         Route::post('/bulk-delete', [InventoryController::class, 'bulkDelete'])->name('bulk.delete');
@@ -161,6 +156,30 @@ Route::middleware('auth')->group(function () {
         Route::post('/staff-approval/{id}', [StaffApprovalController::class, 'approve'])->name('staff.approve');
     });
 
+    /* ================= CUSTOMERS ================= */
+    Route::prefix('customers')->name('customers.')->group(function () {
+        Route::get('/', [CustomerController::class, 'index'])->name('index');
+        Route::get('/create', [CustomerController::class, 'create'])->name('create');
+        Route::post('/', [CustomerController::class, 'store'])->name('store');
+        Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('edit');
+        Route::put('/{customer}', [CustomerController::class, 'update'])->name('update');
+        Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
+        Route::get('/{customer}/sales', [CustomerController::class, 'sales'])->name('sales');
+        Route::get('/{customer}/payments', [CustomerController::class, 'payments'])->name('payments');
+        Route::get('/{customer}/wallet', [CustomerWalletController::class, 'customerReport'])->name('wallet');
+    });
+
+    /* ================= WALLET (Independent) ================= */
+    Route::prefix('wallet')->name('wallet.')->group(function () {
+        Route::post('/add', [CustomerWalletController::class, 'addAdvance'])->name('add');
+        Route::post('/use', [CustomerWalletController::class, 'useAdvance'])->name('use');
+        Route::delete('/{wallet}', [CustomerWalletController::class, 'destroy'])->name('delete');
+        Route::get('/delete-impact/{wallet}', [CustomerWalletController::class, 'deleteImpact'])->name('delete.impact');
+        Route::get('/history/{customer}', [CustomerWalletController::class, 'getHistory'])->name('history');
+        Route::get('/report', [CustomerWalletController::class, 'report'])->name('report');
+        Route::post('/recalculate/{customer}', [CustomerWalletController::class, 'recalculate'])->name('recalculate');
+    });
+
     /* ================= SALES ================= */
     Route::prefix('sales')->name('sales.')->group(function () {
         Route::get('/', [SalesController::class, 'index'])->name('index');
@@ -170,67 +189,51 @@ Route::middleware('auth')->group(function () {
         Route::get('/stats', [SalesController::class, 'stats'])->name('stats');
         Route::get('/{sale}', [SalesController::class, 'show'])->name('show');
         Route::get('/{sale}/invoice', [SalesController::class, 'invoice'])->name('invoice');
+        Route::get('/{sale}/print', [SalesController::class, 'print'])->name('print'); // ✅ Added missing print route
         Route::get('/{sale}/edit', [SalesController::class, 'edit'])->name('edit');
         Route::put('/{sale}', [SalesController::class, 'update'])->name('update');
-        Route::get('/{sale}/view', [SalesController::class, 'view'])->name('view');
         Route::delete('/{sale}', [SalesController::class, 'destroy'])->name('destroy');
         Route::post('/{sale}/mark-due', [PaymentController::class, 'markAsDue'])->name('mark-due');
+
+        // ✅ Delete with payments route
+        Route::delete('/{saleId}/delete-with-payments', [SalesController::class, 'deleteWithPayments'])->name('delete-with-payments');
+
+        // ✅ Delete impact analysis
+        Route::get('/{id}/delete-impact', [SalesController::class, 'deleteImpact'])->name('delete-impact');
     });
 
     /* ================= PURCHASES ================= */
     Route::resource('purchases', PurchaseController::class);
-
-    /* ================= CUSTOMERS ================= */
-    Route::prefix('customers')->name('customers.')->group(function () {
-        // CRUD Routes
-        Route::get('/', [CustomerController::class, 'index'])->name('index');
-        Route::get('/create', [CustomerController::class, 'create'])->name('create');
-        Route::post('/', [CustomerController::class, 'store'])->name('store');
-        Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('edit');
-        Route::put('/{customer}', [CustomerController::class, 'update'])->name('update');
-        Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('destroy');
-
-        // Customer Relations
-        Route::get('/{customer}/sales', [CustomerController::class, 'sales'])->name('sales');
-        Route::get('/{customer}/payments', [CustomerController::class, 'payments'])->name('payments');
-
-        // AJAX Routes
-        Route::get('ajax-search', [CustomerController::class, 'ajaxSearch'])->name('ajax.search');
-        Route::post('ajax-store', [CustomerController::class, 'ajaxStore'])->name('ajax.store');
-    });
-
-    /* ================= REPORTS ================= */
-    Route::prefix('reports')->name('reports.')->group(function () {
-        // Sales Reports
-        Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
-        Route::get('/sales/excel', [ReportController::class, 'exportSalesCSV'])->name('sales.excel');
-        Route::get('/sales/pdf', [ReportController::class, 'exportSalesPDF'])->name('sales.pdf');
-
-        // Purchases Reports
-        Route::get('/purchases', [ReportController::class, 'purchases'])->name('purchases');
-        Route::get('/purchases/excel', [ReportController::class, 'exportPurchasesCSV'])->name('purchases.excel');
-        Route::get('/purchases/pdf', [ReportController::class, 'exportPurchasesPDF'])->name('purchases.pdf');
-
-        // Attendance Reports
-        Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
-        Route::get('/attendance/excel', [ReportController::class, 'exportAttendanceCSV'])->name('attendance.excel');
-        Route::get('/attendance/pdf', [ReportController::class, 'exportAttendancePDF'])->name('attendance.pdf');
-    });
 
     /* ================= PAYMENTS ================= */
     Route::prefix('payments')->name('payments.')->group(function () {
         Route::get('/create/{sale}', [PaymentController::class, 'create'])->name('create');
         Route::post('/store', [PaymentController::class, 'store'])->name('store');
         Route::delete('/{payment}', [PaymentController::class, 'destroy'])->name('destroy');
+        Route::delete('/bulk/{saleId}', [PaymentController::class, 'deleteBulk'])->name('delete-bulk'); // ✅ Fixed duplicate
+        Route::delete('/customer/{customerId}/delete-all', [PaymentController::class, 'destroyAll'])->name('delete-all'); // ✅ Fixed name
     });
 
-    /* ================= EMI PAYMENTS ================= */
+    /* ================= EMI ================= */
     Route::prefix('emi')->name('emi.')->group(function () {
         Route::get('/{emi}', [EmiPaymentController::class, 'show'])->name('show');
         Route::post('/{emi}/pay', [EmiPaymentController::class, 'pay'])->name('pay');
     });
 
-    /* ================= AI FEATURES ================= */
+    /* ================= REPORTS ================= */
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+        Route::get('/sales/excel', [ReportController::class, 'exportSalesCSV'])->name('sales.excel');
+        Route::get('/sales/pdf', [ReportController::class, 'exportSalesPDF'])->name('sales.pdf');
+        Route::get('/purchases', [ReportController::class, 'purchases'])->name('purchases');
+        Route::get('/purchases/excel', [ReportController::class, 'exportPurchasesCSV'])->name('purchases.excel');
+        Route::get('/purchases/pdf', [ReportController::class, 'exportPurchasesPDF'])->name('purchases.pdf');
+        Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
+        Route::get('/attendance/excel', [ReportController::class, 'exportAttendanceCSV'])->name('attendance.excel');
+        Route::get('/attendance/pdf', [ReportController::class, 'exportAttendancePDF'])->name('attendance.pdf');
+    });
+
+    /* ================= AI ================= */
     Route::prefix('ai')->name('ai.')->group(function () {
         Route::get('/sales-prediction', [AiController::class, 'salesPrediction'])->name('sales.prediction');
         Route::post('/ask', [AiAssistantController::class, 'ask'])->name('ask');
@@ -245,5 +248,23 @@ Route::middleware('auth')->group(function () {
     });
 });
 
+/* ================= ADDITIONAL ROUTES (Outside Auth Group) ================= */
+// Ye routes already auth group ke andar hain, isliye yahan duplicate nahi hone chahiye
+// Aapne jo neeche likha hai wo duplicate hai, isliye comment out kiya
 
-Route::delete('/payments/delete-bulk/{saleId}', [PaymentController::class, 'deleteBulk'])->name('payments.delete-bulk');
+
+Route::delete('/invoices/{id}/delete', [SalesController::class, 'destroy'])->name('invoices.delete');
+Route::delete('/customers/{customerId}/payments/delete-all', [PaymentController::class, 'destroyAll'])->name('payments.delete-all');
+Route::delete('/payments/bulk/{saleId}', [PaymentController::class, 'deleteBulk'])->name('payments.delete-bulk');
+Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
+Route::delete('/payments/bulk/{saleId}', [PaymentController::class, 'deleteBulk'])->name('payments.delete-bulk');
+Route::get('/customers/{customer}/payments', [CustomerController::class, 'payments'])->name('customers.payments');
+Route::delete('/customers/{customerId}/payments/delete-all', [PaymentController::class, 'destroyAll'])->name('payments.delete-all');
+Route::delete('/invoices/{saleId}/delete-with-payments', [SalesController::class, 'deleteWithPayments'])->name('invoices.delete-with-payments');
+
+
+    // Route::delete('/{saleId}/delete-with-payments', [SalesController::class, 'deleteWithPayments'])
+    //     ->name('sales.delete-with-payments');
+
+
+    Route::get('/customers/{id}/details', [CustomerController::class, 'getDetails'])->name('customers.details');

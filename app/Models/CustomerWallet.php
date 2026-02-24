@@ -22,4 +22,12 @@ class CustomerWallet extends Model
     {
         return $this->belongsTo(Customer::class);
     }
+     public function sourcePayments()
+    {
+        return $this->hasMany(Payment::class, 'source_wallet_id');
+    }
+      public function payments()
+    {
+        return $this->hasMany(Payment::class, 'wallet_id');
+    }
 }
