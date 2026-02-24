@@ -2,7 +2,7 @@ FROM php:8.2-cli
 
 WORKDIR /var/www
 
-# Install system dependencies including GD
+# Install required system libraries
 RUN apt-get update && apt-get install -y \
     git unzip curl libzip-dev zip \
     libonig-dev libxml2-dev \
@@ -14,13 +14,19 @@ RUN apt-get update && apt-get install -y \
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Copy project files
 COPY . .
 
+# Setup environment
 RUN cp .env.example .env || true
 
+# Install Laravel dependencies
 RUN composer install --no-dev --no-interaction --prefer-dist
 
+# Generate app key
 RUN php artisan key:generate || true
+
+# Set permissions
 RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 10000
