@@ -1,93 +1,434 @@
 @extends('layouts.app')
 
+@section('page-title', 'Manage Leave Requests')
+
 @section('content')
-    <div class="report-box"
-        style="max-width:1000px;margin:30px auto;padding:25px;border:1px solid #ddd;border-radius:10px;
-               background:#fdfdfd;box-shadow:0 4px 10px rgba(0,0,0,0.1);
-               font-family:'Segoe UI',Arial,sans-serif;">
+<style>
+    /* ================= PROFESSIONAL DESIGN SYSTEM ================= */
+    :root {
+        --primary: #007bff;
+        --primary-dark: #0056b3;
+        --success: #28a745;
+        --success-dark: #218838;
+        --danger: #dc3545;
+        --danger-dark: #c82333;
+        --warning: #ffc107;
+        --warning-dark: #e0a800;
+        --info: #17a2b8;
+        --text-main: #2c3e50;
+        --text-muted: #6b7280;
+        --border: #ddd;
+        --bg-light: #f8f9fa;
+        --bg-white: #ffffff;
+        --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+        --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+        --radius-sm: 4px;
+        --radius-md: 6px;
+        --radius-lg: 8px;
+        --radius-xl: 12px;
+        --font-sans: 'Segoe UI', Arial, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
 
-        <h2 style="color:#2c3e50;text-align:center;margin-bottom:25px;font-size:26px;">
-            📋 Leave Requests
-        </h2>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-        <table class="report-table" style="width:100%;border-collapse:collapse;font-size:15px;">
-            <thead>
-                <tr style="background:#007bff;color:#fff;text-align:left;">
-                    <th style="padding:12px;border:1px solid #ddd;">Employee</th>
-                    <th style="padding:12px;border:1px solid #ddd;">Dates</th>
-                    <th style="padding:12px;border:1px solid #ddd;">Type</th>
-                    <th style="padding:12px;border:1px solid #ddd;">Reason</th>
-                    <th style="padding:12px;border:1px solid #ddd;">Status</th>
-                    <th style="padding:12px;border:1px solid #ddd;">Action</th>
-                </tr>
-            </thead>
+    body {
+        font-family: var(--font-sans);
+        background: #f4f6f9;
+        color: var(--text-main);
+        line-height: 1.5;
+    }
 
-            <tbody>
-                @forelse ($leaves as $l)
-                    <tr style="background:#fff;transition:background 0.3s;" onmouseover="this.style.background='#f1f9ff'"
-                        onmouseout="this.style.background='#fff'">
+    /* ================= MAIN CONTAINER ================= */
+    .leave-page {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+        padding: clamp(16px, 3vw, 30px);
+        width: 100%;
+    }
 
-                        <td style="padding:12px;border:1px solid #ddd;font-weight:600;">
-                            {{ $l->employee->name }}
-                        </td>
+    .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+    }
 
-                        <td style="padding:12px;border:1px solid #ddd;">
-                            {{ $l->from_date }} → {{ $l->to_date }}
-                        </td>
+    /* ================= HEADER CARD ================= */
+    .header-card {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: var(--radius-xl);
+        padding: clamp(20px, 4vw, 30px);
+        margin-bottom: 30px;
+        box-shadow: var(--shadow-lg);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
 
-                        <td style="padding:12px;border:1px solid #ddd;">
-                            {{ $l->type }}
-                        </td>
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
 
-                        <td
-                            style="padding:12px;border:1px solid #ddd;max-width:220px;
-                                   white-space:normal;word-break:break-word;color:#374151;">
-                            {{ $l->reason ?? '-' }}
-                        </td>
+    .header-icon {
+        width: clamp(50px, 8vw, 60px);
+        height: clamp(50px, 8vw, 60px);
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(24px, 4vw, 30px);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
 
-                        <td
-                            style="padding:12px;border:1px solid #ddd;font-weight:600;
-                                   color:
-                                   {{ $l->status === 'Approved' ? '#16a34a' : ($l->status === 'Rejected' ? '#dc2626' : '#ca8a04') }}">
-                            {{ $l->status }}
-                        </td>
+    .header-title h1 {
+        margin: 0;
+        font-size: clamp(24px, 5vw, 28px);
+        font-weight: 700;
+        color: white;
+        word-break: break-word;
+    }
 
-                        <td style="padding:12px;border:1px solid #ddd;">
-                            @if ($l->status === 'Pending')
-                                <form method="POST" action="{{ route('leaves.approve', $l->id) }}" style="display:inline">
-                                    @csrf
-                                    <button
-                                        style="padding:8px 14px;background:#28a745;color:#fff;
-                                               border:none;border-radius:5px;cursor:pointer;
-                                               margin-right:5px;">
-                                        ✔ Approve
-                                    </button>
-                                </form>
+    .header-title p {
+        margin: 5px 0 0 0;
+        font-size: clamp(14px, 3vw, 16px);
+        opacity: 0.9;
+        word-break: break-word;
+    }
 
-                                <form method="POST" action="{{ route('leaves.reject', $l->id) }}" style="display:inline">
-                                    @csrf
-                                    <button
-                                        style="padding:8px 14px;background:#dc3545;color:#fff;
-                                               border:none;border-radius:5px;cursor:pointer;">
-                                        ✖ Reject
-                                    </button>
-                                </form>
-                            @else
-                                <span style="color:#6b7280;font-style:italic;">
-                                    No action
-                                </span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" style="padding:15px;text-align:center;color:#6b7280;">
-                            No leave requests found
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+    .stats-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 12px 24px;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: clamp(14px, 3vw, 16px);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        white-space: nowrap;
+    }
 
-    </div>
-@endsection
+    /* ================= STATS CARDS ================= */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: var(--bg-white);
+        border-radius: var(--radius-lg);
+        padding: clamp(16px, 3vw, 20px);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary);
+    }
+
+    .stat-icon {
+        width: clamp(45px, 7vw, 50px);
+        height: clamp(45px, 7vw, 50px);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(20px, 4vw, 24px);
+        flex-shrink: 0;
+    }
+
+    .stat-icon.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .stat-icon.approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .stat-icon.rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .stat-info {
+        flex: 1;
+    }
+
+    .stat-label {
+        font-size: clamp(12px, 2.5vw, 13px);
+        color: var(--text-muted);
+        margin-bottom: 5px;
+        font-weight: 500;
+        word-break: break-word;
+    }
+
+    .stat-value {
+        font-size: clamp(24px, 5vw, 28px);
+        font-weight: 700;
+        color: var(--text-main);
+        line-height: 1.2;
+        word-break: break-word;
+    }
+
+    .stat-total {
+        font-size: clamp(11px, 2vw, 12px);
+        color: var(--text-muted);
+        margin-top: 5px;
+    }
+
+    /* ================= FILTERS SECTION ================= */
+    .filters-card {
+        background: var(--bg-white);
+        border-radius: var(--radius-lg);
+        padding: clamp(16px, 3vw, 20px);
+        margin-bottom: 30px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+    }
+
+    .filters-wrapper {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .filters-left {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        flex: 1;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--bg-light);
+        padding: 5px 10px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+    }
+
+    .filter-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .filter-select {
+        padding: 8px 12px;
+        border: none;
+        background: transparent;
+        font-size: 14px;
+        color: var(--text-main);
+        cursor: pointer;
+        outline: none;
+        min-width: 130px;
+    }
+
+    .search-box {
+        position: relative;
+        min-width: 250px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 40px 10px 15px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .search-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    /* ================= REPORT CARD ================= */
+    .report-card {
+        background: var(--bg-white);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .report-header {
+        padding: clamp(16px, 3vw, 20px) clamp(20px, 4vw, 25px);
+        background: linear-gradient(135deg, var(--bg-light) 0%, #e9ecef 100%);
+        border-bottom: 2px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .report-title {
+        margin: 0;
+        font-size: clamp(18px, 4vw, 20px);
+        font-weight: 700;
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .report-title span {
+        background: var(--primary);
+        width: 6px;
+        height: 24px;
+        border-radius: 3px;
+        display: inline-block;
+    }
+
+    .entries-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .entries-label {
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .entries-select {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        outline: none;
+        background: white;
+        cursor: pointer;
+    }
+
+    .entries-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    }
+
+    /* ================= TABLE ================= */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
+    .leave-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 1000px;
+    }
+
+    .leave-table thead tr {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+    .leave-table th {
+        padding: 15px 12px;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: left;
+        border: 1px solid var(--primary-dark);
+        white-space: nowrap;
+    }
+
+    .leave-table td {
+        padding: 15px 12px;
+        border: 1px solid var(--border);
+        font-size: 14px;
+        vertical-align: middle;
+        transition: background 0.3s ease;
+    }
+
+    .leave-table tbody tr:hover td {
+        background: #f1f9ff;
+    }
+
+    /* ================= EMPLOYEE INFO ================= */
+    .employee-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .employee-avatar {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .employee-name {
+        font-weight: 600;
+        color: var(--text-main);
+        word-break: break-word;
+    }
+
+    /* ================= DATE BADGE ================= */
+    .date-badge {
+        background: var(--bg-light);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-main);
+        border: 1px solid var(--border);
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+    }
+
+    .date-badge i {
+        font-size: 12px;
+        color: var(--primary);
+    }
+
+    /* =====

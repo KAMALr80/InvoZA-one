@@ -3,30 +3,574 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>INVOZA One</title>
+    <title>INVOZA One - @yield('page-title', 'Dashboard')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 
     <style>
+        /* ================= PROFESSIONAL DESIGN SYSTEM ================= */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --success-dark: #059669;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --bg-light: #f9fafb;
+            --bg-white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-2xl: 20px;
+            --font-sans: 'Segoe UI', Tahoma, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-light);
+            color: var(--text-main);
+            line-height: 1.5;
+            overflow-x: hidden;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ================= SIDEBAR STYLES ================= */
+        #sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            color: #fff;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            height: 100vh;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            scrollbar-width: thin;
+            scrollbar-color: #4b5563 #1f2937;
+        }
+
+        /* Custom scrollbar for Webkit browsers */
+        #sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        /* Logo Section */
+        .sidebar-logo {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            top: 0;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            z-index: 1;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-text {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-subtitle {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        /* User Info */
+        .user-info {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 2px;
+            word-break: break-word;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: #cbd5e1;
+            word-break: break-word;
+        }
+
+        /* Navigation Menu */
+        .nav-menu {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 20px;
+        }
+
+        .nav-link {
+            color: #e2e8f0;
+            text-decoration: none;
+            padding: 14px 16px;
+            border-radius: var(--radius-lg);
+            text-align: left;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid transparent;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background-color: rgba(99, 102, 241, 0.1);
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.3);
+            font-weight: 700;
+        }
+
+        .nav-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: #475569;
+            flex-shrink: 0;
+            transition: background 0.3s ease;
+        }
+
+        .nav-link.active .nav-icon {
+            background: var(--primary);
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            opacity: 0.7;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* ================= TOP NAVBAR ================= */
+        .top-navbar {
+            position: fixed;
+            top: 0;
+            left: 260px;
+            right: 0;
+            height: 70px;
+            background: var(--bg-white);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 999;
+            transition: left 0.3s ease;
+        }
+
+        .menu-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .menu-toggle:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        .page-title {
+            font-size: clamp(18px, 3vw, 22px);
+            font-weight: 700;
+            color: var(--text-main);
+            word-break: break-word;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-detail {
+            text-align: right;
+        }
+
+        .user-fullname {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 15px;
+            word-break: break-word;
+        }
+
+        .user-badge {
+            font-size: 13px;
+            color: var(--text-muted);
+            background: var(--bg-light);
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            word-break: break-word;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, var(--danger) 0%, var(--danger-dark) 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+            white-space: nowrap;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.3);
+        }
+
+        /* ================= MAIN CONTENT ================= */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            margin-top: 70px;
+            min-height: calc(100vh - 70px);
+            padding: 30px;
+            background: var(--bg-light);
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* ================= TOAST NOTIFICATION ================= */
+        .toast-notification {
+            position: fixed;
+            top: 90px;
+            right: 30px;
+            background: var(--success);
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            max-width: 90%;
+            word-break: break-word;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ================= RESPONSIVE BREAKPOINTS ================= */
+        
+        /* Large Desktop (1200px and above) */
+        @media (min-width: 1200px) {
+            .main-content {
+                padding: 30px;
+            }
+        }
+
+        /* Desktop (992px to 1199px) */
+        @media (max-width: 1199px) {
+            .main-content {
+                padding: 25px;
+            }
+        }
+
+        /* Tablet (768px to 991px) */
+        @media (max-width: 991px) {
+            .top-navbar {
+                left: 0;
+                padding: 0 20px;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            #sidebar {
+                transform: translateX(-100%);
+            }
+
+            #sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .user-detail {
+                display: none;
+            }
+        }
+
+        /* Mobile Landscape (576px to 767px) */
+        @media (max-width: 767px) {
+            .top-navbar {
+                padding: 0 15px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .user-section {
+                gap: 10px;
+            }
+
+            .logout-btn {
+                padding: 8px 15px;
+                font-size: 13px;
+            }
+
+            .logout-btn span {
+                font-size: 16px;
+            }
+
+            .toast-notification {
+                top: 80px;
+                right: 15px;
+                left: 15px;
+                max-width: none;
+            }
+        }
+
+        /* Mobile Portrait (up to 575px) */
+        @media (max-width: 575px) {
+            .top-navbar {
+                padding: 0 12px;
+            }
+
+            .page-title {
+                font-size: 16px;
+            }
+
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+
+            .logout-btn span {
+                font-size: 14px;
+            }
+
+            .main-content {
+                padding: 12px;
+            }
+
+            #sidebar {
+                width: 240px;
+            }
+
+            .nav-link {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+
+            .nav-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+        }
+
+        /* Extra Small Devices (up to 360px) */
+        @media (max-width: 360px) {
+            .top-navbar {
+                padding: 0 8px;
+            }
+
+            .page-title {
+                font-size: 14px;
+            }
+
+            .logout-btn {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .logout-btn span {
+                font-size: 12px;
+            }
+
+            .main-content {
+                padding: 8px;
+            }
+
+            #sidebar {
+                width: 220px;
+                padding: 20px 15px;
+            }
+
+            .nav-link {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+
+            .nav-icon {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+
+            .user-avatar {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+
+            .user-name {
+                font-size: 14px;
+            }
+
+            .user-role {
+                font-size: 11px;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            #sidebar,
+            .top-navbar,
+            .toast-notification {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0;
+                margin-top: 0;
+                padding: 0;
+            }
+        }
+
         /* DataTable Custom Styling */
         .dataTables_wrapper .dataTables_filter input {
-            border: 2px solid #e5e7eb !important;
-            border-radius: 8px !important;
+            border: 2px solid var(--border) !important;
+            border-radius: var(--radius-md) !important;
             padding: 8px 12px !important;
             margin-left: 10px !important;
         }
 
         .dataTables_wrapper .dataTables_length select {
-            border: 2px solid #e5e7eb !important;
-            border-radius: 8px !important;
+            border: 2px solid var(--border) !important;
+            border-radius: var(--radius-md) !important;
             padding: 6px 10px !important;
         }
 
@@ -35,1009 +579,230 @@
         }
 
         .dt-button {
-            background: #4f46e5 !important;
+            background: var(--primary) !important;
             color: white !important;
             border: none !important;
-            border-radius: 6px !important;
+            border-radius: var(--radius-sm) !important;
             padding: 8px 16px !important;
             margin-right: 5px !important;
             cursor: pointer !important;
         }
 
         .dt-button:hover {
-            background: #4338ca !important;
+            background: var(--primary-dark) !important;
+        }
+
+        @media (max-width: 767px) {
+            .dataTables_wrapper .dt-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .dt-button {
+                width: 100%;
+                margin-right: 0 !important;
+            }
         }
     </style>
+
+    @stack('styles')
 </head>
 
-<body
-    style="margin:0; font-family:'Segoe UI', Tahoma, sans-serif; background:#f3f4f6; overflow-x:hidden; display:flex; min-height:100vh;">
-
+<body>
     {{-- ================= SIDEBAR ================= --}}
-    <div id="sidebar"
-        style="
-        width:220px;
-        background:linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-        color:#fff;
-        padding:25px 20px;
-        display:flex;
-        flex-direction:column;
-        position:fixed;
-        left:0;
-        top:0;
-        bottom:0;
-        height:100vh;
-        border-right:1px solid rgba(255,255,255,0.1);
-        box-shadow:4px 0 20px rgba(0,0,0,0.2);
-        z-index:1000;
-        overflow-y:auto;
-        scrollbar-width:thin;
-        scrollbar-color:#4b5563 #1f2937;
-    ">
-        {{-- Custom scrollbar for Webkit browsers --}}
-        <style>
-            #sidebar::-webkit-scrollbar {
-                width: 6px;
-            }
-
-            #sidebar::-webkit-scrollbar-track {
-                background: #1f2937;
-            }
-
-            #sidebar::-webkit-scrollbar-thumb {
-                background: #4b5563;
-                border-radius: 3px;
-            }
-
-            #sidebar::-webkit-scrollbar-thumb:hover {
-                background: #6b7280;
-            }
-        </style>
-
+    <div id="sidebar">
         {{-- Logo --}}
-        <div
-            style="
-            text-align:center;
-            margin-bottom:25px;
-            padding-bottom:20px;
-            border-bottom:1px solid rgba(255,255,255,0.1);
-            position:relative;
-            top:0;
-            background:linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-            z-index:1;
-        ">
-            <div
-                style="
-                background:linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-                width:50px;
-                height:50px;
-                border-radius:14px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:24px;
-                margin:0 auto 15px auto;
-                box-shadow:0 8px 20px rgba(99,102,241,0.3);
-            ">
-                ⚡
-            </div>
-            <h2
-                style="
-                margin:0;
-                font-size:22px;
-                font-weight:900;
-                letter-spacing:0.5px;
-                background:linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
-                -webkit-background-clip:text;
-                -webkit-text-fill-color:transparent;
-            ">
-                INVOZA One
-            </h2>
-            <div style="margin-top:8px; font-size:12px; color:#94a3b8; font-weight:500;">
-                Business Intelligence System
-            </div>
+        <div class="sidebar-logo">
+            <div class="logo-icon">⚡</div>
+            <h2 class="logo-text">INVOZA One</h2>
+            <div class="logo-subtitle">Business Intelligence System</div>
         </div>
 
         {{-- User Info --}}
         @auth
-            <div
-                style="
-                background:rgba(255,255,255,0.05);
-                border-radius:12px;
-                padding:15px;
-                margin-bottom:20px;
-                border:1px solid rgba(255,255,255,0.08);
-                backdrop-filter:blur(10px);
-            ">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <div
-                        style="
-                        background:linear-gradient(135deg, #10b981 0%, #059669 100%);
-                        width:40px;
-                        height:40px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        font-weight:bold;
-                    ">
+            <div class="user-info">
+                <div class="user-details">
+                    <div class="user-avatar">
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     </div>
                     <div>
-                        <div style="font-weight:700; font-size:15px; margin-bottom:2px;">
-                            {{ auth()->user()->name }}
-                        </div>
-                        <div style="font-size:12px; color:#cbd5e1;">
-                            {{ auth()->user()->role }}
-                        </div>
+                        <div class="user-name">{{ auth()->user()->name }}</div>
+                        <div class="user-role">{{ ucfirst(auth()->user()->role) }}</div>
                     </div>
                 </div>
             </div>
         @endauth
 
         {{-- Navigation Menu --}}
-        <div style="flex:1; display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-            {{-- Dashboard --}}
-            <a href="{{ route('dashboard') }}"
-                style="
-                    color:#e2e8f0;
-                    text-decoration:none;
-                    padding:14px 16px;
-                    margin-bottom:4px;
-                    border-radius:12px;
-                    text-align:left;
-                    font-size:15px;
-                    transition:all 0.3s ease;
-                    display:flex;
-                    align-items:center;
-                    gap:12px;
-                    border:1px solid {{ request()->is('dashboard') ? 'rgba(99,102,241,0.3)' : 'transparent' }};
-                    background:{{ request()->is('dashboard') ? 'rgba(99,102,241,0.15)' : 'transparent' }};
-                    font-weight:{{ request()->is('dashboard') ? '700' : '500' }};
-               "
-                onmouseover="this.style.backgroundColor='rgba(99,102,241,0.1)'; this.style.transform='translateX(4px)';"
-                onmouseout="this.style.backgroundColor='{{ request()->is('dashboard') ? 'rgba(99,102,241,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                <span
-                    style="
-                    width:36px;
-                    height:36px;
-                    border-radius:10px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    font-size:18px;
-                    background:{{ request()->is('dashboard') ? '#6366f1' : '#475569' }};
-                ">
-                    📊
-                </span>
+        <div class="nav-menu">
+            {{-- Common Links for All Users --}}
+            <a href="{{ route('dashboard') }}" 
+               class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <span class="nav-icon">📊</span>
                 Dashboard
             </a>
 
             {{-- ADMIN MENU --}}
             @if (auth()->check() && auth()->user()->role === 'admin')
-                <a href="{{ route('employees.index') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('employees*') ? 'rgba(59,130,246,0.3)' : 'transparent' }};
-                        background:{{ request()->is('employees*') ? 'rgba(59,130,246,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('employees*') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(59,130,246,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('employees*') ? 'rgba(59,130,246,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('employees*') ? '#3b82f6' : '#475569' }};
-                    ">
-                        👥
-                    </span>
+                <a href="{{ route('employees.index') }}" 
+                   class="nav-link {{ request()->routeIs('employees*') ? 'active' : '' }}">
+                    <span class="nav-icon">👥</span>
                     Employees
                 </a>
 
-                <a href="{{ route('inventory.index') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('inventory*') ? 'rgba(249,115,22,0.3)' : 'transparent' }};
-                        background:{{ request()->is('inventory*') ? 'rgba(249,115,22,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('inventory*') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(249,115,22,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('inventory*') ? 'rgba(249,115,22,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('inventory*') ? '#f97316' : '#475569' }};
-                    ">
-                        📦
-                    </span>
+                <a href="{{ route('inventory.index') }}" 
+                   class="nav-link {{ request()->routeIs('inventory*') ? 'active' : '' }}">
+                    <span class="nav-icon">📦</span>
                     Inventory
                 </a>
 
-                <a href="{{ route('customers.index') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('customers*') ? 'rgba(16,185,129,0.3)' : 'transparent' }};
-                        background:{{ request()->is('customers*') ? 'rgba(16,185,129,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('customers*') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(16,185,129,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('customers*') ? 'rgba(16,185,129,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('customers*') ? '#10b981' : '#475569' }};
-                    ">
-                        👤
-                    </span>
+                <a href="{{ route('customers.index') }}" 
+                   class="nav-link {{ request()->routeIs('customers*') ? 'active' : '' }}">
+                    <span class="nav-icon">👤</span>
                     Customers
                 </a>
 
-                <a href="{{ route('sales.index') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('sales*') ? 'rgba(234,88,12,0.3)' : 'transparent' }};
-                        background:{{ request()->is('sales*') ? 'rgba(234,88,12,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('sales*') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(234,88,12,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('sales*') ? 'rgba(234,88,12,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('sales*') ? '#ea580c' : '#475569' }};
-                    ">
-                        💰
-                    </span>
+                <a href="{{ route('sales.index') }}" 
+                   class="nav-link {{ request()->routeIs('sales*') ? 'active' : '' }}">
+                    <span class="nav-icon">💰</span>
                     Sales
                 </a>
 
-                <a href="{{ route('purchases.index') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('purchases*') ? 'rgba(168,85,247,0.3)' : 'transparent' }};
-                        background:{{ request()->is('purchases*') ? 'rgba(168,85,247,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('purchases*') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(168,85,247,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('purchases*') ? 'rgba(168,85,247,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('purchases*') ? '#a855f7' : '#475569' }};
-                    ">
-                        🛒
-                    </span>
+                <a href="{{ route('purchases.index') }}" 
+                   class="nav-link {{ request()->routeIs('purchases*') ? 'active' : '' }}">
+                    <span class="nav-icon">🛒</span>
                     Purchases
                 </a>
 
-                <a href="{{ route('attendance.manage') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('attendance/manage') ? 'rgba(59,130,246,0.3)' : 'transparent' }};
-                        background:{{ request()->is('attendance/manage') ? 'rgba(59,130,246,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('attendance/manage') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(59,130,246,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('attendance/manage') ? 'rgba(59,130,246,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('attendance/manage') ? '#3b82f6' : '#475569' }};
-                    ">
-                        🕒
-                    </span>
+                <a href="{{ route('attendance.manage') }}" 
+                   class="nav-link {{ request()->routeIs('attendance.manage') ? 'active' : '' }}">
+                    <span class="nav-icon">🕒</span>
                     Attendance
                 </a>
 
-                <a href="{{ route('leaves.manage') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('leaves/manage') ? 'rgba(16,185,129,0.3)' : 'transparent' }};
-                        background:{{ request()->is('leaves/manage') ? 'rgba(16,185,129,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('leaves/manage') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(16,185,129,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('leaves/manage') ? 'rgba(16,185,129,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('leaves/manage') ? '#10b981' : '#475569' }};
-                    ">
-                        ✅
-                    </span>
+                <a href="{{ route('leaves.manage') }}" 
+                   class="nav-link {{ request()->routeIs('leaves.manage') ? 'active' : '' }}">
+                    <span class="nav-icon">✅</span>
                     Manage Leaves
                 </a>
 
-                <a href="{{ route('admin.staff.approval') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('admin/staff-approval') ? 'rgba(239,68,68,0.3)' : 'transparent' }};
-                        background:{{ request()->is('admin/staff-approval') ? 'rgba(239,68,68,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('admin/staff-approval') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(239,68,68,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('admin/staff-approval') ? 'rgba(239,68,68,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('admin/staff-approval') ? '#ef4444' : '#475569' }};
-                    ">
-                        🧑‍⚖️
-                    </span>
+                <a href="{{ route('admin.staff.approval') }}" 
+                   class="nav-link {{ request()->routeIs('admin.staff.approval') ? 'active' : '' }}">
+                    <span class="nav-icon">🧑‍⚖️</span>
                     Staff Approval
                 </a>
 
-                <!-- HR Dashboard Menu Item -->
-                <a href="{{ route('hr.dashboard') }}"
-                    style="
-        color:#e2e8f0;
-        text-decoration:none;
-        padding:14px 16px;
-        margin-bottom:4px;
-        border-radius:12px;
-        text-align:left;
-        font-size:15px;
-        transition:all 0.3s ease;
-        display:flex;
-        align-items:center;
-        gap:12px;
-        border:1px solid {{ request()->is('hr/dashboard') ? 'rgba(139,92,246,0.3)' : 'transparent' }};
-        background:{{ request()->is('hr/dashboard') ? 'rgba(139,92,246,0.15)' : 'transparent' }};
-        font-weight:{{ request()->is('hr/dashboard') ? '700' : '500' }};
-   "
-                    onmouseover="this.style.backgroundColor='rgba(139,92,246,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('hr/dashboard') ? 'rgba(139,92,246,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-        width:36px;
-        height:36px;
-        border-radius:10px;
-        display:flex;
-        align-items:center;
-        justify-content:center;
-        font-size:18px;
-        background:{{ request()->is('hr/dashboard') ? '#8b5cf6' : '#475569' }};
-    ">
-                        👨‍💼
-                    </span>
+                <a href="{{ route('hr.dashboard') }}" 
+                   class="nav-link {{ request()->routeIs('hr.dashboard') ? 'active' : '' }}">
+                    <span class="nav-icon">👨‍💼</span>
                     HR Dashboard
                 </a>
             @endif
+
             {{-- HR MENU --}}
             @if (auth()->check() && auth()->user()->role === 'hr')
-                <!-- HR Dashboard -->
-                <a href="{{ route('hr.dashboard') }}"
-                    style="
-            color:#e2e8f0;
-            text-decoration:none;
-            padding:14px 16px;
-            margin-bottom:4px;
-            border-radius:12px;
-            text-align:left;
-            font-size:15px;
-            transition:all 0.3s ease;
-            display:flex;
-            align-items:center;
-            gap:12px;
-            border:1px solid {{ request()->is('hr/dashboard') ? 'rgba(139,92,246,0.3)' : 'transparent' }};
-            background:{{ request()->is('hr/dashboard') ? 'rgba(139,92,246,0.15)' : 'transparent' }};
-            font-weight:{{ request()->is('hr/dashboard') ? '700' : '500' }};
-        "
-                    onmouseover="this.style.backgroundColor='rgba(139,92,246,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('hr/dashboard') ? 'rgba(139,92,246,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                width:36px;
-                height:36px;
-                border-radius:10px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:18px;
-                background:{{ request()->is('hr/dashboard') ? '#8b5cf6' : '#475569' }};
-            ">
-                        👨‍💼
-                    </span>
+                <a href="{{ route('hr.dashboard') }}" 
+                   class="nav-link {{ request()->routeIs('hr.dashboard') ? 'active' : '' }}">
+                    <span class="nav-icon">👨‍💼</span>
                     HR Dashboard
                 </a>
 
-                <!-- Employees -->
-                <a href="{{ route('employees.index') }}"
-                    style="
-            color:#e2e8f0;
-            text-decoration:none;
-            padding:14px 16px;
-            margin-bottom:4px;
-            border-radius:12px;
-            text-align:left;
-            font-size:15px;
-            transition:all 0.3s ease;
-            display:flex;
-            align-items:center;
-            gap:12px;
-            border:1px solid {{ request()->is('employees*') ? 'rgba(59,130,246,0.3)' : 'transparent' }};
-            background:{{ request()->is('employees*') ? 'rgba(59,130,246,0.15)' : 'transparent' }};
-            font-weight:{{ request()->is('employees*') ? '700' : '500' }};
-        "
-                    onmouseover="this.style.backgroundColor='rgba(59,130,246,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('employees*') ? 'rgba(59,130,246,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                width:36px;
-                height:36px;
-                border-radius:10px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:18px;
-                background:{{ request()->is('employees*') ? '#3b82f6' : '#475569' }};
-            ">
-                        👥
-                    </span>
+                <a href="{{ route('employees.index') }}" 
+                   class="nav-link {{ request()->routeIs('employees*') ? 'active' : '' }}">
+                    <span class="nav-icon">👥</span>
                     Employees
                 </a>
 
-                <!-- Attendance -->
-                <a href="{{ route('attendance.manage') }}"
-                    style="
-            color:#e2e8f0;
-            text-decoration:none;
-            padding:14px 16px;
-            margin-bottom:4px;
-            border-radius:12px;
-            text-align:left;
-            font-size:15px;
-            transition:all 0.3s ease;
-            display:flex;
-            align-items:center;
-            gap:12px;
-            border:1px solid {{ request()->is('attendance*') ? 'rgba(59,130,246,0.3)' : 'transparent' }};
-            background:{{ request()->is('attendance*') ? 'rgba(59,130,246,0.15)' : 'transparent' }};
-            font-weight:{{ request()->is('attendance*') ? '700' : '500' }};
-        "
-                    onmouseover="this.style.backgroundColor='rgba(59,130,246,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('attendance*') ? 'rgba(59,130,246,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                width:36px;
-                height:36px;
-                border-radius:10px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:18px;
-                background:{{ request()->is('attendance*') ? '#3b82f6' : '#475569' }};
-            ">
-                        🕒
-                    </span>
+                <a href="{{ route('attendance.manage') }}" 
+                   class="nav-link {{ request()->routeIs('attendance*') ? 'active' : '' }}">
+                    <span class="nav-icon">🕒</span>
                     Attendance
                 </a>
 
-                <!-- Mark Attendance (Quick Action) -->
-                <a href="{{ route('attendance.mark') }}"
-                    style="
-            color:#e2e8f0;
-            text-decoration:none;
-            padding:14px 16px;
-            margin-bottom:4px;
-            border-radius:12px;
-            text-align:left;
-            font-size:15px;
-            transition:all 0.3s ease;
-            display:flex;
-            align-items:center;
-            gap:12px;
-            border:1px solid {{ request()->is('attendance/mark') ? 'rgba(16,185,129,0.3)' : 'transparent' }};
-            background:{{ request()->is('attendance/mark') ? 'rgba(16,185,129,0.15)' : 'transparent' }};
-            font-weight:{{ request()->is('attendance/mark') ? '700' : '500' }};
-        "
-                    onmouseover="this.style.backgroundColor='rgba(16,185,129,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('attendance/mark') ? 'rgba(16,185,129,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                width:36px;
-                height:36px;
-                border-radius:10px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:18px;
-                background:{{ request()->is('attendance/mark') ? '#10b981' : '#475569' }};
-            ">
-                        📝
-                    </span>
+                <a href="{{ route('attendance.mark') }}" 
+                   class="nav-link {{ request()->routeIs('attendance.mark') ? 'active' : '' }}">
+                    <span class="nav-icon">📝</span>
                     Mark Attendance
                 </a>
 
-                <!-- Manage Leaves -->
-                <a href="{{ route('leaves.manage') }}"
-                    style="
-            color:#e2e8f0;
-            text-decoration:none;
-            padding:14px 16px;
-            margin-bottom:4px;
-            border-radius:12px;
-            text-align:left;
-            font-size:15px;
-            transition:all 0.3s ease;
-            display:flex;
-            align-items:center;
-            gap:12px;
-            border:1px solid {{ request()->is('leaves*') ? 'rgba(16,185,129,0.3)' : 'transparent' }};
-            background:{{ request()->is('leaves*') ? 'rgba(16,185,129,0.15)' : 'transparent' }};
-            font-weight:{{ request()->is('leaves*') ? '700' : '500' }};
-        "
-                    onmouseover="this.style.backgroundColor='rgba(16,185,129,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('leaves*') ? 'rgba(16,185,129,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                width:36px;
-                height:36px;
-                border-radius:10px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:18px;
-                background:{{ request()->is('leaves*') ? '#10b981' : '#475569' }};
-            ">
-                        ✅
-                    </span>
+                <a href="{{ route('leaves.manage') }}" 
+                   class="nav-link {{ request()->routeIs('leaves*') ? 'active' : '' }}">
+                    <span class="nav-icon">✅</span>
                     Manage Leaves
                 </a>
 
-                <!-- Add Employee -->
-                <a href="{{ route('employees.create') }}"
-                    style="
-            color:#e2e8f0;
-            text-decoration:none;
-            padding:14px 16px;
-            margin-bottom:4px;
-            border-radius:12px;
-            text-align:left;
-            font-size:15px;
-            transition:all 0.3s ease;
-            display:flex;
-            align-items:center;
-            gap:12px;
-            border:1px solid {{ request()->is('employees/create') ? 'rgba(59,130,246,0.3)' : 'transparent' }};
-            background:{{ request()->is('employees/create') ? 'rgba(59,130,246,0.15)' : 'transparent' }};
-            font-weight:{{ request()->is('employees/create') ? '700' : '500' }};
-        "
-                    onmouseover="this.style.backgroundColor='rgba(59,130,246,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('employees/create') ? 'rgba(59,130,246,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                width:36px;
-                height:36px;
-                border-radius:10px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:18px;
-                background:{{ request()->is('employees/create') ? '#3b82f6' : '#475569' }};
-            ">
-                        ➕
-                    </span>
+                <a href="{{ route('employees.create') }}" 
+                   class="nav-link {{ request()->routeIs('employees.create') ? 'active' : '' }}">
+                    <span class="nav-icon">➕</span>
                     Add Employee
                 </a>
 
-                <!-- HR Reports -->
-                <a href="{{ route('reports.attendance') }}"
-                    style="
-            color:#e2e8f0;
-            text-decoration:none;
-            padding:14px 16px;
-            margin-bottom:4px;
-            border-radius:12px;
-            text-align:left;
-            font-size:15px;
-            transition:all 0.3s ease;
-            display:flex;
-            align-items:center;
-            gap:12px;
-            border:1px solid {{ request()->is('reports*') ? 'rgba(168,85,247,0.3)' : 'transparent' }};
-            background:{{ request()->is('reports*') ? 'rgba(168,85,247,0.15)' : 'transparent' }};
-            font-weight:{{ request()->is('reports*') ? '700' : '500' }};
-        "
-                    onmouseover="this.style.backgroundColor='rgba(168,85,247,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('reports*') ? 'rgba(168,85,247,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                width:36px;
-                height:36px;
-                border-radius:10px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:18px;
-                background:{{ request()->is('reports*') ? '#a855f7' : '#475569' }};
-            ">
-                        📊
-                    </span>
+                <a href="{{ route('reports.attendance') }}" 
+                   class="nav-link {{ request()->routeIs('reports*') ? 'active' : '' }}">
+                    <span class="nav-icon">📊</span>
                     HR Reports
                 </a>
 
-                <!-- HR Analytics -->
-                <a href="{{ route('hr.analytics') }}"
-                    style="
-            color:#e2e8f0;
-            text-decoration:none;
-            padding:14px 16px;
-            margin-bottom:4px;
-            border-radius:12px;
-            text-align:left;
-            font-size:15px;
-            transition:all 0.3s ease;
-            display:flex;
-            align-items:center;
-            gap:12px;
-            border:1px solid {{ request()->is('hr/analytics') ? 'rgba(139,92,246,0.3)' : 'transparent' }};
-            background:{{ request()->is('hr/analytics') ? 'rgba(139,92,246,0.15)' : 'transparent' }};
-            font-weight:{{ request()->is('hr/analytics') ? '700' : '500' }};
-        "
-                    onmouseover="this.style.backgroundColor='rgba(139,92,246,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('hr/analytics') ? 'rgba(139,92,246,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                width:36px;
-                height:36px;
-                border-radius:10px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                font-size:18px;
-                background:{{ request()->is('hr/analytics') ? '#8b5cf6' : '#475569' }};
-            ">
-                        📈
-                    </span>
+                <a href="{{ route('hr.analytics') }}" 
+                   class="nav-link {{ request()->routeIs('hr.analytics') ? 'active' : '' }}">
+                    <span class="nav-icon">📈</span>
                     HR Analytics
                 </a>
             @endif
+
             {{-- STAFF MENU --}}
             @if (auth()->check() && auth()->user()->role === 'staff')
-                <a href="{{ route('attendance.my') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('attendance/my') ? 'rgba(59,130,246,0.3)' : 'transparent' }};
-                        background:{{ request()->is('attendance/my') ? 'rgba(59,130,246,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('attendance/my') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(59,130,246,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('attendance/my') ? 'rgba(59,130,246,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('attendance/my') ? '#3b82f6' : '#475569' }};
-                    ">
-                        🕒
-                    </span>
+                <a href="{{ route('attendance.my') }}" 
+                   class="nav-link {{ request()->routeIs('attendance.my') ? 'active' : '' }}">
+                    <span class="nav-icon">🕒</span>
                     My Attendance
                 </a>
 
-                <a href="{{ route('leaves.my') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('leaves/my') ? 'rgba(16,185,129,0.3)' : 'transparent' }};
-                        background:{{ request()->is('leaves/my') ? 'rgba(16,185,129,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('leaves/my') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(16,185,129,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('leaves/my') ? 'rgba(16,185,129,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('leaves/my') ? '#10b981' : '#475569' }};
-                    ">
-                        📝
-                    </span>
+                <a href="{{ route('leaves.my') }}" 
+                   class="nav-link {{ request()->routeIs('leaves.my') ? 'active' : '' }}">
+                    <span class="nav-icon">📝</span>
                     My Leaves
                 </a>
 
-                <a href="{{ route('sales.index') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('sales*') ? 'rgba(234,88,12,0.3)' : 'transparent' }};
-                        background:{{ request()->is('sales*') ? 'rgba(234,88,12,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('sales*') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(234,88,12,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('sales*') ? 'rgba(234,88,12,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('sales*') ? '#ea580c' : '#475569' }};
-                    ">
-                        💰
-                    </span>
+                <a href="{{ route('sales.index') }}" 
+                   class="nav-link {{ request()->routeIs('sales*') ? 'active' : '' }}">
+                    <span class="nav-icon">💰</span>
                     Sales
                 </a>
 
-                <a href="{{ route('customers.index') }}"
-                    style="
-                        color:#e2e8f0;
-                        text-decoration:none;
-                        padding:14px 16px;
-                        margin-bottom:4px;
-                        border-radius:12px;
-                        text-align:left;
-                        font-size:15px;
-                        transition:all 0.3s ease;
-                        display:flex;
-                        align-items:center;
-                        gap:12px;
-                        border:1px solid {{ request()->is('customers*') ? 'rgba(16,185,129,0.3)' : 'transparent' }};
-                        background:{{ request()->is('customers*') ? 'rgba(16,185,129,0.15)' : 'transparent' }};
-                        font-weight:{{ request()->is('customers*') ? '700' : '500' }};
-                   "
-                    onmouseover="this.style.backgroundColor='rgba(16,185,129,0.1)'; this.style.transform='translateX(4px)';"
-                    onmouseout="this.style.backgroundColor='{{ request()->is('customers*') ? 'rgba(16,185,129,0.15)' : 'transparent' }}'; this.style.transform='translateX(0)';">
-                    <span
-                        style="
-                        width:36px;
-                        height:36px;
-                        border-radius:10px;
-                        display:flex;
-                        align-items:center;
-                        justify-content:center;
-                        font-size:18px;
-                        background:{{ request()->is('customers*') ? '#10b981' : '#475569' }};
-                    ">
-                        👤
-                    </span>
+                <a href="{{ route('customers.index') }}" 
+                   class="nav-link {{ request()->routeIs('customers*') ? 'active' : '' }}">
+                    <span class="nav-icon">👤</span>
                     Customers
                 </a>
             @endif
         </div>
 
         {{-- Footer --}}
-        <div
-            style="margin-top:auto; padding-top:20px; text-align:center; font-size:11px; color:#94a3b8; opacity:0.7; border-top:1px solid rgba(255,255,255,0.1);">
+        <div class="sidebar-footer">
             INVOZA One v1.0 • {{ date('Y') }}
         </div>
     </div>
 
     {{-- ================= TOP NAVBAR ================= --}}
-    <div
-        style="
-        position:fixed;
-        top:0;
-        left:260px;
-        right:0;
-        height:70px;
-        background:white;
-        box-shadow:0 2px 15px rgba(0,0,0,0.08);
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        padding:0 30px;
-        z-index:999;
-    ">
-        <button id="menuToggle"
-            style="
-            display:none;
-            align-items:center;
-            justify-content:center;
-            width:40px;
-            height:40px;
-            background:#6366f1;
-            color:white;
-            border-radius:10px;
-            border:none;
-            cursor:pointer;
-            font-size:20px;
-        ">
-            ☰
-        </button>
+    <div class="top-navbar">
+        <button id="menuToggle" class="menu-toggle">☰</button>
 
-        <div style="font-size:22px; font-weight:700; color:#1f2937;">
+        <div class="page-title">
             @yield('page-title', 'Dashboard')
         </div>
 
         @auth
-            <div style="display:flex; align-items:center; gap:15px;">
-                <div style="text-align:right;">
-                    <div style="font-weight:600; color:#1f2937; font-size:15px;">{{ auth()->user()->name }}</div>
-                    <div style="font-size:13px; color:#6b7280; background:#f3f4f6; padding:3px 10px; border-radius:20px;">
-                        {{ ucfirst(auth()->user()->role) }}
-                    </div>
+            <div class="user-section">
+                <div class="user-detail">
+                    <div class="user-fullname">{{ auth()->user()->name }}</div>
+                    <div class="user-badge">{{ ucfirst(auth()->user()->role) }}</div>
                 </div>
                 <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                     @csrf
-                    <button type="submit"
-                        style="
-                        background:linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                        color:white;
-                        border:none;
-                        padding:10px 20px;
-                        border-radius:10px;
-                        font-weight:600;
-                        cursor:pointer;
-                        display:flex;
-                        align-items:center;
-                        gap:8px;
-                        transition:all 0.3s ease;
-                        box-shadow:0 4px 12px rgba(220,38,38,0.2);
-                    "
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(220,38,38,0.3)';"
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(220,38,38,0.2)'">
-                        <span style="font-size:18px;">🚪</span>
+                    <button type="submit" class="logout-btn">
+                        <span>🚪</span>
                         Logout
                     </button>
                 </form>
@@ -1046,84 +811,20 @@
     </div>
 
     {{-- ================= MAIN CONTENT ================= --}}
-    <div
-        style="
-        flex:1;
-        margin-left:260px;
-        margin-top:70px;
-        min-height:calc(100vh - 70px);
-        padding:30px;
-        background:#f8fafc;
-        overflow-y:auto;
-    ">
+    <div class="main-content">
         @yield('content')
     </div>
 
-    {{-- ================= RESPONSIVE STYLES ================= --}}
-    <style>
-        @media (max-width: 768px) {
-            #sidebar {
-                width: 260px;
-                transform: translateX(-100%);
-                transition: transform 0.3s ease;
-            }
-
-            #sidebar.active {
-                transform: translateX(0);
-            }
-
-            div[style*="position:fixed; top:0; left:260px"] {
-                left: 0;
-                padding: 0 20px;
-            }
-
-            div[style*="margin-left:260px; margin-top:70px"] {
-                margin-left: 0;
-                padding: 20px;
-            }
-
-            #menuToggle {
-                display: flex;
-            }
-        }
-    </style>
-
     {{-- ================= TOAST NOTIFICATION ================= --}}
     @if (session('success'))
-        <div
-            style="
-            position:fixed;
-            top:90px;
-            right:30px;
-            background:#16a34a;
-            color:#fff;
-            padding:14px 20px;
-            border-radius:10px;
-            font-weight:600;
-            box-shadow:0 10px 25px rgba(0,0,0,0.2);
-            z-index:9999;
-            animation:slideIn 0.3s ease;
-        ">
+        <div class="toast-notification">
             ✅ {{ session('success') }}
         </div>
         <script>
             setTimeout(() => {
-                document.querySelector('div[style*="position:fixed; top:90px; right:30px"]')?.remove();
+                document.querySelector('.toast-notification')?.remove();
             }, 3000);
         </script>
-        <style>
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-        </style>
     @endif
 
     {{-- ================= JAVASCRIPT LIBRARIES ================= --}}
@@ -1147,7 +848,8 @@
     {{-- ================= CUSTOM JAVASCRIPT ================= --}}
     <script>
         // Mobile menu toggle
-        document.getElementById('menuToggle')?.addEventListener('click', function() {
+        document.getElementById('menuToggle')?.addEventListener('click', function(e) {
+            e.stopPropagation();
             document.getElementById('sidebar').classList.toggle('active');
         });
 
@@ -1156,7 +858,7 @@
             const sidebar = document.getElementById('sidebar');
             const menuToggle = document.getElementById('menuToggle');
 
-            if (window.innerWidth <= 768 &&
+            if (window.innerWidth <= 991 &&
                 sidebar && menuToggle &&
                 !sidebar.contains(event.target) &&
                 !menuToggle.contains(event.target) &&
@@ -1168,10 +870,21 @@
         // Auto-close sidebar when clicking a link on mobile
         document.querySelectorAll('#sidebar a').forEach(link => {
             link.addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
+                if (window.innerWidth <= 991) {
                     document.getElementById('sidebar')?.classList.remove('active');
                 }
             });
+        });
+
+        // Handle window resize
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                if (window.innerWidth > 991) {
+                    document.getElementById('sidebar')?.classList.remove('active');
+                }
+            }, 250);
         });
 
         // Basic DataTable Initialization (will be overridden by specific page scripts)

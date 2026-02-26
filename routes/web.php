@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Mail;
+use App\Models\Purchase;
+use App\Models\Product;
 
 /* ================= CONTROLLERS ================= */
 use App\Http\Controllers\ProfileController;
@@ -268,3 +270,47 @@ Route::delete('/invoices/{saleId}/delete-with-payments', [SalesController::class
 
 
     Route::get('/customers/{id}/details', [CustomerController::class, 'getDetails'])->name('customers.details');
+
+
+
+    
+Route::get('/test-relationship', function() {
+    try {
+        // Test 1: Check if Product model exists
+        $productCount = Product::count();
+        
+        // Test 2: Check if Purchase model exists
+        $purchaseCount = Purchase::count();
+        
+        // Test 3: Try to get a purchase with product
+        $purchase = Purchase::with('product')->first();
+        
+        $results = [
+            'product_model_exists' => 'Yes',
+            'total_products' => $productCount,
+            'purchase_model_exists' => 'Yes',
+            'total_purchases' => $purchaseCount,
+        ];
+        
+        if ($purchase) {
+            $results['sample_purchase'] = [
+                'id' => $purchase->id,
+                'invoice' => $purchase->invoice_number,
+                'product_loaded' => $purchase->product ? 'Yes' : 'No',
+                'product_name' => $purchase->product ? $purchase->product->name : 'No product found',
+                'product_id' => $purchase->product_id
+            ];
+        } else {
+            $results['message'] = 'No purchases found. Create one first.';
+        }
+        
+        return response()->json($results);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
+    }
+});

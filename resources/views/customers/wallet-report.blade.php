@@ -47,16 +47,18 @@
         min-height: 100vh;
         background: #f1f5f9;
         padding: 2rem 1rem;
+        width: 100%;
     }
 
     .report-container {
-        max-width: 1400px;
+        max-width: 1600px;
         margin: 0 auto;
         background: var(--bg-white);
         border-radius: var(--radius-2xl);
         box-shadow: var(--shadow-lg);
         overflow: hidden;
         padding: 2rem;
+        width: 100%;
     }
 
     /* ================= HEADER ================= */
@@ -75,6 +77,7 @@
         display: flex;
         align-items: center;
         gap: 1rem;
+        flex-wrap: wrap;
     }
 
     .title-icon {
@@ -88,20 +91,23 @@
         color: white;
         font-size: 2rem;
         box-shadow: var(--shadow-md);
+        flex-shrink: 0;
     }
 
     .title-content h1 {
         margin: 0;
-        font-size: 2rem;
+        font-size: clamp(1.5rem, 4vw, 2rem);
         font-weight: 700;
         color: var(--text-main);
         letter-spacing: -0.5px;
+        word-break: break-word;
     }
 
     .title-content p {
         margin: 0.25rem 0 0;
         color: var(--text-muted);
-        font-size: 0.95rem;
+        font-size: clamp(0.85rem, 3vw, 0.95rem);
+        word-break: break-word;
     }
 
     .header-actions {
@@ -126,6 +132,7 @@
         border: none;
         cursor: pointer;
         font-size: 0.95rem;
+        white-space: nowrap;
     }
 
     .btn-primary:hover {
@@ -147,6 +154,7 @@
         transition: all 0.2s;
         cursor: pointer;
         font-size: 0.95rem;
+        white-space: nowrap;
     }
 
     .btn-outline:hover {
@@ -163,6 +171,7 @@
         margin-bottom: 2rem;
         border: 1px solid var(--border);
         box-shadow: var(--shadow-sm);
+        width: 100%;
     }
 
     .filter-title {
@@ -173,6 +182,7 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .filter-grid {
@@ -180,12 +190,14 @@
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
         align-items: end;
+        width: 100%;
     }
 
     .filter-group {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        width: 100%;
     }
 
     .filter-group label {
@@ -194,10 +206,12 @@
         font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        word-break: break-word;
     }
 
     .filter-group input,
     .filter-group select {
+        width: 100%;
         padding: 0.75rem 1rem;
         border: 1px solid var(--border);
         border-radius: var(--radius-md);
@@ -216,6 +230,7 @@
         display: flex;
         gap: 0.5rem;
         justify-content: flex-end;
+        flex-wrap: wrap;
     }
 
     /* ================= SUMMARY CARDS ================= */
@@ -224,6 +239,7 @@
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
+        width: 100%;
     }
 
     .summary-card {
@@ -235,6 +251,7 @@
         border: 1px solid var(--border);
         box-shadow: var(--shadow-sm);
         transition: all 0.2s;
+        width: 100%;
     }
 
     .summary-card:hover {
@@ -276,14 +293,16 @@
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        word-break: break-word;
     }
 
     .summary-value {
-        font-size: 2rem;
+        font-size: clamp(1.5rem, 4vw, 2rem);
         font-weight: 700;
         color: var(--text-main);
         line-height: 1.2;
         margin-bottom: 0.25rem;
+        word-break: break-word;
     }
 
     .summary-trend {
@@ -291,6 +310,7 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .trend-up { color: var(--success); }
@@ -299,9 +319,10 @@
     /* ================= CHARTS SECTION ================= */
     .charts-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
+        width: 100%;
     }
 
     .chart-card {
@@ -310,6 +331,7 @@
         padding: 1.5rem;
         border: 1px solid var(--border);
         box-shadow: var(--shadow-sm);
+        width: 100%;
     }
 
     .chart-header {
@@ -317,21 +339,25 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
     .chart-header h3 {
         margin: 0;
-        font-size: 1.1rem;
+        font-size: clamp(1rem, 3vw, 1.1rem);
         font-weight: 600;
         color: var(--text-main);
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        word-break: break-word;
     }
 
     .chart-container {
         height: 300px;
         position: relative;
+        width: 100%;
     }
 
     /* ================= STATS GRID ================= */
@@ -340,6 +366,7 @@
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 1rem;
         margin-bottom: 2rem;
+        width: 100%;
     }
 
     .stat-card {
@@ -351,6 +378,7 @@
         position: relative;
         overflow: hidden;
         transition: all 0.2s;
+        width: 100%;
     }
 
     .stat-card:hover {
@@ -382,21 +410,24 @@
     }
 
     .stat-value {
-        font-size: 1.5rem;
+        font-size: clamp(1.25rem, 3vw, 1.5rem);
         font-weight: 700;
         color: var(--text-main);
         margin-bottom: 0.25rem;
+        word-break: break-word;
     }
 
     .stat-label {
         font-size: 0.85rem;
         color: var(--text-muted);
         font-weight: 500;
+        word-break: break-word;
     }
 
     /* ================= TABLES ================= */
     .tables-section {
         margin-top: 2rem;
+        width: 100%;
     }
 
     .table-wrapper {
@@ -405,6 +436,7 @@
         border: 1px solid var(--border);
         overflow: hidden;
         margin-bottom: 1.5rem;
+        width: 100%;
     }
 
     .table-header {
@@ -420,17 +452,19 @@
 
     .table-header h2 {
         margin: 0;
-        font-size: 1.1rem;
+        font-size: clamp(1rem, 3vw, 1.1rem);
         font-weight: 600;
         color: var(--text-main);
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        word-break: break-word;
     }
 
     .table-actions {
         display: flex;
         gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .table-search {
@@ -438,6 +472,7 @@
         border: 1px solid var(--border);
         border-radius: var(--radius-md);
         width: 250px;
+        max-width: 100%;
         font-size: 0.9rem;
     }
 
@@ -447,10 +482,17 @@
         box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
     }
 
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+
     .data-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 0.95rem;
+        min-width: 1000px;
     }
 
     .data-table thead th {
@@ -463,12 +505,14 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
         border-bottom: 2px solid var(--border);
+        white-space: nowrap;
     }
 
     .data-table tbody td {
         padding: 1rem 1.5rem;
         border-bottom: 1px solid var(--border);
         vertical-align: middle;
+        white-space: nowrap;
     }
 
     .data-table tbody tr:hover {
@@ -479,6 +523,7 @@
         display: flex;
         gap: 0.75rem;
         align-items: center;
+        flex-wrap: wrap;
     }
 
     .customer-avatar {
@@ -493,6 +538,7 @@
         font-weight: 600;
         font-size: 1rem;
         box-shadow: var(--shadow-sm);
+        flex-shrink: 0;
     }
 
     .customer-details {
@@ -503,11 +549,13 @@
         font-weight: 600;
         color: var(--text-main);
         font-size: 0.95rem;
+        word-break: break-word;
     }
 
     .customer-contact {
         font-size: 0.8rem;
         color: var(--text-muted);
+        word-break: break-word;
     }
 
     .balance-badge {
@@ -518,6 +566,7 @@
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
+        white-space: nowrap;
     }
 
     .balance-badge.positive {
@@ -538,6 +587,7 @@
         border-radius: 2rem;
         font-size: 0.8rem;
         font-weight: 600;
+        white-space: nowrap;
     }
 
     .trend-up {
@@ -567,6 +617,7 @@
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
+        white-space: nowrap;
     }
 
     .view-btn:hover {
@@ -581,6 +632,7 @@
         gap: 0.25rem;
         padding: 1rem 1.5rem;
         border-top: 1px solid var(--border);
+        flex-wrap: wrap;
     }
 
     .pagination .page-item {
@@ -633,6 +685,30 @@
 
     .export-options:hover .export-dropdown {
         display: block;
+    }
+
+    @media (max-width: 768px) {
+        .export-dropdown {
+            position: fixed;
+            top: auto;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            max-width: 100%;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .export-item {
+            padding: 1rem;
+            justify-content: center;
+        }
     }
 
     .export-item {
@@ -702,6 +778,8 @@
         animation: slideInRight 0.3s ease;
         border-left: 4px solid;
         min-width: 300px;
+        max-width: 90%;
+        word-break: break-word;
     }
 
     .toast.success { border-left-color: var(--success); }
@@ -710,28 +788,22 @@
 
     @keyframes slideInRight {
         from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(0%); opacity: 1; }
     }
 
-    /* ================= RESPONSIVE ================= */
-    @media (max-width: 1024px) {
+    /* ================= RESPONSIVE BREAKPOINTS ================= */
+    
+    /* Large Desktop (1200px and above) */
+    @media (min-width: 1200px) {
         .charts-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 
-    @media (max-width: 768px) {
+    /* Desktop (992px to 1199px) */
+    @media (max-width: 1199px) {
         .report-container {
-            padding: 1.5rem;
-        }
-
-        .report-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .filter-grid {
-            grid-template-columns: 1fr;
+            padding: 1.75rem;
         }
 
         .summary-grid {
@@ -741,16 +813,100 @@
         .stats-grid {
             grid-template-columns: repeat(2, 1fr);
         }
+    }
 
-        .data-table {
-            display: block;
-            overflow-x: auto;
+    /* Tablet (768px to 991px) */
+    @media (max-width: 991px) {
+        .report-wrapper {
+            padding: 1.5rem 0.75rem;
+        }
+
+        .report-container {
+            padding: 1.5rem;
+        }
+
+        .report-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-actions {
+            width: 100%;
+        }
+
+        .btn-primary,
+        .btn-outline {
+            flex: 1;
+            justify-content: center;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            flex-direction: row;
+            width: 100%;
+        }
+
+        .filter-actions button {
+            flex: 1;
+        }
+
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-container {
+            height: 250px;
         }
     }
 
-    @media (max-width: 480px) {
+    /* Mobile Landscape (576px to 767px) */
+    @media (max-width: 767px) {
+        .report-wrapper {
+            padding: 1rem 0.5rem;
+        }
+
+        .report-container {
+            padding: 1.25rem;
+            border-radius: var(--radius-lg);
+        }
+
+        .title-section {
+            width: 100%;
+        }
+
+        .title-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+        }
+
+        .header-actions {
+            flex-direction: column;
+        }
+
+        .btn-primary,
+        .btn-outline {
+            width: 100%;
+        }
+
+        .export-options {
+            width: 100%;
+        }
+
+        .export-dropdown {
+            width: 100%;
+        }
+
         .summary-grid {
             grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .summary-card {
+            padding: 1.25rem;
         }
 
         .stats-grid {
@@ -764,6 +920,126 @@
 
         .table-search {
             width: 100%;
+        }
+
+        .table-actions {
+            width: 100%;
+        }
+
+        .data-table {
+            min-width: 900px;
+        }
+
+        .pagination {
+            justify-content: center;
+        }
+
+        .toast {
+            left: 10px;
+            right: 10px;
+            min-width: auto;
+            bottom: 10px;
+            top: auto;
+        }
+    }
+
+    /* Mobile Portrait (up to 575px) */
+    @media (max-width: 575px) {
+        .report-container {
+            padding: 1rem;
+        }
+
+        .filter-section {
+            padding: 1rem;
+        }
+
+        .filter-actions {
+            flex-direction: column;
+        }
+
+        .filter-actions button {
+            width: 100%;
+        }
+
+        .chart-container {
+            height: 220px;
+        }
+
+        .customer-info {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .view-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Extra Small Devices (up to 360px) */
+    @media (max-width: 360px) {
+        .report-container {
+            padding: 0.75rem;
+        }
+
+        .title-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.25rem;
+        }
+
+        .summary-value {
+            font-size: 1.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+        }
+
+        .data-table {
+            min-width: 800px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .header-actions,
+        .filter-section,
+        .table-actions,
+        .pagination,
+        .export-options,
+        .loading-overlay,
+        .toast {
+            display: none !important;
+        }
+
+        .summary-card,
+        .stat-card,
+        .chart-card {
+            break-inside: avoid;
+            border: 1px solid #000;
+            box-shadow: none;
+        }
+
+        .data-table {
+            border: 1px solid #000;
+        }
+
+        .data-table th {
+            background: #f0f0f0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .balance-badge {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
     }
 </style>
@@ -1004,75 +1280,77 @@
                     </div>
                 </div>
 
-                <table class="data-table" id="customersTable">
-                    <thead>
-                        <tr>
-                            <th>Customer</th>
-                            <th>Contact</th>
-                            <th>Current Balance</th>
-                            <th>Total Credits</th>
-                            <th>Total Debits</th>
-                            <th>Transaction Count</th>
-                            <th>Last Activity</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($customers as $customer)
-                            @php
-                                $balance = $customer->getCurrentWalletBalanceAttribute();
-                                $customerCredits = $customer->wallet()->where('type', 'credit')->sum('amount');
-                                $customerDebits = $customer->wallet()->where('type', 'debit')->sum('amount');
-                                $transactionCount = $customer->wallet()->count();
-                                $lastTransaction = $customer->wallet()->first();
-                            @endphp
+                <div class="table-responsive">
+                    <table class="data-table" id="customersTable">
+                        <thead>
                             <tr>
-                                <td>
-                                    <div class="customer-info">
-                                        <div class="customer-avatar">{{ strtoupper(substr($customer->name, 0, 1)) }}</div>
-                                        <div class="customer-details">
-                                            <div class="customer-name">{{ $customer->name }}</div>
-                                            <div class="customer-contact">ID: {{ $customer->id }}</div>
+                                <th>Customer</th>
+                                <th>Contact</th>
+                                <th>Current Balance</th>
+                                <th>Total Credits</th>
+                                <th>Total Debits</th>
+                                <th>Transaction Count</th>
+                                <th>Last Activity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($customers as $customer)
+                                @php
+                                    $balance = $customer->getCurrentWalletBalanceAttribute();
+                                    $customerCredits = $customer->wallet()->where('type', 'credit')->sum('amount');
+                                    $customerDebits = $customer->wallet()->where('type', 'debit')->sum('amount');
+                                    $transactionCount = $customer->wallet()->count();
+                                    $lastTransaction = $customer->wallet()->first();
+                                @endphp
+                                <tr>
+                                    <td>
+                                        <div class="customer-info">
+                                            <div class="customer-avatar">{{ strtoupper(substr($customer->name, 0, 1)) }}</div>
+                                            <div class="customer-details">
+                                                <div class="customer-name">{{ $customer->name }}</div>
+                                                <div class="customer-contact">ID: {{ $customer->id }}</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div>{{ $customer->mobile ?? 'N/A' }}</div>
-                                    <small style="color: var(--text-muted);">{{ $customer->email ?? '' }}</small>
-                                </td>
-                                <td>
-                                    <span class="balance-badge {{ $balance > 0 ? 'positive' : 'zero' }}">
-                                        ₹{{ number_format($balance, 2) }}
-                                    </span>
-                                </td>
-                                <td>₹{{ number_format($customerCredits, 2) }}</td>
-                                <td>₹{{ number_format($customerDebits, 2) }}</td>
-                                <td>{{ $transactionCount }}</td>
-                                <td>
-                                    @if($lastTransaction)
-                                        <span title="{{ $lastTransaction->created_at->format('d M Y H:i') }}">
-                                            {{ $lastTransaction->created_at->diffForHumans() }}
+                                    </td>
+                                    <td>
+                                        <div>{{ $customer->mobile ?? 'N/A' }}</div>
+                                        <small style="color: var(--text-muted);">{{ $customer->email ?? '' }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="balance-badge {{ $balance > 0 ? 'positive' : 'zero' }}">
+                                            ₹{{ number_format($balance, 2) }}
                                         </span>
-                                    @else
-                                        <span style="color: var(--text-muted);">Never</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <a href="{{ route('customers.sales', $customer->id) }}" class="view-btn">
-                                        <span>👁️</span> View
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="8" style="text-align: center; padding: 3rem;">
-                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-                                    <div style="font-size: 1.125rem; color: var(--text-muted);">No customers found</div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                    </td>
+                                    <td>₹{{ number_format($customerCredits, 2) }}</td>
+                                    <td>₹{{ number_format($customerDebits, 2) }}</td>
+                                    <td>{{ $transactionCount }}</td>
+                                    <td>
+                                        @if($lastTransaction)
+                                            <span title="{{ $lastTransaction->created_at->format('d M Y H:i') }}">
+                                                {{ $lastTransaction->created_at->diffForHumans() }}
+                                            </span>
+                                        @else
+                                            <span style="color: var(--text-muted);">Never</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('customers.sales', $customer->id) }}" class="view-btn">
+                                            <span>👁️</span> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" style="text-align: center; padding: 3rem;">
+                                        <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+                                        <div style="font-size: 1.125rem; color: var(--text-muted);">No customers found</div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
                 @if(method_exists($customers, 'links'))
                     <div class="pagination">
@@ -1092,61 +1370,63 @@
                     </div>
                 </div>
 
-                <table class="data-table" id="transactionsTable">
-                    <thead>
-                        <tr>
-                            <th>Date & Time</th>
-                            <th>Customer</th>
-                            <th>Type</th>
-                            <th>Amount</th>
-                            <th>Balance After</th>
-                            <th>Reference</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentTransactions as $transaction)
+                <div class="table-responsive">
+                    <table class="data-table" id="transactionsTable">
+                        <thead>
                             <tr>
-                                <td>
-                                    <div>{{ $transaction->created_at->format('d M Y') }}</div>
-                                    <small style="color: var(--text-muted);">{{ $transaction->created_at->format('h:i A') }}</small>
-                                </td>
-                                <td>
-                                    <div class="customer-info">
-                                        <div class="customer-avatar" style="width: 30px; height: 30px; font-size: 0.85rem;">
-                                            {{ strtoupper(substr($transaction->customer->name, 0, 1)) }}
-                                        </div>
-                                        <div class="customer-details">
-                                            <div class="customer-name" style="font-size: 0.9rem;">{{ $transaction->customer->name }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="trend-indicator {{ $transaction->type === 'credit' ? 'trend-up' : 'trend-down' }}">
-                                        {{ $transaction->type === 'credit' ? 'Credit' : 'Debit' }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span style="color: {{ $transaction->type === 'credit' ? 'var(--success)' : 'var(--danger)' }}; font-weight: 600;">
-                                        {{ $transaction->type === 'credit' ? '+' : '-' }} ₹{{ number_format($transaction->amount, 2) }}
-                                    </span>
-                                </td>
-                                <td>₹{{ number_format($transaction->balance, 2) }}</td>
-                                <td>
-                                    <span title="{{ $transaction->reference }}">
-                                        {{ Str::limit($transaction->reference ?? 'No reference', 30) }}
-                                    </span>
-                                </td>
+                                <th>Date & Time</th>
+                                <th>Customer</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Balance After</th>
+                                <th>Reference</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 3rem;">
-                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
-                                    <div style="font-size: 1.125rem; color: var(--text-muted);">No transactions found</div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @forelse($recentTransactions as $transaction)
+                                <tr>
+                                    <td>
+                                        <div>{{ $transaction->created_at->format('d M Y') }}</div>
+                                        <small style="color: var(--text-muted);">{{ $transaction->created_at->format('h:i A') }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="customer-info">
+                                            <div class="customer-avatar" style="width: 30px; height: 30px; font-size: 0.85rem;">
+                                                {{ strtoupper(substr($transaction->customer->name, 0, 1)) }}
+                                            </div>
+                                            <div class="customer-details">
+                                                <div class="customer-name" style="font-size: 0.9rem;">{{ $transaction->customer->name }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="trend-indicator {{ $transaction->type === 'credit' ? 'trend-up' : 'trend-down' }}">
+                                            {{ $transaction->type === 'credit' ? 'Credit' : 'Debit' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span style="color: {{ $transaction->type === 'credit' ? 'var(--success)' : 'var(--danger)' }}; font-weight: 600;">
+                                            {{ $transaction->type === 'credit' ? '+' : '-' }} ₹{{ number_format($transaction->amount, 2) }}
+                                        </span>
+                                    </td>
+                                    <td>₹{{ number_format($transaction->balance, 2) }}</td>
+                                    <td>
+                                        <span title="{{ $transaction->reference }}">
+                                            {{ Str::limit($transaction->reference ?? 'No reference', 30) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 3rem;">
+                                        <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+                                        <div style="font-size: 1.125rem; color: var(--text-muted);">No transactions found</div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -1169,6 +1449,7 @@
     // Initialize Charts on page load
     document.addEventListener('DOMContentLoaded', function() {
         initializeCharts();
+        initializeResponsiveHandlers();
     });
 
     function initializeCharts() {
@@ -1329,6 +1610,26 @@
         });
     }
 
+    // Initialize responsive handlers
+    function initializeResponsiveHandlers() {
+        // Handle window resize
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                if (balanceChart) balanceChart.resize();
+                if (trendChart) trendChart.resize();
+            }, 250);
+        });
+
+        // Close export dropdown on mobile when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.export-options') && window.innerWidth <= 768) {
+                document.querySelector('.export-dropdown').style.display = 'none';
+            }
+        });
+    }
+
     // Search Functions
     function searchCustomers(query) {
         query = query.toLowerCase();
@@ -1373,9 +1674,6 @@
             hideLoading();
             showToast(`Report exported as ${format.toUpperCase()} successfully!`, 'success');
         }, 1500);
-
-        // In production, uncomment this:
-        // window.location.href = `/customers/wallet/export/${format}?from_date=${fromDate}&to_date=${toDate}`;
     }
 
     function printReport() {

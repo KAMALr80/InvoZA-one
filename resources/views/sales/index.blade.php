@@ -1,21 +1,75 @@
 @extends('layouts.app')
 
+@section('page-title', 'Sales Management')
+
 @section('content')
     <style>
-        /* Base Container */
-        .sales-dashboard {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            padding: 30px;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-            max-width: 100%;
-            margin: 20px auto;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            border: 1px solid #e5e7eb;
-            position: relative;
+        /* ================= PROFESSIONAL DESIGN SYSTEM ================= */
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --success-dark: #059669;
+            --danger: #ef4444;
+            --danger-dark: #dc2626;
+            --warning: #f59e0b;
+            --info: #0ea5e9;
+            --purple: #8b5cf6;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e5e7eb;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.08);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-2xl: 24px;
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        /* Header */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+            font-family: var(--font-sans);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* ================= MAIN CONTAINER ================= */
+        .sales-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+            padding: clamp(16px, 3vw, 30px);
+            width: 100%;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* ================= SALES DASHBOARD ================= */
+        .sales-dashboard {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            padding: clamp(20px, 4vw, 30px);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border);
+            width: 100%;
+        }
+
+        /* ================= HEADER ================= */
         .dashboard-header {
             display: flex;
             justify-content: space-between;
@@ -23,60 +77,73 @@
             margin-bottom: 30px;
             padding-bottom: 25px;
             border-bottom: 2px solid #f1f5f9;
+            flex-wrap: wrap;
+            gap: 20px;
         }
 
         .header-left {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: clamp(12px, 3vw, 20px);
+            flex-wrap: wrap;
         }
 
         .header-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            border-radius: 16px;
+            width: clamp(50px, 8vw, 60px);
+            height: clamp(50px, 8vw, 60px);
+            background: linear-gradient(135deg, var(--purple) 0%, #7c3aed 100%);
+            border-radius: var(--radius-lg);
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+            flex-shrink: 0;
+        }
+
+        .header-icon span {
+            font-size: clamp(24px, 4vw, 28px);
+            color: white;
         }
 
         .header-content h1 {
             margin: 0;
-            font-size: 32px;
+            font-size: clamp(24px, 5vw, 32px);
             font-weight: 800;
-            color: #1e293b;
+            color: var(--text-main);
             letter-spacing: -0.5px;
+            word-break: break-word;
         }
 
         .header-content p {
             margin: 6px 0 0;
-            color: #64748b;
-            font-size: 15px;
+            color: var(--text-muted);
+            font-size: clamp(13px, 2.5vw, 15px);
+            word-break: break-word;
         }
 
-        /* Action Buttons */
+        /* ================= ACTION BUTTONS ================= */
         .action-buttons {
             display: flex;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 14px 28px;
-            border-radius: 12px;
+            padding: clamp(12px, 2.5vw, 14px) clamp(20px, 4vw, 28px);
+            border-radius: var(--radius-lg);
             border: none;
             font-weight: 600;
-            font-size: 14px;
-            display: flex;
+            font-size: clamp(13px, 2.5vw, 14px);
+            display: inline-flex;
             align-items: center;
             gap: 10px;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 0 4px 20px rgba(59, 130, 246, 0.25);
             text-decoration: none;
+            white-space: nowrap;
         }
 
         .btn-primary:hover {
@@ -87,16 +154,17 @@
         .btn-secondary {
             background: white;
             color: #475569;
-            padding: 14px 28px;
-            border-radius: 12px;
-            border: 1.5px solid #e5e7eb;
+            padding: clamp(12px, 2.5vw, 14px) clamp(20px, 4vw, 28px);
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--border);
             font-weight: 600;
-            font-size: 14px;
-            display: flex;
+            font-size: clamp(13px, 2.5vw, 14px);
+            display: inline-flex;
             align-items: center;
             gap: 10px;
             cursor: pointer;
             transition: all 0.3s;
+            white-space: nowrap;
         }
 
         .btn-secondary:hover {
@@ -104,19 +172,19 @@
             border-color: #cbd5e1;
         }
 
-        /* Stats Cards */
+        /* ================= STATS CARDS ================= */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
 
         .stat-card {
             background: white;
-            padding: 24px;
-            border-radius: 16px;
-            border: 1px solid #e5e7eb;
+            padding: clamp(20px, 3vw, 24px);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -124,7 +192,7 @@
 
         .stat-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            box-shadow: var(--shadow-lg);
         }
 
         .stat-card::before {
@@ -134,47 +202,173 @@
             left: 0;
             width: 4px;
             height: 100%;
-            background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+            background: linear-gradient(135deg, var(--purple), var(--primary));
         }
 
         .stat-content {
             display: flex;
             align-items: center;
             gap: 16px;
+            flex-wrap: wrap;
         }
 
         .stat-icon {
             width: 48px;
             height: 48px;
-            border-radius: 12px;
+            border-radius: var(--radius-lg);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .stat-text {
+            flex: 1;
         }
 
         .stat-text h3 {
             margin: 0;
-            font-size: 28px;
+            font-size: clamp(24px, 4vw, 28px);
             font-weight: 800;
-            color: #1e293b;
+            color: var(--text-main);
+            word-break: break-word;
         }
 
         .stat-text p {
             margin: 4px 0 0;
-            color: #64748b;
-            font-size: 14px;
+            color: var(--text-muted);
+            font-size: clamp(12px, 2.5vw, 14px);
             font-weight: 500;
+            word-break: break-word;
         }
 
-        /* Advanced Filter Bar */
+        /* ================= SUCCESS ALERT ================= */
+        .success-alert {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            color: #065f46;
+            padding: clamp(14px, 3vw, 16px) clamp(16px, 4vw, 20px);
+            border-radius: var(--radius-lg);
+            margin-bottom: 25px;
+            border-left: 4px solid var(--success);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: clamp(13px, 2.5vw, 14px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+            word-break: break-word;
+        }
+
+        .success-alert::before {
+            content: "✓";
+            background: var(--success);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .error-alert {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border-left: 4px solid var(--danger);
+            padding: clamp(14px, 3vw, 16px) clamp(16px, 4vw, 20px);
+            border-radius: var(--radius-lg);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: clamp(13px, 2.5vw, 14px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+            word-break: break-word;
+        }
+
+        .error-alert::before {
+            content: "⚠";
+            background: var(--danger);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* ================= SEARCH BOX ================= */
+        .search-box {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--border);
+            font-size: clamp(14px, 2.5vw, 15px);
+            color: #374151;
+            background: white;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-md);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 18px;
+            pointer-events: none;
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 18px;
+            display: none;
+            padding: 4px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .search-clear:hover {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        /* ================= ADVANCED FILTER BAR ================= */
         .advanced-filter-bar {
             background: white;
-            padding: 25px;
-            border-radius: 16px;
-            border: 1px solid #e5e7eb;
+            padding: clamp(20px, 3vw, 25px);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
             margin-bottom: 25px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow-md);
         }
 
         .filter-header {
@@ -182,12 +376,14 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .filter-title {
-            font-size: 16px;
+            font-size: clamp(14px, 2.5vw, 16px);
             font-weight: 700;
-            color: #1e293b;
+            color: var(--text-main);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -197,13 +393,18 @@
             background: #f1f5f9;
             border: none;
             padding: 8px 16px;
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             color: #64748b;
-            font-size: 13px;
+            font-size: clamp(12px, 2.5vw, 13px);
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .filter-toggle:hover {
+            background: #e2e8f0;
         }
 
         .filter-content {
@@ -220,24 +421,25 @@
         }
 
         .filter-label {
-            font-size: 13px;
+            font-size: clamp(12px, 2.5vw, 13px);
             font-weight: 600;
             color: #475569;
         }
 
         .filter-input {
             padding: 10px 14px;
-            border-radius: 10px;
-            border: 1.5px solid #e5e7eb;
-            font-size: 14px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--border);
+            font-size: clamp(13px, 2.5vw, 14px);
             color: #374151;
             background: white;
             transition: all 0.2s;
+            width: 100%;
         }
 
         .filter-input:focus {
             outline: none;
-            border-color: #3b82f6;
+            border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
@@ -246,70 +448,61 @@
             justify-content: flex-end;
             gap: 12px;
             padding-top: 15px;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
         }
 
-        /* Search Box */
-        .search-box {
-            position: relative;
-            margin-bottom: 25px;
+        /* ================= DATE RANGE PICKER ================= */
+        .date-range-picker {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .search-input {
-            width: 100%;
-            padding: 14px 20px 14px 48px;
-            border-radius: 12px;
-            border: 1.5px solid #e5e7eb;
-            font-size: 15px;
-            color: #374151;
-            background: white;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        .date-input {
+            flex: 1;
+            min-width: 120px;
         }
 
-        .search-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
+        .date-separator {
             color: #94a3b8;
-            font-size: 18px;
+            font-weight: 500;
         }
 
-        .search-clear {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #94a3b8;
-            cursor: pointer;
-            font-size: 18px;
-            display: none;
+        @media (max-width: 576px) {
+            .date-range-picker {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .date-separator {
+                display: none;
+            }
         }
 
-        /* DataTable Container */
+        /* ================= DATATABLE CONTAINER ================= */
         .datatable-container {
             background: white;
-            border-radius: 16px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
             position: relative;
             overflow: visible !important;
+            width: 100%;
         }
 
-        /* DataTable */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+        }
+
         .datatable {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: clamp(13px, 2.2vw, 14px);
+            min-width: 1200px;
         }
 
         .datatable thead {
@@ -321,22 +514,22 @@
             text-align: left;
             font-weight: 700;
             color: #475569;
-            font-size: 12px;
+            font-size: clamp(11px, 2vw, 12px);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            border-bottom: 2px solid #e5e7eb;
+            border-bottom: 2px solid var(--border);
             white-space: nowrap;
             user-select: none;
+            position: relative;
         }
 
         .datatable th.sortable {
             cursor: pointer;
             transition: color 0.2s;
-            position: relative;
         }
 
         .datatable th.sortable:hover {
-            color: #3b82f6;
+            color: var(--primary);
             background: #f1f5f9;
         }
 
@@ -344,6 +537,7 @@
             margin-left: 6px;
             opacity: 0.5;
             transition: opacity 0.2s;
+            display: inline-block;
         }
 
         .datatable th.sortable:hover .sort-icon {
@@ -364,9 +558,10 @@
             color: #475569;
             font-weight: 500;
             vertical-align: middle;
+            white-space: nowrap;
         }
 
-        /* ✅ FIXED: Action Cell - Proper positioning */
+        /* ================= ACTION CELL ================= */
         .action-cell {
             position: relative;
             width: 140px;
@@ -379,12 +574,11 @@
             width: 100%;
         }
 
-        /* ✅ FIXED: Action Button */
         .action-btn {
             padding: 10px 18px;
-            border-radius: 10px;
+            border-radius: var(--radius-md);
             border: none;
-            font-size: 13px;
+            font-size: clamp(12px, 2.2vw, 13px);
             font-weight: 600;
             display: inline-flex;
             align-items: center;
@@ -393,8 +587,8 @@
             transition: all 0.2s ease;
             text-decoration: none;
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            color: #1e293b;
-            border: 1px solid #e5e7eb;
+            color: var(--text-main);
+            border: 1px solid var(--border);
             white-space: nowrap;
             min-width: 110px;
             justify-content: center;
@@ -403,36 +597,34 @@
         }
 
         .action-btn:hover {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             border-color: transparent;
         }
 
         .action-btn.active {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
             border-color: transparent;
         }
 
-        /* ✅ FIXED: Action Menu - NO GAP between button and menu */
         .action-menu {
             display: none;
             position: absolute;
             background: white;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
             z-index: 1000;
             min-width: 200px;
             width: max-content;
             top: 100%;
             left: 0;
-            margin-top: 4px; /* Small gap for visual separation but still connected via hover zone */
+            margin-top: 4px;
             overflow: hidden;
             animation: fadeIn 0.15s ease;
         }
 
-        /* ✅ CRITICAL FIX: Invisible bridge between button and menu */
         .action-menu::before {
             content: '';
             position: absolute;
@@ -443,13 +635,11 @@
             background: transparent;
         }
 
-        /* Keep menu open when hovering over it or the button */
         .action-container:hover .action-menu,
         .action-menu:hover {
             display: block;
         }
 
-        /* Show menu when button is active/clicked (for mobile) */
         .action-menu.show {
             display: block;
         }
@@ -465,7 +655,6 @@
             }
         }
 
-        /* Action menu items */
         .action-menu-item {
             padding: 12px 18px;
             display: flex;
@@ -475,7 +664,7 @@
             transition: all 0.2s;
             text-decoration: none;
             color: #374151;
-            font-size: 14px;
+            font-size: clamp(13px, 2.2vw, 14px);
             font-weight: 500;
             background: none;
             border: none;
@@ -495,26 +684,42 @@
         }
 
         .action-menu-item.view:hover {
-            color: #3b82f6;
+            color: var(--primary);
         }
 
         .action-menu-item.edit:hover {
-            color: #8b5cf6;
+            color: var(--purple);
         }
 
         .action-menu-item.print:hover {
-            color: #1e293b;
+            color: var(--text-main);
         }
 
         .action-menu-item.delete:hover {
-            color: #ef4444;
+            color: var(--danger);
             background: #fee2e2;
         }
 
-        /* Cell Styles */
+        .delete-form {
+            margin: 0;
+            padding: 0;
+        }
+
+        .delete-form button {
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        /* ================= INVOICE CELL ================= */
         .invoice-cell {
             font-weight: 700;
-            color: #1e293b;
+            color: var(--text-main);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -524,18 +729,20 @@
             width: 36px;
             height: 36px;
             background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
-            border-radius: 8px;
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
             color: #4f46e5;
             font-size: 14px;
             font-weight: 600;
+            flex-shrink: 0;
         }
 
+        /* ================= DATE CELL ================= */
         .date-cell {
             color: #64748b;
-            font-size: 13px;
+            font-size: clamp(12px, 2.2vw, 13px);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -546,17 +753,19 @@
             font-size: 16px;
         }
 
+        /* ================= CUSTOMER CELL ================= */
         .customer-cell {
             display: flex;
             align-items: center;
             gap: 12px;
+            min-width: 200px;
         }
 
         .customer-avatar {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            border-radius: 10px;
+            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -575,22 +784,22 @@
         .customer-name {
             font-weight: 600;
             color: #374151;
-            font-size: 14px;
+            font-size: clamp(13px, 2.2vw, 14px);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
         .customer-mobile {
-            font-size: 12px;
+            font-size: clamp(11px, 2vw, 12px);
             color: #94a3b8;
         }
 
-        /* Status Badges */
+        /* ================= STATUS BADGES ================= */
         .status-badge {
             padding: 6px 12px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: clamp(10px, 2vw, 11px);
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -599,6 +808,7 @@
             gap: 6px;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .status-badge:hover {
@@ -630,13 +840,14 @@
             border: 1px solid #d1d5db;
         }
 
-        /* Amount Cell */
+        /* ================= AMOUNT CELL ================= */
         .amount-cell {
             font-weight: 700;
-            font-size: 15px;
+            font-size: clamp(14px, 2.5vw, 15px);
             display: flex;
             align-items: center;
             gap: 6px;
+            white-space: nowrap;
         }
 
         .amount-positive {
@@ -652,7 +863,7 @@
             font-weight: 600;
         }
 
-        /* Empty State */
+        /* ================= EMPTY STATE ================= */
         .empty-state {
             padding: 60px 20px;
             text-align: center;
@@ -678,103 +889,69 @@
         }
 
         .empty-title {
-            font-size: 20px;
+            font-size: clamp(18px, 3.5vw, 20px);
             font-weight: 700;
             color: #374151;
             margin-bottom: 10px;
+            word-break: break-word;
         }
 
         .empty-description {
             color: #6b7280;
-            font-size: 14px;
+            font-size: clamp(13px, 2.5vw, 14px);
             line-height: 1.6;
             margin-bottom: 25px;
+            word-break: break-word;
         }
 
-        /* DataTable Footer */
-        .datatable-footer {
-            display: flex;
-            justify-content: space-between;
+        /* ================= BULK ACTIONS ================= */
+        .bulk-actions {
+            display: none;
             align-items: center;
-            padding: 20px;
-            background: #f8fafc;
-            border-top: 1px solid #e5e7eb;
+            gap: 12px;
+            padding: 16px 20px;
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
         }
 
-        .pagination-info {
-            color: #64748b;
-            font-size: 14px;
-            font-weight: 500;
+        .bulk-actions.show {
+            display: flex;
         }
 
-        /* Pagination */
-        .pagination {
+        .bulk-select-all {
             display: flex;
             align-items: center;
-            gap: 8px;
-        }
-
-        .pagination-btn {
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1.5px solid #e5e7eb;
-            background: white;
+            gap: 10px;
+            font-size: clamp(13px, 2.5vw, 14px);
             color: #475569;
-            font-weight: 600;
-            font-size: 13px;
+            font-weight: 500;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .table-checkbox {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid #cbd5e1;
             cursor: pointer;
             transition: all 0.2s;
-            min-width: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
         }
 
-        .pagination-btn:hover:not(:disabled) {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
+        .table-checkbox:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
         }
 
-        .pagination-btn.active {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            border-color: transparent;
-        }
-
-        .pagination-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .pagination-ellipsis {
-            padding: 10px;
-            color: #94a3b8;
-        }
-
-        /* Export Menu */
+        /* ================= EXPORT MENU ================= */
         .export-menu {
             position: relative;
             display: inline-block;
-        }
-
-        .export-btn {
-            padding: 10px 16px;
-            border-radius: 10px;
-            border: 1.5px solid #e5e7eb;
-            background: white;
-            color: #475569;
-            font-weight: 600;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .export-btn:hover {
-            background: #f8fafc;
         }
 
         .export-dropdown {
@@ -783,9 +960,9 @@
             top: 100%;
             margin-top: 5px;
             background: white;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
             min-width: 200px;
             z-index: 100;
             display: none;
@@ -813,7 +990,71 @@
             background: #f8fafc;
         }
 
-        /* Loading Overlay */
+        /* ================= DATATABLE FOOTER ================= */
+        .datatable-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: clamp(16px, 3vw, 20px);
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .pagination-info {
+            color: #64748b;
+            font-size: clamp(13px, 2.5vw, 14px);
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pagination-btn {
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--border);
+            background: white;
+            color: #475569;
+            font-weight: 600;
+            font-size: clamp(12px, 2.2vw, 13px);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-ellipsis {
+            padding: 10px;
+            color: #94a3b8;
+        }
+
+        /* ================= LOADING OVERLAY ================= */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -831,124 +1072,34 @@
             display: flex;
         }
 
+        .export-progress {
+            background: white;
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            text-align: center;
+            max-width: 400px;
+            margin: 20px;
+        }
+
         .loading-spinner {
             width: 50px;
             height: 50px;
-            border: 4px solid #e5e7eb;
-            border-top-color: #3b82f6;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        /* Success Message */
-        .success-alert {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            color: #065f46;
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            border-left: 4px solid #10b981;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
-        }
-
-        .success-alert::before {
-            content: "✓";
-            background: #10b981;
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        /* Bulk Actions */
-        .bulk-actions {
-            display: none;
-            align-items: center;
-            gap: 12px;
-            padding: 16px 20px;
-            background: #f1f5f9;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .bulk-actions.show {
-            display: flex;
-        }
-
-        .bulk-select-all {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            color: #475569;
-            font-weight: 500;
-        }
-
-        /* Checkbox */
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-        }
-
-        .table-checkbox {
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
-            border: 2px solid #cbd5e1;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .table-checkbox:checked {
-            background-color: #3b82f6;
-            border-color: #3b82f6;
-        }
-
-        /* Date Range Picker */
-        .date-range-picker {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .date-input {
-            flex: 1;
-            min-width: 120px;
-        }
-
-        .date-separator {
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
-        /* PDF Export Progress */
-        .export-progress {
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            text-align: center;
-            max-width: 400px;
-            margin: 20px;
-        }
-
         .progress-bar {
             width: 100%;
             height: 8px;
-            background: #e5e7eb;
+            background: var(--border);
             border-radius: 4px;
             margin: 20px 0;
             overflow: hidden;
@@ -956,7 +1107,7 @@
 
         .progress-fill {
             height: 100%;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             width: 0%;
             transition: width 0.3s ease;
         }
@@ -967,28 +1118,26 @@
             margin-top: 10px;
         }
 
-        /* Delete form styling */
-        .delete-form {
-            margin: 0;
-            padding: 0;
+        /* ================= RESPONSIVE BREAKPOINTS ================= */
+        
+        /* Large Desktop (1200px and above) */
+        @media (min-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
 
-        .delete-form button {
-            width: 100%;
-            text-align: left;
-            background: none;
-            border: none;
-            padding: 0;
-            margin: 0;
-            font: inherit;
-            cursor: pointer;
+        /* Desktop (992px to 1199px) */
+        @media (max-width: 1199px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
+        /* Tablet (768px to 991px) */
+        @media (max-width: 991px) {
             .dashboard-header {
                 flex-direction: column;
-                gap: 20px;
                 align-items: stretch;
             }
 
@@ -1001,9 +1150,10 @@
             }
         }
 
-        @media (max-width: 768px) {
-            .sales-dashboard {
-                padding: 20px;
+        /* Mobile Landscape (576px to 767px) */
+        @media (max-width: 767px) {
+            .sales-page {
+                padding: 15px;
             }
 
             .stats-grid {
@@ -1012,7 +1162,6 @@
 
             .datatable-footer {
                 flex-direction: column;
-                gap: 15px;
                 align-items: stretch;
             }
 
@@ -1033,442 +1182,601 @@
                 margin-top: 0;
             }
 
-            .date-range-picker {
-                flex-direction: column;
-                align-items: stretch;
+            .datatable {
+                min-width: 1000px;
+            }
+        }
+
+        /* Mobile Portrait (up to 575px) */
+        @media (max-width: 575px) {
+            .sales-page {
+                padding: 12px;
             }
 
-            .date-separator {
-                display: none;
+            .sales-dashboard {
+                padding: 16px;
+            }
+
+            .header-content h1 {
+                font-size: 24px;
+            }
+
+            .header-content p {
+                font-size: 13px;
+            }
+
+            .stat-text h3 {
+                font-size: 24px;
+            }
+
+            .filter-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filter-actions {
+                flex-direction: column;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .bulk-actions {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .bulk-select-all {
+                width: 100%;
+            }
+
+            .pagination {
+                justify-content: center;
+            }
+
+            .pagination-btn {
+                padding: 8px 12px;
+                min-width: 36px;
+            }
+
+            .empty-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+            }
+
+            .empty-title {
+                font-size: 18px;
+            }
+
+            .empty-description {
+                font-size: 13px;
+            }
+        }
+
+        /* Extra Small Devices (up to 360px) */
+        @media (max-width: 360px) {
+            .sales-page {
+                padding: 8px;
+            }
+
+            .sales-dashboard {
+                padding: 12px;
+            }
+
+            .header-content h1 {
+                font-size: 22px;
+            }
+
+            .stat-text h3 {
+                font-size: 22px;
+            }
+
+            .datatable {
+                min-width: 900px;
+            }
+
+            .datatable th,
+            .datatable td {
+                padding: 12px 10px;
+                font-size: 11px;
+            }
+
+            .customer-avatar {
+                width: 32px;
+                height: 32px;
+                font-size: 13px;
+            }
+
+            .status-badge {
+                padding: 4px 8px;
+                font-size: 9px;
+            }
+
+            .pagination-btn {
+                padding: 6px 10px;
+                min-width: 32px;
+                font-size: 11px;
+            }
+
+            .action-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+                min-width: 80px;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .action-buttons,
+            .btn-primary,
+            .btn-secondary,
+            .export-menu,
+            .filter-toggle,
+            .filter-actions,
+            .bulk-actions,
+            .pagination,
+            .search-clear,
+            .action-cell,
+            .table-checkbox {
+                display: none !important;
+            }
+
+            .status-badge {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .datatable {
+                border: 1px solid #000;
+            }
+
+            .datatable th {
+                background: #f0f0f0 !important;
             }
         }
     </style>
 
-    <div class="sales-dashboard" id="salesDashboard">
-        <!-- Loading Overlay -->
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="export-progress">
-                <div class="loading-spinner"></div>
-                <h3 style="margin: 20px 0 10px; color: #1e293b;">Generating Report</h3>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+    <div class="sales-page">
+        <div class="container">
+            <div class="sales-dashboard" id="salesDashboard">
+                <!-- Loading Overlay -->
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="export-progress">
+                        <div class="loading-spinner"></div>
+                        <h3 style="margin: 20px 0 10px; color: #1e293b;">Generating Report</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">Preparing data...</div>
+                    </div>
                 </div>
-                <div class="progress-text" id="progressText">Preparing data...</div>
-            </div>
-        </div>
 
-        {{-- HEADER --}}
-        <div class="dashboard-header">
-            <div class="header-left">
-                <div class="header-icon">
-                    <span style="font-size: 28px; color: white;">💰</span>
+                {{-- HEADER --}}
+                <div class="dashboard-header">
+                    <div class="header-left">
+                        <div class="header-icon">
+                            <span>💰</span>
+                        </div>
+                        <div class="header-content">
+                            <h1>Sales Management</h1>
+                            <p>Track, manage, and analyze your sales transactions</p>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <a href="{{ route('sales.create') }}" class="btn-primary">
+                            <span style="font-size: 20px;">+</span>
+                            New Sale
+                        </a>
+                        <div class="export-menu">
+                            <button class="btn-secondary" id="exportBtn">
+                                <span>📤</span>
+                                Export
+                                <span>▼</span>
+                            </button>
+                            <div class="export-dropdown" id="exportDropdown">
+                                <div class="export-option" data-format="csv">
+                                    <span>📁</span>
+                                    Export as CSV
+                                </div>
+                                <div class="export-option" data-format="excel">
+                                    <span>📊</span>
+                                    Export as Excel
+                                </div>
+                                <div class="export-option" data-format="pdf">
+                                    <span>📄</span>
+                                    Export as PDF
+                                </div>
+                                <div class="export-option" onclick="window.print()">
+                                    <span>🖨️</span>
+                                    Print List
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="header-content">
-                    <h1>Sales Management</h1>
-                    <p>Track, manage, and analyze your sales transactions</p>
+
+                {{-- STATS CARDS --}}
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+                                📊
+                            </div>
+                            <div class="stat-text">
+                                <h3 id="totalInvoices">{{ $sales->total() }}</h3>
+                                <p>Total Invoices</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                                ₹
+                            </div>
+                            <div class="stat-text">
+                                <h3 id="totalRevenue">₹{{ number_format($sales->sum('grand_total'), 2) }}</h3>
+                                <p>Total Revenue</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white;">
+                                👥
+                            </div>
+                            <div class="stat-text">
+                                <h3 id="totalCustomers">{{ $customersCount ?? '0' }}</h3>
+                                <p>Active Customers</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                                📈
+                            </div>
+                            <div class="stat-text">
+                                <h3 id="averageInvoice">₹{{ number_format($sales->avg('grand_total') ?? 0, 2) }}</h3>
+                                <p>Average Invoice</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="action-buttons">
-                <a href="{{ route('sales.create') }}" class="btn-primary">
-                    <span style="font-size: 20px;">+</span>
-                    New Sale
-                </a>
-                <div class="export-menu">
-                    <button class="btn-secondary" id="exportBtn">
-                        <span>📤</span>
-                        Export
-                        <span>▼</span>
-                    </button>
-                    <div class="export-dropdown" id="exportDropdown">
-                        <div class="export-option" data-format="csv">
-                            <span>📁</span>
-                            Export as CSV
+
+                {{-- SUCCESS/ERROR MESSAGES --}}
+                @if (session('success'))
+                    <div class="success-alert" id="successAlert">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="error-alert" id="errorAlert">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                {{-- SEARCH BAR --}}
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by invoice number, customer name, amount...">
+                    <button class="search-clear" id="searchClear" title="Clear search">×</button>
+                </div>
+
+                {{-- ADVANCED FILTER --}}
+                <div class="advanced-filter-bar">
+                    <div class="filter-header">
+                        <div class="filter-title">
+                            <span>⚙️</span>
+                            Advanced Filters
                         </div>
-                        <div class="export-option" data-format="excel">
-                            <span>📊</span>
-                            Export as Excel
+                        <button class="filter-toggle" id="toggleFilters">
+                            <span>▼</span>
+                            Show Filters
+                        </button>
+                    </div>
+                    <div class="filter-content" id="filterContent" style="display: none;">
+                        <div class="filter-group">
+                            <label class="filter-label">Date Range</label>
+                            <div class="date-range-picker">
+                                <input type="date" id="startDate" class="filter-input date-input">
+                                <span class="date-separator">to</span>
+                                <input type="date" id="endDate" class="filter-input date-input">
+                            </div>
                         </div>
-                        <div class="export-option" data-format="pdf">
-                            <span>📄</span>
-                            Export as PDF
+                        <div class="filter-group">
+                            <label class="filter-label">Status</label>
+                            <select class="filter-input" id="statusFilter">
+                                <option value="">All Status</option>
+                                <option value="paid">Paid</option>
+                                <option value="pending">Pending</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="draft">Draft</option>
+                            </select>
                         </div>
-                        <div class="export-option" onclick="window.print()">
+                        <div class="filter-group">
+                            <label class="filter-label">Customer</label>
+                            <select class="filter-input" id="customerFilter">
+                                <option value="">All Customers</option>
+                                @foreach ($customers ?? [] as $customer)
+                                    <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Amount Range</label>
+                            <div class="date-range-picker">
+                                <input type="number" id="minAmount" class="filter-input date-input" placeholder="Min">
+                                <span class="date-separator">to</span>
+                                <input type="number" id="maxAmount" class="filter-input date-input" placeholder="Max">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-actions" id="filterActions" style="display: none;">
+                        <button class="btn-secondary" id="resetFilters">
+                            Reset All
+                        </button>
+                        <button class="btn-primary" id="applyFilters">
+                            Apply Filters
+                        </button>
+                    </div>
+                </div>
+
+                {{-- BULK ACTIONS --}}
+                <div class="bulk-actions" id="bulkActions">
+                    <div class="bulk-select-all">
+                        <input type="checkbox" id="selectAllBulk" class="table-checkbox">
+                        <span id="selectedCount">0 items selected</span>
+                    </div>
+                    <div class="action-buttons" style="gap: 8px;">
+                        <button class="action-btn" id="bulkPrint" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;">
                             <span>🖨️</span>
-                            Print List
+                            Print
+                        </button>
+                        <button class="action-btn" id="bulkExportBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                            <span>📤</span>
+                            Export
+                        </button>
+                        <button class="action-btn" id="bulkDelete" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+                            <span>🗑️</span>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+
+                {{-- DATATABLE --}}
+                <div class="datatable-container">
+                    <div class="table-responsive">
+                        <table class="datatable" id="salesTable">
+                            <thead>
+                                <tr>
+                                    <th width="40">
+                                        <input type="checkbox" id="selectAll" class="table-checkbox">
+                                    </th>
+                                    <th width="140">Actions</th>
+                                    <th class="sortable" data-sort="invoice_no">
+                                        Invoice # <span class="sort-icon">↓</span>
+                                    </th>
+                                    <th class="sortable" data-sort="sale_date">
+                                        Date <span class="sort-icon">↓</span>
+                                    </th>
+                                    <th class="sortable" data-sort="customer_name">
+                                        Customer <span class="sort-icon">↓</span>
+                                    </th>
+                                    <th class="sortable" data-sort="status">
+                                        Status <span class="sort-icon">↓</span>
+                                    </th>
+                                    <th class="sortable" data-sort="amount">
+                                        Amount <span class="sort-icon">↓</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesTableBody">
+                                @forelse ($sales as $sale)
+                                    <tr data-id="{{ $sale->id }}" data-invoice="{{ $sale->invoice_no }}"
+                                        data-customer="{{ $sale->customer->name ?? 'Walk-in Customer' }}"
+                                        data-status="{{ $sale->payment_status }}" data-amount="{{ $sale->grand_total }}"
+                                        data-date="{{ $sale->sale_date }}" data-customer-id="{{ $sale->customer_id }}">
+                                        <td>
+                                            <input type="checkbox" class="row-checkbox table-checkbox">
+                                        </td>
+                                        <td class="action-cell">
+                                            <div class="action-container">
+                                                <!-- Hover-based menu -->
+                                                <button type="button" class="action-btn" onmouseenter="showActionMenu('{{ $sale->id }}', this)">
+                                                    <span>⚡</span>
+                                                    Actions
+                                                    <span style="font-size: 12px;">▼</span>
+                                                </button>
+
+                                                <div class="action-menu" id="actionMenu{{ $sale->id }}"
+                                                     onmouseleave="hideActionMenu('{{ $sale->id }}')">
+                                                    <a href="{{ route('sales.show', $sale->id) }}" class="action-menu-item view">
+                                                        <span>👁️</span>
+                                                        View Details
+                                                    </a>
+                                                    <a href="{{ route('sales.edit', $sale->id) }}" class="action-menu-item edit">
+                                                        <span>✏️</span>
+                                                        Edit Sale
+                                                    </a>
+                                                    <a href="{{ route('sales.invoice', $sale->id) }}" target="_blank" class="action-menu-item print">
+                                                        <span>🖨️</span>
+                                                        Print Invoice
+                                                    </a>
+                                                    @if (Route::has('sales.destroy'))
+                                                        <form action="{{ route('sales.destroy', $sale->id) }}" method="POST" class="delete-form">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="action-menu-item delete" onclick="return confirm('Are you sure you want to delete this sale?')">
+                                                                <span>🗑️</span>
+                                                                Delete Sale
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="invoice-cell">
+                                                <div class="invoice-icon">
+                                                    {{ substr($sale->invoice_no, -3) }}
+                                                </div>
+                                                <div>
+                                                    <div>{{ $sale->invoice_no }}</div>
+                                                    <div style="font-size: 11px; color: #94a3b8;">
+                                                        {{ $sale->invoice_type ?? 'Sale' }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="date-cell">
+                                                <span class="date-icon">📅</span>
+                                                {{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="customer-cell">
+                                                <div class="customer-avatar">
+                                                    {{ substr($sale->customer->name ?? 'W', 0, 1) }}
+                                                </div>
+                                                <div class="customer-info">
+                                                    <div class="customer-name" title="{{ $sale->customer->name ?? 'Walk-in Customer' }}">
+                                                        {{ $sale->customer->name ?? 'Walk-in Customer' }}
+                                                    </div>
+                                                    <div class="customer-mobile">
+                                                        {{ $sale->customer->mobile ?? 'No contact' }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $statusClass = 'status-paid';
+                                                $statusIcon = '✓';
+                                                if ($sale->payment_status == 'pending') {
+                                                    $statusClass = 'status-pending';
+                                                    $statusIcon = '⏱️';
+                                                } elseif ($sale->payment_status == 'overdue') {
+                                                    $statusClass = 'status-overdue';
+                                                    $statusIcon = '⚠️';
+                                                } elseif ($sale->payment_status == 'draft') {
+                                                    $statusClass = 'status-draft';
+                                                    $statusIcon = '📝';
+                                                }
+                                            @endphp
+                                            <span class="status-badge {{ $statusClass }}">
+                                                <span>{{ $statusIcon }}</span>
+                                                {{ ucfirst($sale->payment_status ?? 'paid') }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="amount-cell {{ $sale->grand_total >= 0 ? 'amount-positive' : 'amount-negative' }}">
+                                                <span class="currency-symbol">₹</span>
+                                                {{ number_format($sale->grand_total, 2) }}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="empty-state">
+                                            <div class="empty-content">
+                                                <div class="empty-icon">
+                                                    📊
+                                                </div>
+                                                <div class="empty-title">No Sales Records Found</div>
+                                                <div class="empty-description">
+                                                    Start by creating your first sales invoice. All your sales transactions will
+                                                    appear here for tracking and analysis.
+                                                </div>
+                                                <a href="{{ route('sales.create') }}" class="btn-primary" style="display: inline-flex; margin-top: 15px;">
+                                                    <span>+</span>
+                                                    Create Your First Sale
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- PAGINATION --}}
+                @if ($sales->hasPages())
+                    <div class="datatable-footer">
+                        <div class="pagination-info" id="paginationInfo">
+                            Showing <span id="startCount">{{ $sales->firstItem() ?? 0 }}</span> to
+                            <span id="endCount">{{ $sales->lastItem() ?? 0 }}</span> of
+                            <span id="totalCount">{{ $sales->total() }}</span> entries
+                        </div>
+                        <div class="pagination">
+                            {{-- Previous Page Link --}}
+                            @if ($sales->onFirstPage())
+                                <button class="pagination-btn" disabled>
+                                    <span>←</span>
+                                    Previous
+                                </button>
+                            @else
+                                <a href="{{ $sales->previousPageUrl() }}" class="pagination-btn">
+                                    <span>←</span>
+                                    Previous
+                                </a>
+                            @endif
+
+                            {{-- Page Numbers --}}
+                            @php
+                                $current = $sales->currentPage();
+                                $last = $sales->lastPage();
+                                $start = max($current - 2, 1);
+                                $end = min($current + 2, $last);
+                            @endphp
+
+                            @if ($start > 1)
+                                <a href="{{ $sales->url(1) }}" class="pagination-btn {{ 1 == $current ? 'active' : '' }}">
+                                    1
+                                </a>
+                                @if ($start > 2)
+                                    <span class="pagination-ellipsis">...</span>
+                                @endif
+                            @endif
+
+                            @for ($i = $start; $i <= $end; $i++)
+                                <a href="{{ $sales->url($i) }}" class="pagination-btn {{ $i == $current ? 'active' : '' }}">
+                                    {{ $i }}
+                                </a>
+                            @endfor
+
+                            @if ($end < $last)
+                                @if ($end < $last - 1)
+                                    <span class="pagination-ellipsis">...</span>
+                                @endif
+                                <a href="{{ $sales->url($last) }}" class="pagination-btn {{ $last == $current ? 'active' : '' }}">
+                                    {{ $last }}
+                                </a>
+                            @endif
+
+                            {{-- Next Page Link --}}
+                            @if ($sales->hasMorePages())
+                                <a href="{{ $sales->nextPageUrl() }}" class="pagination-btn">
+                                    Next
+                                    <span>→</span>
+                                </a>
+                            @else
+                                <button class="pagination-btn" disabled>
+                                    Next
+                                    <span>→</span>
+                                </button>
+                            @endif
                         </div>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
-
-        {{-- STATS CARDS --}}
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-content">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
-                        📊
-                    </div>
-                    <div class="stat-text">
-                        <h3 id="totalInvoices">{{ $sales->total() }}</h3>
-                        <p>Total Invoices</p>
-                    </div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-content">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-                        ₹
-                    </div>
-                    <div class="stat-text">
-                        <h3 id="totalRevenue">₹{{ number_format($sales->sum('grand_total'), 2) }}</h3>
-                        <p>Total Revenue</p>
-                    </div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-content">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white;">
-                        👥
-                    </div>
-                    <div class="stat-text">
-                        <h3 id="totalCustomers">{{ $customersCount ?? '0' }}</h3>
-                        <p>Active Customers</p>
-                    </div>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-content">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
-                        📈
-                    </div>
-                    <div class="stat-text">
-                        <h3 id="averageInvoice">₹{{ number_format($sales->avg('grand_total') ?? 0, 2) }}</h3>
-                        <p>Average Invoice</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- SUCCESS MESSAGE --}}
-        @if (session('success'))
-            <div class="success-alert" id="successAlert">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        {{-- SEARCH BAR --}}
-        <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" class="search-input" placeholder="Search by invoice number, customer name, amount...">
-            <button class="search-clear" id="searchClear" title="Clear search">×</button>
-        </div>
-
-        {{-- ADVANCED FILTER --}}
-        <div class="advanced-filter-bar">
-            <div class="filter-header">
-                <div class="filter-title">
-                    <span>⚙️</span>
-                    Advanced Filters
-                </div>
-                <button class="filter-toggle" id="toggleFilters">
-                    <span>▼</span>
-                    Show Filters
-                </button>
-            </div>
-            <div class="filter-content" id="filterContent" style="display: none;">
-                <div class="filter-group">
-                    <label class="filter-label">Date Range</label>
-                    <div class="date-range-picker">
-                        <input type="date" id="startDate" class="filter-input date-input">
-                        <span class="date-separator">to</span>
-                        <input type="date" id="endDate" class="filter-input date-input">
-                    </div>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Status</label>
-                    <select class="filter-input" id="statusFilter">
-                        <option value="">All Status</option>
-                        <option value="paid">Paid</option>
-                        <option value="pending">Pending</option>
-                        <option value="overdue">Overdue</option>
-                        <option value="draft">Draft</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Customer</label>
-                    <select class="filter-input" id="customerFilter">
-                        <option value="">All Customers</option>
-                        @foreach ($customers ?? [] as $customer)
-                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Amount Range</label>
-                    <div class="date-range-picker">
-                        <input type="number" id="minAmount" class="filter-input date-input" placeholder="Min">
-                        <span class="date-separator">to</span>
-                        <input type="number" id="maxAmount" class="filter-input date-input" placeholder="Max">
-                    </div>
-                </div>
-            </div>
-            <div class="filter-actions" id="filterActions" style="display: none;">
-                <button class="btn-secondary" id="resetFilters">
-                    Reset All
-                </button>
-                <button class="btn-primary" id="applyFilters">
-                    Apply Filters
-                </button>
-            </div>
-        </div>
-
-        {{-- BULK ACTIONS --}}
-        <div class="bulk-actions" id="bulkActions">
-            <div class="bulk-select-all">
-                <input type="checkbox" id="selectAllBulk" class="table-checkbox">
-                <span id="selectedCount">0 items selected</span>
-            </div>
-            <div class="action-buttons" style="gap: 8px;">
-                <button class="action-btn" id="bulkPrint" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;">
-                    <span>🖨️</span>
-                    Print
-                </button>
-                <button class="action-btn" id="bulkExportBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-                    <span>📤</span>
-                    Export
-                </button>
-                <button class="action-btn" id="bulkDelete" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
-                    <span>🗑️</span>
-                    Delete
-                </button>
-            </div>
-        </div>
-
-        {{-- DATATABLE --}}
-        <div class="datatable-container">
-            <table class="datatable" id="salesTable">
-                <thead>
-                    <tr>
-                        <th width="40">
-                            <input type="checkbox" id="selectAll" class="table-checkbox">
-                        </th>
-                        <th width="140">Actions</th>
-                        <th class="sortable" data-sort="invoice_no">
-                            Invoice # <span class="sort-icon">↓</span>
-                        </th>
-                        <th class="sortable" data-sort="sale_date">
-                            Date <span class="sort-icon">↓</span>
-                        </th>
-                        <th class="sortable" data-sort="customer_name">
-                            Customer <span class="sort-icon">↓</span>
-                        </th>
-                        <th class="sortable" data-sort="status">
-                            Status <span class="sort-icon">↓</span>
-                        </th>
-                        <th class="sortable" data-sort="amount">
-                            Amount <span class="sort-icon">↓</span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody id="salesTableBody">
-                    @forelse ($sales as $sale)
-                        <tr data-id="{{ $sale->id }}" data-invoice="{{ $sale->invoice_no }}"
-                            data-customer="{{ $sale->customer->name ?? 'Walk-in Customer' }}"
-                            data-status="{{ $sale->payment_status }}" data-amount="{{ $sale->grand_total }}"
-                            data-date="{{ $sale->sale_date }}" data-customer-id="{{ $sale->customer_id }}">
-                            <td>
-                                <input type="checkbox" class="row-checkbox table-checkbox">
-                            </td>
-                            <td class="action-cell">
-                                <div class="action-container">
-                                    <!-- ✅ FIXED: Using hover-based menu instead of click -->
-                                    <button type="button" class="action-btn" onmouseenter="showActionMenu('{{ $sale->id }}', this)">
-                                        <span>⚡</span>
-                                        Actions
-                                        <span style="font-size: 12px;">▼</span>
-                                    </button>
-
-                                    <div class="action-menu" id="actionMenu{{ $sale->id }}"
-                                         onmouseleave="hideActionMenu('{{ $sale->id }}')">
-                                        <a href="{{ route('sales.show', $sale->id) }}" class="action-menu-item view">
-                                            <span>👁️</span>
-                                            View Details
-                                        </a>
-                                        <a href="{{ route('sales.edit', $sale->id) }}" class="action-menu-item edit">
-                                            <span>✏️</span>
-                                            Edit Sale
-                                        </a>
-                                        <a href="{{ route('sales.invoice', $sale->id) }}" target="_blank" class="action-menu-item print">
-                                            <span>🖨️</span>
-                                            Print Invoice
-                                        </a>
-                                        @if (Route::has('sales.destroy'))
-                                            <form action="{{ route('sales.destroy', $sale->id) }}" method="POST" class="delete-form">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="action-menu-item delete" onclick="return confirm('Are you sure you want to delete this sale?')">
-                                                    <span>🗑️</span>
-                                                    Delete Sale
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="invoice-cell">
-                                    <div class="invoice-icon">
-                                        {{ substr($sale->invoice_no, -3) }}
-                                    </div>
-                                    <div>
-                                        <div>{{ $sale->invoice_no }}</div>
-                                        <div style="font-size: 11px; color: #94a3b8;">
-                                            {{ $sale->invoice_type ?? 'Sale' }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="date-cell">
-                                    <span class="date-icon">📅</span>
-                                    {{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="customer-cell">
-                                    <div class="customer-avatar">
-                                        {{ substr($sale->customer->name ?? 'W', 0, 1) }}
-                                    </div>
-                                    <div class="customer-info">
-                                        <div class="customer-name" title="{{ $sale->customer->name ?? 'Walk-in Customer' }}">
-                                            {{ $sale->customer->name ?? 'Walk-in Customer' }}
-                                        </div>
-                                        <div class="customer-mobile">
-                                            {{ $sale->customer->mobile ?? 'No contact' }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                @php
-                                    $statusClass = 'status-paid';
-                                    $statusIcon = '✓';
-                                    if ($sale->payment_status == 'pending') {
-                                        $statusClass = 'status-pending';
-                                        $statusIcon = '⏱️';
-                                    } elseif ($sale->payment_status == 'overdue') {
-                                        $statusClass = 'status-overdue';
-                                        $statusIcon = '⚠️';
-                                    } elseif ($sale->payment_status == 'draft') {
-                                        $statusClass = 'status-draft';
-                                        $statusIcon = '📝';
-                                    }
-                                @endphp
-                                <span class="status-badge {{ $statusClass }}">
-                                    <span>{{ $statusIcon }}</span>
-                                    {{ ucfirst($sale->payment_status ?? 'paid') }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="amount-cell {{ $sale->grand_total >= 0 ? 'amount-positive' : 'amount-negative' }}">
-                                    <span class="currency-symbol">₹</span>
-                                    {{ number_format($sale->grand_total, 2) }}
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="empty-state">
-                                <div class="empty-content">
-                                    <div class="empty-icon">
-                                        📊
-                                    </div>
-                                    <div class="empty-title">No Sales Records Found</div>
-                                    <div class="empty-description">
-                                        Start by creating your first sales invoice. All your sales transactions will
-                                        appear here for tracking and analysis.
-                                    </div>
-                                    <a href="{{ route('sales.create') }}" class="btn-primary" style="display: inline-flex; margin-top: 15px;">
-                                        <span>+</span>
-                                        Create Your First Sale
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        {{-- PAGINATION --}}
-        @if ($sales->hasPages())
-            <div class="datatable-footer">
-                <div class="pagination-info" id="paginationInfo">
-                    Showing <span id="startCount">{{ $sales->firstItem() ?? 0 }}</span> to
-                    <span id="endCount">{{ $sales->lastItem() ?? 0 }}</span> of
-                    <span id="totalCount">{{ $sales->total() }}</span> entries
-                </div>
-                <div class="pagination">
-                    {{-- Previous Page Link --}}
-                    @if ($sales->onFirstPage())
-                        <button class="pagination-btn" disabled>
-                            <span>←</span>
-                            Previous
-                        </button>
-                    @else
-                        <a href="{{ $sales->previousPageUrl() }}" class="pagination-btn">
-                            <span>←</span>
-                            Previous
-                        </a>
-                    @endif
-
-                    {{-- Page Numbers --}}
-                    @php
-                        $current = $sales->currentPage();
-                        $last = $sales->lastPage();
-                        $start = max($current - 2, 1);
-                        $end = min($current + 2, $last);
-                    @endphp
-
-                    @if ($start > 1)
-                        <a href="{{ $sales->url(1) }}" class="pagination-btn {{ 1 == $current ? 'active' : '' }}">
-                            1
-                        </a>
-                        @if ($start > 2)
-                            <span class="pagination-ellipsis">...</span>
-                        @endif
-                    @endif
-
-                    @for ($i = $start; $i <= $end; $i++)
-                        <a href="{{ $sales->url($i) }}" class="pagination-btn {{ $i == $current ? 'active' : '' }}">
-                            {{ $i }}
-                        </a>
-                    @endfor
-
-                    @if ($end < $last)
-                        @if ($end < $last - 1)
-                            <span class="pagination-ellipsis">...</span>
-                        @endif
-                        <a href="{{ $sales->url($last) }}" class="pagination-btn {{ $last == $current ? 'active' : '' }}">
-                            {{ $last }}
-                        </a>
-                    @endif
-
-                    {{-- Next Page Link --}}
-                    @if ($sales->hasMorePages())
-                        <a href="{{ $sales->nextPageUrl() }}" class="pagination-btn">
-                            Next
-                            <span>→</span>
-                        </a>
-                    @else
-                        <button class="pagination-btn" disabled>
-                            Next
-                            <span>→</span>
-                        </button>
-                    @endif
-                </div>
-            </div>
-        @endif
     </div>
 
     <!-- Include jsPDF library -->
@@ -1908,46 +2216,14 @@
 
             // Initialize
             updateVisibleCount(allRows.length);
+
+            // Auto-hide success/error messages after 5 seconds
+            setTimeout(() => {
+                const successAlert = document.getElementById('successAlert');
+                const errorAlert = document.getElementById('errorAlert');
+                if (successAlert) successAlert.style.display = 'none';
+                if (errorAlert) errorAlert.style.display = 'none';
+            }, 5000);
         });
     </script>
-
-    <style>
-        .error-alert {
-            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-            color: #991b1b;
-            border-left: 4px solid #ef4444;
-            padding: 16px 20px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
-        }
-
-        .error-alert::before {
-            content: "⚠";
-            background: #ef4444;
-            color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        /* Additional smooth animations */
-        .action-btn, .action-menu-item {
-            transition: all 0.2s ease;
-        }
-
-        .datatable tbody tr {
-            transition: background-color 0.2s ease;
-        }
-    </style>
 @endsection

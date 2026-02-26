@@ -270,10 +270,23 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Handle responsive chart resizing
+        function handleResize() {
+            if (attendanceChart) attendanceChart.resize();
+            if (aiSalesChart) aiSalesChart.resize();
+        }
+
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(handleResize, 250);
+        });
+
         // Updated Attendance Chart with all 5 categories
         const attendanceCtx = document.getElementById('attendanceChart');
+        let attendanceChart;
         if (attendanceCtx) {
-            new Chart(attendanceCtx, {
+            attendanceChart = new Chart(attendanceCtx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Present', 'Absent', 'Late', 'Half Day', 'Not Marked'],
@@ -295,7 +308,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '70%',
+                    cutout: window.innerWidth < 768 ? '60%' : '70%',
                     plugins: {
                         legend: {
                             display: false
@@ -307,7 +320,7 @@
                             borderColor: '#e5e7eb',
                             borderWidth: 1,
                             cornerRadius: 10,
-                            padding: 12,
+                            padding: window.innerWidth < 768 ? 8 : 12,
                             callbacks: {
                                 label: function(context) {
                                     const label = context.label || '';
@@ -325,13 +338,14 @@
 
         // AI Sales Chart
         const aiSalesCtx = document.getElementById('aiSalesChart');
+        let aiSalesChart;
         if (aiSalesCtx) {
             const pastLabels = @json($pastLabels ?? []);
             const pastData = @json($pastData ?? []);
             const futureLabels = @json($futureLabels ?? []);
             const futureData = @json($futureData ?? []);
 
-            new Chart(aiSalesCtx, {
+            aiSalesChart = new Chart(aiSalesCtx, {
                 type: 'line',
                 data: {
                     labels: [...pastLabels, ...futureLabels],
@@ -341,27 +355,29 @@
                             data: [...pastData, ...Array(futureData.length).fill(null)],
                             borderColor: '#3b82f6',
                             backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 3,
+                            borderWidth: window.innerWidth < 768 ? 2 : 3,
                             tension: 0.4,
                             fill: true,
                             pointBackgroundColor: '#3b82f6',
                             pointBorderColor: '#ffffff',
                             pointBorderWidth: 2,
-                            pointRadius: 5
+                            pointRadius: window.innerWidth < 768 ? 3 : 5,
+                            pointHoverRadius: window.innerWidth < 768 ? 5 : 7
                         },
                         {
                             label: 'AI Predicted Sales',
                             data: [...Array(pastData.length).fill(null), ...futureData],
                             borderColor: '#8b5cf6',
                             backgroundColor: 'rgba(139, 92, 246, 0.05)',
-                            borderWidth: 3,
+                            borderWidth: window.innerWidth < 768 ? 2 : 3,
                             borderDash: [8, 4],
                             tension: 0.4,
                             fill: true,
                             pointBackgroundColor: '#8b5cf6',
                             pointBorderColor: '#ffffff',
                             pointBorderWidth: 2,
-                            pointRadius: 5
+                            pointRadius: window.innerWidth < 768 ? 3 : 5,
+                            pointHoverRadius: window.innerWidth < 768 ? 5 : 7
                         }
                     ]
                 },
@@ -372,10 +388,10 @@
                         legend: {
                             labels: {
                                 font: {
-                                    size: 13,
+                                    size: window.innerWidth < 768 ? 11 : 13,
                                     weight: '600'
                                 },
-                                padding: 20
+                                padding: window.innerWidth < 768 ? 15 : 20
                             }
                         },
                         tooltip: {
@@ -385,17 +401,29 @@
                             borderColor: '#e5e7eb',
                             borderWidth: 1,
                             cornerRadius: 10,
-                            padding: 12
+                            padding: window.innerWidth < 768 ? 8 : 12
                         }
                     },
                     scales: {
                         x: {
-                            grid: { color: 'rgba(229, 231, 235, 0.5)' }
+                            grid: { color: 'rgba(229, 231, 235, 0.5)' },
+                            ticks: {
+                                font: {
+                                    size: window.innerWidth < 768 ? 9 : 11
+                                },
+                                maxRotation: window.innerWidth < 768 ? 45 : 30
+                            }
                         },
                         y: {
                             grid: { color: 'rgba(229, 231, 235, 0.5)' },
                             ticks: {
+                                font: {
+                                    size: window.innerWidth < 768 ? 9 : 11
+                                },
                                 callback: function(value) {
+                                    if (window.innerWidth < 480) {
+                                        return '₹' + (value/1000).toFixed(1) + 'k';
+                                    }
                                     return '₹' + value.toLocaleString();
                                 }
                             }
@@ -410,17 +438,18 @@
 <style>
     /* Base Styles */
     .dashboard-container {
-        max-width: 1400px;
-        margin: 30px auto;
-        padding: 30px;
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 20px;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
         background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
         min-height: 100vh;
+        width: 100%;
     }
 
     /* Header Styles */
     .dashboard-header {
-        margin-bottom: 40px;
+        margin-bottom: 30px;
     }
 
     .header-content {
@@ -428,28 +457,37 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 8px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .header-left {
+        flex: 1;
+        min-width: 280px;
     }
 
     .dashboard-title {
         margin: 0;
-        font-size: 32px;
+        font-size: clamp(24px, 4vw, 32px);
         font-weight: 900;
         background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         letter-spacing: -0.5px;
+        word-break: break-word;
     }
 
     .dashboard-subtitle {
         margin: 8px 0 0 0;
         color: #64748b;
-        font-size: 16px;
+        font-size: clamp(14px, 2vw, 16px);
         font-weight: 500;
+        word-break: break-word;
     }
 
     .header-date {
         background: white;
-        padding: 12px 20px;
+        padding: 10px 18px;
         border-radius: 14px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
         font-weight: 600;
@@ -457,6 +495,8 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        white-space: nowrap;
+        font-size: clamp(13px, 2vw, 15px);
     }
 
     /* Stats Grid */
@@ -464,17 +504,23 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 20px;
-        margin-bottom: 40px;
+        margin-bottom: 30px;
+        width: 100%;
     }
 
     .stat-card {
-        padding: 24px;
+        padding: clamp(16px, 3vw, 24px);
         border-radius: 20px;
         color: white;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         position: relative;
         overflow: hidden;
-        min-height: 160px;
+        min-height: 140px;
+        transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
     }
 
     .stat-card-blue {
@@ -495,10 +541,10 @@
 
     .stat-icon {
         position: absolute;
-        right: 20px;
-        top: 20px;
+        right: 15px;
+        top: 15px;
         opacity: 0.2;
-        font-size: 48px;
+        font-size: clamp(36px, 6vw, 48px);
     }
 
     .stat-content {
@@ -507,90 +553,99 @@
     }
 
     .stat-label {
-        font-size: 14px;
+        font-size: clamp(12px, 2vw, 14px);
         font-weight: 600;
         opacity: 0.9;
         margin-bottom: 8px;
+        word-break: break-word;
     }
 
     .stat-value {
-        font-size: 36px;
+        font-size: clamp(28px, 5vw, 36px);
         font-weight: 900;
         margin-bottom: 4px;
         line-height: 1;
+        word-break: break-word;
     }
 
     .stat-desc {
-        font-size: 12px;
+        font-size: clamp(11px, 1.5vw, 12px);
         opacity: 0.8;
         margin-top: 8px;
+        word-break: break-word;
     }
 
     /* Charts Row */
     .charts-row {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-        gap: 30px;
-        margin-bottom: 40px;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+        width: 100%;
     }
 
     .chart-container {
         background: white;
         border-radius: 24px;
-        padding: 25px;
+        padding: clamp(16px, 3vw, 25px);
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(229, 231, 235, 0.8);
+        width: 100%;
     }
 
     .chart-header {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
     }
 
     .chart-title {
         margin: 0;
-        font-size: 20px;
+        font-size: clamp(16px, 3vw, 20px);
         font-weight: 800;
         color: #1f2937;
+        word-break: break-word;
     }
 
     .chart-subtitle {
         margin: 4px 0 0 0;
         color: #6b7280;
-        font-size: 14px;
+        font-size: clamp(12px, 2vw, 14px);
+        word-break: break-word;
     }
 
     .chart-legend {
         display: flex;
-        gap: 10px;
+        gap: 8px;
         flex-wrap: wrap;
-        justify-content: flex-end;
+        justify-content: flex-start;
     }
 
     .legend-item {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 4px;
         margin: 2px 0;
     }
 
     .legend-color {
-        width: 12px;
-        height: 12px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
         flex-shrink: 0;
     }
 
     .legend-label {
-        font-size: 13px;
+        font-size: 11px;
         color: #4b5563;
         white-space: nowrap;
     }
 
     .chart-canvas-container {
-        height: 300px;
+        height: clamp(250px, 40vw, 300px);
         width: 100%;
         margin-bottom: 15px;
     }
@@ -603,42 +658,49 @@
         border-radius: 12px;
         border: 1px solid #e5e7eb;
         margin-top: 15px;
+        flex-wrap: wrap;
+        gap: 15px;
     }
 
     .summary-item {
         text-align: center;
+        flex: 1;
+        min-width: 100px;
     }
 
     .summary-label {
         display: block;
-        font-size: 12px;
+        font-size: 11px;
         color: #6b7280;
         margin-bottom: 4px;
         font-weight: 600;
+        word-break: break-word;
     }
 
     .summary-value {
         display: block;
-        font-size: 20px;
+        font-size: clamp(16px, 3vw, 20px);
         font-weight: 800;
         color: #1f2937;
+        word-break: break-word;
     }
 
     /* Section Cards */
     .section-card {
         background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
         border-radius: 24px;
-        padding: 30px;
-        margin-bottom: 40px;
+        padding: clamp(20px, 4vw, 30px);
+        margin-bottom: 30px;
         box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(229, 231, 235, 0.8);
+        width: 100%;
     }
 
     .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         flex-wrap: wrap;
         gap: 15px;
     }
@@ -647,17 +709,19 @@
         display: flex;
         align-items: center;
         gap: 15px;
+        flex-wrap: wrap;
     }
 
     .section-icon-container {
-        width: 50px;
-        height: 50px;
+        width: clamp(40px, 8vw, 50px);
+        height: clamp(40px, 8vw, 50px);
         border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: clamp(20px, 4vw, 24px);
         color: white;
+        flex-shrink: 0;
     }
 
     .section-icon-blue {
@@ -670,33 +734,41 @@
 
     .section-title {
         margin: 0;
-        font-size: 24px;
+        font-size: clamp(18px, 4vw, 24px);
         font-weight: 800;
         color: #1f2937;
+        word-break: break-word;
     }
 
     .section-subtitle {
         margin: 4px 0 0 0;
         color: #6b7280;
-        font-size: 14px;
+        font-size: clamp(12px, 2vw, 14px);
+        word-break: break-word;
     }
 
     /* Updated Employee Stats Grid - 6 cards */
     .employee-stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        width: 100%;
     }
 
     .employee-stat-card {
-        padding: 20px;
+        padding: clamp(12px, 3vw, 20px);
         border-radius: 18px;
         text-align: center;
         border: 2px solid;
-        min-height: 140px;
+        min-height: 120px;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        transition: transform 0.2s ease;
+    }
+
+    .employee-stat-card:hover {
+        transform: translateY(-3px);
     }
 
     .employee-stat-blue {
@@ -730,24 +802,27 @@
     }
 
     .employee-stat-label {
-        font-size: 14px;
+        font-size: clamp(12px, 2vw, 14px);
         font-weight: 600;
         margin-bottom: 8px;
         color: #374151;
+        word-break: break-word;
     }
 
     .employee-stat-value {
-        font-size: 32px;
+        font-size: clamp(24px, 5vw, 32px);
         font-weight: 900;
         color: #1f2937;
         margin-bottom: 8px;
         line-height: 1;
+        word-break: break-word;
     }
 
     .employee-stat-percentage {
-        font-size: 13px;
+        font-size: clamp(11px, 2vw, 13px);
         color: #6b7280;
         font-weight: 500;
+        word-break: break-word;
     }
 
     /* Low Stock Table */
@@ -757,6 +832,7 @@
         overflow: hidden;
         border: 1px solid #fecaca;
         overflow-x: auto;
+        width: 100%;
     }
 
     .low-stock-table {
@@ -766,11 +842,11 @@
     }
 
     .table-header {
-        padding: 16px 20px;
+        padding: 12px 16px;
         text-align: left;
         color: #991b1b;
         font-weight: 700;
-        font-size: 14px;
+        font-size: clamp(12px, 2vw, 14px);
         background: #fecaca;
         white-space: nowrap;
     }
@@ -797,8 +873,9 @@
     }
 
     .table-cell {
-        padding: 16px 20px;
+        padding: 12px 16px;
         vertical-align: middle;
+        font-size: clamp(12px, 2vw, 14px);
     }
 
     .product-name {
@@ -810,21 +887,23 @@
     .stock-badge {
         background: #fee2e2;
         color: #dc2626;
-        padding: 6px 16px;
+        padding: 4px 12px;
         border-radius: 20px;
         font-weight: 800;
-        font-size: 15px;
+        font-size: clamp(13px, 2vw, 15px);
         display: inline-block;
-        min-width: 80px;
+        min-width: 70px;
+        white-space: nowrap;
     }
 
     .status-badge {
-        padding: 6px 16px;
+        padding: 4px 12px;
         border-radius: 20px;
         font-weight: 700;
-        font-size: 13px;
+        font-size: clamp(11px, 2vw, 13px);
         display: inline-block;
-        min-width: 90px;
+        min-width: 80px;
+        white-space: nowrap;
     }
 
     .status-critical {
@@ -846,11 +925,11 @@
     .inventory-btn {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         color: white;
-        padding: 12px 24px;
+        padding: 10px 20px;
         border-radius: 12px;
         text-decoration: none;
         font-weight: 700;
-        font-size: 14px;
+        font-size: clamp(13px, 2vw, 14px);
         display: flex;
         align-items: center;
         gap: 8px;
@@ -868,11 +947,11 @@
     .reorder-btn {
         background: #dc2626;
         color: white;
-        padding: 8px 20px;
+        padding: 6px 16px;
         border-radius: 10px;
         text-decoration: none;
         font-weight: 600;
-        font-size: 13px;
+        font-size: clamp(12px, 2vw, 13px);
         display: inline-flex;
         align-items: center;
         gap: 6px;
@@ -891,12 +970,12 @@
         background: #f0fdf4;
         border: 2px dashed #bbf7d0;
         border-radius: 16px;
-        padding: 40px;
+        padding: clamp(20px, 5vw, 40px);
         text-align: center;
     }
 
     .no-stock-icon {
-        font-size: 48px;
+        font-size: clamp(36px, 8vw, 48px);
         margin-bottom: 16px;
     }
 
@@ -904,60 +983,92 @@
         margin: 0 0 8px 0;
         color: #166534;
         font-weight: 700;
-        font-size: 18px;
+        font-size: clamp(16px, 3vw, 18px);
+        word-break: break-word;
     }
 
     .no-stock-text {
         color: #15803d;
         margin: 0;
-        font-size: 14px;
+        font-size: clamp(13px, 2vw, 14px);
+        word-break: break-word;
     }
 
-    /* Responsive Design */
-    @media (max-width: 1200px) {
+    /* ================= RESPONSIVE BREAKPOINTS ================= */
+    
+    /* Large Desktop (1200px and above) */
+    @media (min-width: 1200px) {
         .charts-row {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr);
         }
+    }
 
+    /* Desktop (992px to 1199px) */
+    @media (max-width: 1199px) {
         .employee-stats-grid {
             grid-template-columns: repeat(3, 1fr);
         }
     }
 
-    @media (max-width: 768px) {
+    /* Tablet (768px to 991px) */
+    @media (max-width: 991px) {
         .dashboard-container {
-            padding: 20px;
-        }
-
-        .header-content {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-
-        .dashboard-title {
-            font-size: 24px;
+            padding: 15px;
         }
 
         .stats-grid {
             grid-template-columns: repeat(2, 1fr);
         }
 
+        .employee-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .chart-legend {
+            width: 100%;
+        }
+
+        .legend-item {
+            flex: 1 1 auto;
+        }
+    }
+
+    /* Mobile Landscape (576px to 767px) */
+    @media (max-width: 767px) {
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-date {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
         .stat-card {
-            min-height: 140px;
-            padding: 20px;
+            min-height: 120px;
         }
 
-        .stat-value {
-            font-size: 28px;
+        .charts-row {
+            grid-template-columns: 1fr;
         }
 
-        .stat-icon {
-            font-size: 36px;
+        .chart-container {
+            padding: 15px;
+        }
+
+        .chart-summary {
+            flex-direction: column;
+            gap: 10px;
         }
 
         .employee-stats-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: 1fr;
         }
 
         .section-header {
@@ -966,65 +1077,121 @@
         }
 
         .inventory-btn {
+            width: 100%;
             justify-content: center;
             margin-top: 10px;
         }
 
-        .chart-container {
-            padding: 20px;
-        }
-
-        .chart-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
-        }
-
-        .chart-legend {
-            align-self: stretch;
-            justify-content: flex-start;
-        }
-
-        .chart-summary {
-            flex-direction: column;
-            gap: 15px;
+        .low-stock-table {
+            min-width: 500px;
         }
     }
 
-    @media (max-width: 480px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
+    /* Mobile Portrait (up to 575px) */
+    @media (max-width: 575px) {
+        .dashboard-container {
+            padding: 12px;
         }
 
-        .stat-card {
-            min-height: 130px;
+        .section-title-container {
+            width: 100%;
+        }
+
+        .section-icon-container {
+            width: 35px;
+            height: 35px;
+            font-size: 18px;
+        }
+
+        .table-cell {
+            padding: 10px;
+        }
+
+        .stock-badge {
+            padding: 3px 10px;
+            min-width: 60px;
+        }
+
+        .status-badge {
+            padding: 3px 10px;
+            min-width: 70px;
+        }
+
+        .reorder-btn {
+            padding: 5px 12px;
+        }
+    }
+
+    /* Extra Small Devices (up to 360px) */
+    @media (max-width: 360px) {
+        .dashboard-container {
+            padding: 10px;
         }
 
         .dashboard-title {
             font-size: 20px;
         }
 
-        .dashboard-subtitle {
-            font-size: 14px;
+        .header-date {
+            padding: 8px 12px;
+            font-size: 12px;
         }
 
-        .section-title {
-            font-size: 20px;
+        .stat-value {
+            font-size: 24px;
         }
 
-        .chart-title {
-            font-size: 18px;
+        .stat-icon {
+            font-size: 32px;
         }
 
         .employee-stat-value {
-            font-size: 28px;
+            font-size: 24px;
         }
 
-        .employee-stats-grid {
-            grid-template-columns: 1fr;
+        .low-stock-table {
+            min-width: 400px;
+        }
+
+        .table-cell {
+            padding: 8px;
+            font-size: 11px;
+        }
+
+        .stock-badge,
+        .status-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+        }
+
+        .reorder-btn {
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .dashboard-container {
+            background: white;
+            padding: 0;
+        }
+
+        .inventory-btn,
+        .reorder-btn,
+        .header-date {
+            display: none !important;
+        }
+
+        .stat-card {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .chart-container {
+            break-inside: avoid;
         }
     }
 </style>
 @endsection
 
-@include('partials.ai_assistant')

@@ -43,12 +43,14 @@
     .payment-wrapper {
         min-height: 100vh;
         background: #f1f5f9;
-        padding: 2rem 1rem;
+        padding: clamp(16px, 3vw, 2rem) clamp(8px, 2vw, 1rem);
+        width: 100%;
     }
 
     .payment-container {
-        max-width: 800px;
+        max-width: 900px;
         margin: 0 auto;
+        width: 100%;
     }
 
     /* ================= ALERTS ================= */
@@ -57,7 +59,8 @@
         border-radius: var(--radius-md);
         margin-bottom: 1.5rem;
         border-left: 4px solid;
-        font-size: 0.95rem;
+        font-size: clamp(0.875rem, 2vw, 0.95rem);
+        word-break: break-word;
     }
 
     .alert-error {
@@ -90,12 +93,13 @@
         border-radius: var(--radius-xl);
         box-shadow: var(--shadow-lg);
         overflow: hidden;
+        width: 100%;
     }
 
     /* ================= HEADER ================= */
     .card-header {
         background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
-        padding: 2rem;
+        padding: clamp(1.5rem, 4vw, 2rem);
         color: white;
     }
 
@@ -108,16 +112,18 @@
     }
 
     .header-title {
-        font-size: 1.75rem;
+        font-size: clamp(1.5rem, 5vw, 1.75rem);
         font-weight: 700;
         margin: 0;
         line-height: 1.2;
+        word-break: break-word;
     }
 
     .header-subtitle {
         margin-top: 0.5rem;
         opacity: 0.9;
-        font-size: 0.95rem;
+        font-size: clamp(0.875rem, 2.5vw, 0.95rem);
+        word-break: break-word;
     }
 
     .status-badge {
@@ -125,40 +131,50 @@
         padding: 0.5rem 1.25rem;
         border-radius: 2rem;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: clamp(0.85rem, 2vw, 0.9rem);
         backdrop-filter: blur(4px);
+        white-space: nowrap;
     }
 
     /* ================= SUMMARY CARDS ================= */
     .summary-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.25rem;
-        padding: 1.5rem 2rem;
+        padding: clamp(1.25rem, 3vw, 1.5rem) clamp(1.5rem, 4vw, 2rem);
         background: var(--bg-light);
         border-bottom: 1px solid var(--border);
     }
 
     .summary-card {
         background: var(--bg-white);
-        padding: 1.25rem;
+        padding: clamp(1rem, 2.5vw, 1.25rem);
         border-radius: var(--radius-lg);
         border: 1px solid var(--border);
         box-shadow: var(--shadow-sm);
+        transition: all 0.2s ease;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary);
     }
 
     .summary-label {
-        font-size: 0.85rem;
+        font-size: clamp(0.8rem, 2vw, 0.85rem);
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.3px;
         margin-bottom: 0.5rem;
+        word-break: break-word;
     }
 
     .summary-value {
-        font-size: 1.5rem;
+        font-size: clamp(1.25rem, 4vw, 1.5rem);
         font-weight: 700;
         line-height: 1.2;
+        word-break: break-word;
     }
 
     .summary-value.primary {
@@ -175,7 +191,7 @@
 
     /* ================= CUSTOMER INFO ================= */
     .customer-info {
-        padding: 1.25rem 2rem;
+        padding: 1.25rem clamp(1.5rem, 4vw, 2rem);
         background: var(--bg-white);
         border-bottom: 1px solid var(--border);
     }
@@ -189,34 +205,37 @@
     }
 
     .customer-avatar {
-        width: 3rem;
-        height: 3rem;
+        width: clamp(2.5rem, 6vw, 3rem);
+        height: clamp(2.5rem, 6vw, 3rem);
         background: var(--bg-light);
         border-radius: var(--radius-md);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: clamp(1.25rem, 3vw, 1.5rem);
+        flex-shrink: 0;
     }
 
     .customer-name {
         font-weight: 600;
         color: var(--text-main);
+        word-break: break-word;
     }
 
     .customer-mobile {
-        font-size: 0.9rem;
+        font-size: clamp(0.85rem, 2vw, 0.9rem);
         color: var(--text-muted);
     }
 
     .balance-badge {
         padding: 0.75rem 1.25rem;
         border-radius: 2rem;
-        font-size: 0.95rem;
+        font-size: clamp(0.85rem, 2vw, 0.95rem);
         font-weight: 500;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
+        white-space: nowrap;
     }
 
     .balance-wallet {
@@ -239,7 +258,7 @@
 
     /* ================= FORM SECTION ================= */
     .form-section {
-        padding: 2rem;
+        padding: clamp(1.5rem, 4vw, 2rem);
     }
 
     /* ================= TABS ================= */
@@ -251,19 +270,22 @@
         border-radius: var(--radius-lg);
         margin-bottom: 2rem;
         border: 1px solid var(--border);
+        flex-wrap: wrap;
     }
 
     .tab-btn {
         flex: 1;
+        min-width: 150px;
         padding: 0.875rem;
         border: none;
         border-radius: var(--radius-md);
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: clamp(0.875rem, 2vw, 0.95rem);
         cursor: pointer;
         transition: all 0.2s;
         background: transparent;
         color: var(--text-muted);
+        white-space: nowrap;
     }
 
     .tab-btn.active {
@@ -281,7 +303,7 @@
         background: #f0fdf4;
         border: 1px solid #86efac;
         border-radius: var(--radius-lg);
-        padding: 1.25rem;
+        padding: clamp(1rem, 3vw, 1.25rem);
         margin-bottom: 1.5rem;
     }
 
@@ -298,12 +320,15 @@
         color: #166534;
         font-weight: 600;
         margin-bottom: 0.25rem;
+        font-size: clamp(0.9rem, 2vw, 1rem);
+        word-break: break-word;
     }
 
     .wallet-balance {
-        font-size: 1.75rem;
+        font-size: clamp(1.5rem, 4vw, 1.75rem);
         font-weight: 700;
         color: var(--success);
+        word-break: break-word;
     }
 
     .wallet-toggle {
@@ -316,6 +341,7 @@
         border: 1px solid #86efac;
         cursor: pointer;
         user-select: none;
+        font-size: clamp(0.85rem, 2vw, 0.95rem);
     }
 
     .wallet-toggle input {
@@ -339,7 +365,7 @@
         padding: 0.875rem;
         border: 1px solid #86efac;
         border-radius: var(--radius-md);
-        font-size: 1rem;
+        font-size: clamp(0.875rem, 2vw, 1rem);
         transition: border-color 0.2s;
     }
 
@@ -353,16 +379,18 @@
         display: flex;
         gap: 0.5rem;
         margin-top: 0.75rem;
+        flex-wrap: wrap;
     }
 
     .wallet-quick-btn {
         flex: 1;
+        min-width: 100px;
         padding: 0.5rem;
         background: #86efac;
         border: none;
         border-radius: var(--radius-sm);
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: clamp(0.85rem, 2vw, 0.9rem);
         cursor: pointer;
         transition: all 0.2s;
     }
@@ -379,7 +407,9 @@
         background: var(--bg-white);
         padding: 0.75rem;
         border-radius: var(--radius-sm);
-        font-size: 0.95rem;
+        font-size: clamp(0.875rem, 2vw, 0.95rem);
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
     /* ================= PAYMENT INPUT ================= */
@@ -392,20 +422,24 @@
         margin-bottom: 0.5rem;
         display: block;
         color: var(--text-main);
+        font-size: clamp(0.9rem, 2vw, 1rem);
+        word-break: break-word;
     }
 
     .payment-input-wrapper {
         display: flex;
         gap: 0.5rem;
         align-items: center;
+        flex-wrap: wrap;
     }
 
     .payment-input {
         flex: 1;
+        min-width: 200px;
         padding: 1rem;
         border: 1px solid var(--border);
         border-radius: var(--radius-md);
-        font-size: 1.125rem;
+        font-size: clamp(1rem, 2.5vw, 1.125rem);
         transition: border-color 0.2s;
     }
 
@@ -420,9 +454,10 @@
         padding: 0.5rem 1rem;
         border-radius: var(--radius-md);
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: clamp(0.85rem, 2vw, 0.9rem);
         cursor: pointer;
         display: none;
+        white-space: nowrap;
     }
 
     .payment-hint.visible {
@@ -433,16 +468,18 @@
         display: flex;
         gap: 0.5rem;
         margin-top: 0.75rem;
+        flex-wrap: wrap;
     }
 
     .quick-btn {
         flex: 1;
+        min-width: 80px;
         padding: 0.75rem;
         background: #e2e8f0;
         border: none;
         border-radius: var(--radius-md);
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: clamp(0.85rem, 2vw, 0.9rem);
         cursor: pointer;
         transition: all 0.2s;
     }
@@ -471,8 +508,9 @@
         align-items: center;
         gap: 0.5rem;
         margin-bottom: 1rem;
-        font-size: 1.1rem;
+        font-size: clamp(1rem, 2.5vw, 1.1rem);
         font-weight: 600;
+        word-break: break-word;
     }
 
     .preview-header.partial {
@@ -489,20 +527,22 @@
 
     .preview-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 1rem;
         margin-bottom: 1rem;
     }
 
     .preview-item .label {
         color: var(--text-muted);
-        font-size: 0.85rem;
+        font-size: clamp(0.8rem, 2vw, 0.85rem);
         margin-bottom: 0.25rem;
+        word-break: break-word;
     }
 
     .preview-item .value {
-        font-size: 1.125rem;
+        font-size: clamp(1rem, 2.5vw, 1.125rem);
         font-weight: 700;
+        word-break: break-word;
     }
 
     .preview-item .value.wallet {
@@ -518,6 +558,8 @@
         display: flex;
         justify-content: space-between;
         margin-bottom: 0.25rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
 
     .preview-row .label {
@@ -539,21 +581,23 @@
     /* ================= ADVANCE SECTION ================= */
     .advance-section {
         background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
-        padding: 1.5rem;
+        padding: clamp(1.25rem, 3vw, 1.5rem);
         border-radius: var(--radius-lg);
         color: white;
     }
 
     .advance-title {
-        font-size: 1.25rem;
+        font-size: clamp(1.1rem, 3vw, 1.25rem);
         font-weight: 700;
         margin-bottom: 0.5rem;
+        word-break: break-word;
     }
 
     .advance-description {
         margin-bottom: 1.5rem;
         opacity: 0.9;
-        font-size: 0.95rem;
+        font-size: clamp(0.875rem, 2vw, 0.95rem);
+        word-break: break-word;
     }
 
     .advance-input {
@@ -561,7 +605,7 @@
         padding: 1rem;
         border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: var(--radius-md);
-        font-size: 1.125rem;
+        font-size: clamp(1rem, 2.5vw, 1.125rem);
         background: rgba(255, 255, 255, 0.1);
         color: white;
         transition: all 0.2s;
@@ -593,7 +637,7 @@
         border-radius: var(--radius-md);
         color: white;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: clamp(0.85rem, 2vw, 0.9rem);
         cursor: pointer;
         transition: all 0.2s;
     }
@@ -608,6 +652,7 @@
         border-radius: var(--radius-md);
         margin-top: 1rem;
         display: none;
+        word-break: break-word;
     }
 
     .advance-preview.visible {
@@ -616,15 +661,16 @@
 
     /* ================= PAYMENT METHODS ================= */
     .methods-title {
-        font-size: 1.125rem;
+        font-size: clamp(1rem, 2.5vw, 1.125rem);
         font-weight: 600;
         margin: 2rem 0 1rem;
         color: var(--text-main);
+        word-break: break-word;
     }
 
     .methods-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 0.75rem;
         margin-bottom: 1.5rem;
     }
@@ -655,19 +701,26 @@
         cursor: not-allowed;
     }
 
+    .method-card.disabled:hover {
+        transform: none;
+        box-shadow: none;
+        border-color: var(--border);
+    }
+
     .method-card input[type="radio"] {
         display: none;
     }
 
     .method-icon {
-        font-size: 1.75rem;
+        font-size: clamp(1.5rem, 4vw, 1.75rem);
         display: block;
         margin-bottom: 0.25rem;
     }
 
     .method-name {
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: clamp(0.85rem, 2vw, 0.9rem);
+        word-break: break-word;
     }
 
     /* ================= EMI SECTION ================= */
@@ -675,15 +728,16 @@
         background: #fffbeb;
         border: 1px solid #fcd34d;
         border-radius: var(--radius-lg);
-        padding: 1.5rem;
+        padding: clamp(1.25rem, 3vw, 1.5rem);
         margin-bottom: 1.5rem;
     }
 
     .emi-title {
         margin: 0 0 1.25rem;
         color: #92400e;
-        font-size: 1.1rem;
+        font-size: clamp(1rem, 2.5vw, 1.1rem);
         font-weight: 600;
+        word-break: break-word;
     }
 
     .emi-field {
@@ -695,6 +749,8 @@
         margin-bottom: 0.25rem;
         display: block;
         color: #92400e;
+        font-size: clamp(0.85rem, 2vw, 0.9rem);
+        word-break: break-word;
     }
 
     .emi-input,
@@ -704,6 +760,7 @@
         border: 1px solid #fcd34d;
         border-radius: var(--radius-md);
         transition: border-color 0.2s;
+        font-size: clamp(0.875rem, 2vw, 1rem);
     }
 
     .emi-input:focus,
@@ -728,6 +785,8 @@
         margin-bottom: 0.25rem;
         display: block;
         color: var(--text-main);
+        font-size: clamp(0.85rem, 2vw, 0.9rem);
+        word-break: break-word;
     }
 
     .form-input,
@@ -738,6 +797,7 @@
         border-radius: var(--radius-md);
         transition: border-color 0.2s;
         font-family: inherit;
+        font-size: clamp(0.875rem, 2vw, 1rem);
     }
 
     .form-input:focus,
@@ -755,12 +815,12 @@
     /* ================= SUBMIT BUTTON ================= */
     .submit-btn {
         width: 100%;
-        padding: 1.25rem;
+        padding: clamp(1rem, 3vw, 1.25rem);
         background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
         color: white;
         border: none;
         border-radius: var(--radius-md);
-        font-size: 1.125rem;
+        font-size: clamp(1rem, 2.5vw, 1.125rem);
         font-weight: 700;
         cursor: pointer;
         transition: all 0.2s;
@@ -772,6 +832,16 @@
         box-shadow: var(--shadow-lg);
     }
 
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
     .back-link {
         text-align: center;
         margin-top: 1.25rem;
@@ -780,7 +850,8 @@
     .back-link a {
         color: var(--text-muted);
         text-decoration: none;
-        font-size: 0.95rem;
+        font-size: clamp(0.9rem, 2vw, 0.95rem);
+        transition: color 0.2s;
     }
 
     .back-link a:hover {
@@ -804,10 +875,26 @@
         font-weight: 600;
     }
 
-    /* ================= RESPONSIVE ================= */
-    @media (max-width: 768px) {
+    /* ================= RESPONSIVE BREAKPOINTS ================= */
+    
+    /* Large Desktop (1200px and above) */
+    @media (min-width: 1200px) {
         .summary-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    /* Desktop (992px to 1199px) */
+    @media (max-width: 1199px) {
+        .payment-container {
+            max-width: 800px;
+        }
+    }
+
+    /* Tablet (768px to 991px) */
+    @media (max-width: 991px) {
+        .payment-wrapper {
+            padding: 1.5rem 0.75rem;
         }
 
         .customer-details {
@@ -815,32 +902,201 @@
             align-items: flex-start;
         }
 
+        .balance-badge {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .methods-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    /* Mobile Landscape (576px to 767px) */
+    @media (max-width: 767px) {
+        .payment-wrapper {
+            padding: 1rem 0.5rem;
+        }
+
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .tabs {
+            flex-direction: column;
+        }
+
+        .tab-btn {
+            width: 100%;
+        }
+
+        .wallet-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .wallet-toggle {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .wallet-quick-buttons,
+        .quick-buttons,
+        .advance-quick-buttons {
+            flex-direction: column;
+        }
+
+        .wallet-quick-btn,
+        .quick-btn,
+        .advance-quick-btn {
+            width: 100%;
+        }
+
         .methods-grid {
             grid-template-columns: repeat(2, 1fr);
         }
 
-        .wallet-quick-buttons,
-        .quick-buttons {
-            flex-wrap: wrap;
+        .preview-grid {
+            grid-template-columns: 1fr;
         }
 
-        .wallet-quick-btn,
-        .quick-btn {
-            min-width: 120px;
+        .payment-input-wrapper {
+            flex-direction: column;
+        }
+
+        .payment-hint {
+            width: 100%;
+            text-align: center;
         }
     }
 
-    @media (max-width: 480px) {
+    /* Mobile Portrait (up to 575px) */
+    @media (max-width: 575px) {
+        .card-header {
+            padding: 1.25rem;
+        }
+
+        .header-title {
+            font-size: 1.35rem;
+        }
+
+        .summary-card {
+            padding: 1rem;
+        }
+
+        .summary-value {
+            font-size: 1.25rem;
+        }
+
         .methods-grid {
             grid-template-columns: 1fr;
         }
 
+        .method-card {
+            padding: 0.875rem;
+        }
+
+        .wallet-balance {
+            font-size: 1.5rem;
+        }
+
+        .payment-input {
+            padding: 0.875rem;
+        }
+
+        .form-section {
+            padding: 1.25rem;
+        }
+    }
+
+    /* Extra Small Devices (up to 360px) */
+    @media (max-width: 360px) {
         .card-header {
-            padding: 1.5rem;
+            padding: 1rem;
         }
 
         .header-title {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
+        }
+
+        .header-subtitle {
+            font-size: 0.85rem;
+        }
+
+        .status-badge {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .summary-label {
+            font-size: 0.75rem;
+        }
+
+        .summary-value {
+            font-size: 1.1rem;
+        }
+
+        .customer-name {
+            font-size: 0.95rem;
+        }
+
+        .customer-mobile {
+            font-size: 0.8rem;
+        }
+
+        .wallet-title {
+            font-size: 0.9rem;
+        }
+
+        .wallet-balance {
+            font-size: 1.35rem;
+        }
+
+        .payment-input {
+            padding: 0.75rem;
+        }
+
+        .method-name {
+            font-size: 0.8rem;
+        }
+
+        .btn-advance,
+        .btn-submit {
+            padding: 0.875rem;
+            font-size: 0.9rem;
+        }
+
+        .back-link a {
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Print Styles */
+    @media print {
+        .card-header {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .tabs,
+        .wallet-section,
+        .quick-buttons,
+        .wallet-quick-buttons,
+        .advance-quick-buttons,
+        .method-card,
+        .submit-btn,
+        .back-link {
+            display: none !important;
+        }
+
+        .preview-box {
+            border: 1px solid #000;
+            background: white;
+        }
+
+        .balance-badge {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
     }
 </style>
@@ -902,7 +1158,7 @@
             @if ($sale->customer)
                 <div class="customer-info">
                     <div class="customer-details">
-                        <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                             <div class="customer-avatar">
                                 <span>👤</span>
                             </div>
@@ -1312,7 +1568,7 @@
             });
         });
 
-        document.querySelectorAll('.quick-advance').forEach(btn => {
+        document.querySelectorAll('.advance-quick-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 advanceAmount.value = btn.dataset.advance;
                 updateAdvancePreview();
@@ -1398,8 +1654,8 @@
             <span>⚠️</span> <strong>Partial Payment</strong>
         </div>
         <div class="preview-grid">
-            <div><span class="label">Cash:</span> <span class="value">₹${cash.toFixed(2)}</span></div>
-            <div><span class="label">Wallet:</span> <span class="value wallet">₹${wallet.toFixed(2)}</span></div>
+            <div class="preview-item"><span class="label">Cash:</span> <span class="value">₹${cash.toFixed(2)}</span></div>
+            <div class="preview-item"><span class="label">Wallet:</span> <span class="value wallet">₹${wallet.toFixed(2)}</span></div>
         </div>
         <div class="preview-divider">
             <div class="preview-row"><span>Total Paid:</span> <span>₹${total.toFixed(2)}</span></div>
@@ -1415,8 +1671,8 @@
             <span>💰</span> <strong>Excess Payment</strong>
         </div>
         <div class="preview-grid">
-            <div><span class="label">Cash:</span> <span class="value">₹${cash.toFixed(2)}</span></div>
-            <div><span class="label">Wallet:</span> <span class="value wallet">₹${wallet.toFixed(2)}</span></div>
+            <div class="preview-item"><span class="label">Cash:</span> <span class="value">₹${cash.toFixed(2)}</span></div>
+            <div class="preview-item"><span class="label">Wallet:</span> <span class="value wallet">₹${wallet.toFixed(2)}</span></div>
         </div>
         <div class="preview-divider">
             <div class="preview-row"><span>Total Paid:</span> <span>₹${total.toFixed(2)}</span></div>
@@ -1432,8 +1688,8 @@
             <span>✅</span> <strong>Full Payment</strong>
         </div>
         <div class="preview-grid">
-            <div><span class="label">Cash:</span> <span class="value">₹${cash.toFixed(2)}</span></div>
-            <div><span class="label">Wallet:</span> <span class="value wallet">₹${wallet.toFixed(2)}</span></div>
+            <div class="preview-item"><span class="label">Cash:</span> <span class="value">₹${cash.toFixed(2)}</span></div>
+            <div class="preview-item"><span class="label">Wallet:</span> <span class="value wallet">₹${wallet.toFixed(2)}</span></div>
         </div>
         <div class="preview-divider">
             <div class="preview-row"><span>Total Paid:</span> <span>₹${total.toFixed(2)}</span></div>
