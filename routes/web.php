@@ -273,25 +273,25 @@ Route::delete('/invoices/{saleId}/delete-with-payments', [SalesController::class
 
 
 
-    
+
 Route::get('/test-relationship', function() {
     try {
         // Test 1: Check if Product model exists
         $productCount = Product::count();
-        
+
         // Test 2: Check if Purchase model exists
         $purchaseCount = Purchase::count();
-        
+
         // Test 3: Try to get a purchase with product
         $purchase = Purchase::with('product')->first();
-        
+
         $results = [
             'product_model_exists' => 'Yes',
             'total_products' => $productCount,
             'purchase_model_exists' => 'Yes',
             'total_purchases' => $purchaseCount,
         ];
-        
+
         if ($purchase) {
             $results['sample_purchase'] = [
                 'id' => $purchase->id,
@@ -303,9 +303,9 @@ Route::get('/test-relationship', function() {
         } else {
             $results['message'] = 'No purchases found. Create one first.';
         }
-        
+
         return response()->json($results);
-        
+
     } catch (\Exception $e) {
         return response()->json([
             'error' => $e->getMessage(),

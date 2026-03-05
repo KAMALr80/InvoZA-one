@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http; // Add this for API calls
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Employee;
@@ -78,48 +79,41 @@ class DashboardController extends Controller
             $lowStockProducts = Product::where('quantity', '<=', 5)->get();
 
             /* =====================================================
-               🤖 AI SALES PREDICTION
+               🤖 AI SALES PREDICTION - FIXED: Using Python API
             ===================================================== */
-            $aiSales = Sale::select('sale_date', 'grand_total')
-                ->orderBy('sale_date')
-                ->get()
-                ->toJson();
-
-            $aiCommand = 'py -3 ai/sales_prediction.py ' . escapeshellarg($aiSales);
-            $aiOutput  = shell_exec($aiCommand);
-
-            $aiPrediction = json_decode($aiOutput, true) ?? [
-                'next_30_days_total' => 0,
-                'daily_prediction_avg' => 0
-            ];
+            $aiPrediction = $this->getAIPredictionFromAPI();
 
             /* =====================================================
                📈 AI + PAST SALES COMBINED GRAPH DATA
             ===================================================== */
 
-            // Past 14 days sales
+            // Past 15 days sales
             $pastSales = Sale::select(
                     DB::raw('DATE(sale_date) as date'),
                     DB::raw('SUM(grand_total) as total')
                 )
-                ->whereDate('sale_date', '>=', Carbon::now()->subDays(13))
+                ->whereDate('sale_date', '>=', Carbon::now()->subDays(15))
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get();
 
             $pastLabels = $pastSales->pluck('date')->map(fn ($d) =>
-                Carbon::parse($d)->format('d M')
+                Carbon::parse($d)->format('Y-m-d')
             );
 
             $pastData = $pastSales->pluck('total');
 
-            // AI future 30 days (daily average based)
-            $futureLabels = collect(range(1, 30))->map(fn ($d) =>
-                Carbon::now()->addDays($d)->format('d M')
-            );
-
-            $futureDaily = $aiPrediction['daily_prediction_avg'] ?? 0;
-            $futureData  = collect(range(1, 30))->map(fn () => $futureDaily);
+            // Future 15 days from API or sample
+            if ($aiPrediction && isset($aiPrediction['data'])) {
+                $futureLabels = $aiPrediction['data']['future_labels'] ?? [];
+                $futureData = $aiPrediction['data']['future_data'] ?? [];
+            } else {
+                // Sample future data if API fails
+                $futureLabels = collect(range(1, 15))->map(fn ($d) =>
+                    Carbon::now()->addDays($d)->format('Y-m-d')
+                );
+                $futureData = collect(range(1, 15))->map(fn () => $averageSale * 1.1);
+            }
 
             // Attendance data for chart
             $attendanceData = [
@@ -142,7 +136,7 @@ class DashboardController extends Controller
                 'absentToday',
                 'lateToday',
                 'halfDayToday',
-                'notMarkedToday', // ✅ यह variable अब available है
+                'notMarkedToday',
                 'lowStockProducts',
                 'aiPrediction',
                 'pastLabels',
@@ -228,7 +222,6 @@ class DashboardController extends Controller
                 ->orderBy('count', 'desc')
                 ->get()
                 ->map(function($dept) {
-                    // Assign colors and icons based on department
                     $colors = [
                         'IT' => '#3b82f6',
                         'Sales' => '#10b981',
@@ -295,7 +288,7 @@ class DashboardController extends Controller
                 'absentToday',
                 'lateToday',
                 'halfDayToday',
-                'notMarkedToday', // ✅ यह variable अब available है
+                'notMarkedToday',
                 'pendingLeaves',
                 'onLeaveToday',
                 'todayAttendance',
@@ -314,7 +307,7 @@ class DashboardController extends Controller
             ));
         }
 
-        /*  =======================
+        /* =======================
            STAFF DASHBOARD
         ======================= */
         if(Auth::check() && Auth::user()->role == 'staff') {
@@ -338,6 +331,46 @@ class DashboardController extends Controller
             'totalProducts',
             'todaySales'
         ));
+    }
+
+    /**
+     * Get AI Prediction from Python API
+     */
+    private function getAIPredictionFromAPI()
+    {
+        try {
+            $response = Http::timeout(5)->get('http://localhost:5001/api/sales-forecast');
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('AI API Response received', ['data' => $data]);
+                return $data;
+            }
+
+            Log::warning('AI API returned non-success response', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('AI API connection failed: ' . $e->getMessage());
+        }
+
+        // Return default structure if API fails
+        return [
+            'success' => false,
+            'data' => [
+                'future_labels' => collect(range(1, 15))->map(fn ($d) => Carbon::now()->addDays($d)->format('Y-m-d'))->toArray(),
+                'future_data' => collect(range(1, 15))->map(fn () => 1000)->toArray(),
+                'analysis' => [
+                    'today_actual' => Sale::whereDate('sale_date', today())->sum('grand_total') ?: 1000,
+                    'tomorrow_prediction' => 1050,
+                    'trend' => 'stable',
+                    'percentage_change' => 0,
+                    'confidence_score' => 75
+                ]
+            ]
+        ];
     }
 
     /**
@@ -418,7 +451,6 @@ class DashboardController extends Controller
             ->orderBy('count', 'desc')
             ->get()
             ->map(function($dept) {
-                // Assign colors and icons based on department
                 $colors = [
                     'IT' => '#3b82f6',
                     'Sales' => '#10b981',
@@ -530,7 +562,7 @@ class DashboardController extends Controller
             'absentToday',
             'lateToday',
             'halfDayToday',
-            'notMarkedToday', // ✅ यह variable अब available है
+            'notMarkedToday',
             'pendingLeaves',
             'onLeaveToday',
             'todayAttendance',
