@@ -86,7 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    /* ================= ATTENDANCE ================= */
+    /* ================= ATTENDANCE ROUTES (Employee) ================= */
     Route::prefix('attendance')->name('attendance.')->group(function () {
         Route::get('/', function () {
             if (Auth::user()->role === 'staff') {
@@ -101,61 +101,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/my', [AttendanceController::class, 'myAttendance'])->name('my');
         Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('checkin');
         Route::post('/check-out', [AttendanceController::class, 'checkOut'])->name('checkout');
-
-        Route::middleware('hr')->group(function () {
-            Route::get('/manage', [AttendanceController::class, 'manage'])->name('manage');
-            Route::get('/mark', [AttendanceController::class, 'markAttendance'])->name('mark');
-            Route::post('/bulk', [AttendanceController::class, 'bulkAttendance'])->name('bulk');
-            Route::get('/{attendance}/edit', [AttendanceController::class, 'edit'])->name('edit');
-            Route::put('/{attendance}', [AttendanceController::class, 'update'])->name('update');
-        });
     });
 
-    /* ================= LEAVES ================= */
+    /* ================= LEAVE ROUTES (Employee) ================= */
     Route::prefix('leaves')->name('leaves.')->group(function () {
+        Route::get('/', [LeaveController::class, 'index'])->name('index');
         Route::get('/my', [LeaveController::class, 'myLeaves'])->name('my');
-        Route::post('/apply', [LeaveController::class, 'apply'])->name('apply');
-
-        Route::middleware('hr')->group(function () {
-            Route::get('/manage', [LeaveController::class, 'manage'])->name('manage');
-            Route::post('/{leave}/approve', [LeaveController::class, 'approve'])->name('approve');
-            Route::post('/{leave}/reject', [LeaveController::class, 'reject'])->name('reject');
-        });
-    });
-
-    /* ================= EMPLOYEES (Admin Only) ================= */
-    Route::middleware('admin')->prefix('employees')->name('employees.')->group(function () {
-        Route::get('/', [EmployeeController::class, 'index'])->name('index');
-        Route::get('/create', [EmployeeController::class, 'create'])->name('create');
-        Route::post('/', [EmployeeController::class, 'store'])->name('store');
-        Route::get('/{employee}', [EmployeeController::class, 'show'])->name('show');
-        Route::get('/{employee}/edit', [EmployeeController::class, 'edit'])->name('edit');
-        Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
-        Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
-        Route::get('/search', [EmployeeController::class, 'search'])->name('search');
-        Route::post('/{employee}/send-email', [EmployeeController::class, 'sendEmail'])->name('send.email');
-    });
-
-    /* ================= INVENTORY (Admin Only) ================= */
-    Route::middleware('admin')->prefix('inventory')->name('inventory.')->group(function () {
-        Route::get('/', [InventoryController::class, 'index'])->name('index');
-        Route::get('/create', [InventoryController::class, 'create'])->name('create');
-        Route::post('/', [InventoryController::class, 'store'])->name('store');
-        Route::get('/{inventory}', [InventoryController::class, 'show'])->name('show');
-        Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
-        Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
-        Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
-        Route::get('/search', [InventoryController::class, 'ajaxSearch'])->name('ajax.search');
-        Route::post('/{id}/update-quantity', [InventoryController::class, 'updateQuantity'])->name('update.quantity');
-        Route::post('/bulk-delete', [InventoryController::class, 'bulkDelete'])->name('bulk.delete');
-        Route::post('/barcode-preview', [InventoryController::class, 'barcodePreview'])->name('barcode.preview');
-        Route::post('/barcode-download', [InventoryController::class, 'barcodeDownload'])->name('barcode.download');
-    });
-
-    /* ================= STAFF APPROVAL (Admin Only) ================= */
-    Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/staff-approval', [StaffApprovalController::class, 'index'])->name('staff.approval');
-        Route::post('/staff-approval/{id}', [StaffApprovalController::class, 'approve'])->name('staff.approve');
+        Route::get('/create', [LeaveController::class, 'create'])->name('create');
+        Route::post('/store', [LeaveController::class, 'store'])->name('store');
+        Route::get('/{leave}', [LeaveController::class, 'show'])->name('show')->where('leave', '[0-9]+');
+        Route::post('/{leave}/cancel', [LeaveController::class, 'cancel'])->name('cancel')->where('leave', '[0-9]+');
+        Route::get('/{leave}/print', [LeaveController::class, 'printLeave'])->name('print')->where('leave', '[0-9]+');
+        Route::get('/{leave}/pdf', [LeaveController::class, 'pdf'])->name('pdf')->where('leave', '[0-9]+');
+        Route::get('/{leave}/download', [LeaveController::class, 'download'])->name('download')->where('leave', '[0-9]+');
     });
 
     /* ================= CUSTOMERS ================= */
@@ -169,9 +127,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/{customer}/sales', [CustomerController::class, 'sales'])->name('sales');
         Route::get('/{customer}/payments', [CustomerController::class, 'payments'])->name('payments');
         Route::get('/{customer}/wallet', [CustomerWalletController::class, 'customerReport'])->name('wallet');
+        Route::get('/{id}/details', [CustomerController::class, 'getDetails'])->name('details');
     });
 
-    /* ================= WALLET (Independent) ================= */
+    /* ================= WALLET ================= */
     Route::prefix('wallet')->name('wallet.')->group(function () {
         Route::post('/add', [CustomerWalletController::class, 'addAdvance'])->name('add');
         Route::post('/use', [CustomerWalletController::class, 'useAdvance'])->name('use');
@@ -191,16 +150,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/stats', [SalesController::class, 'stats'])->name('stats');
         Route::get('/{sale}', [SalesController::class, 'show'])->name('show');
         Route::get('/{sale}/invoice', [SalesController::class, 'invoice'])->name('invoice');
-        Route::get('/{sale}/print', [SalesController::class, 'print'])->name('print'); // ✅ Added missing print route
+        Route::get('/{sale}/print', [SalesController::class, 'print'])->name('print');
         Route::get('/{sale}/edit', [SalesController::class, 'edit'])->name('edit');
         Route::put('/{sale}', [SalesController::class, 'update'])->name('update');
         Route::delete('/{sale}', [SalesController::class, 'destroy'])->name('destroy');
         Route::post('/{sale}/mark-due', [PaymentController::class, 'markAsDue'])->name('mark-due');
-
-        // ✅ Delete with payments route
         Route::delete('/{saleId}/delete-with-payments', [SalesController::class, 'deleteWithPayments'])->name('delete-with-payments');
-
-        // ✅ Delete impact analysis
         Route::get('/{id}/delete-impact', [SalesController::class, 'deleteImpact'])->name('delete-impact');
     });
 
@@ -212,8 +167,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/create/{sale}', [PaymentController::class, 'create'])->name('create');
         Route::post('/store', [PaymentController::class, 'store'])->name('store');
         Route::delete('/{payment}', [PaymentController::class, 'destroy'])->name('destroy');
-        Route::delete('/bulk/{saleId}', [PaymentController::class, 'deleteBulk'])->name('delete-bulk'); // ✅ Fixed duplicate
-        Route::delete('/customer/{customerId}/delete-all', [PaymentController::class, 'destroyAll'])->name('delete-all'); // ✅ Fixed name
+        Route::delete('/bulk/{saleId}', [PaymentController::class, 'deleteBulk'])->name('delete-bulk');
+        Route::delete('/customer/{customerId}/delete-all', [PaymentController::class, 'destroyAll'])->name('delete-all');
     });
 
     /* ================= EMI ================= */
@@ -241,6 +196,35 @@ Route::middleware('auth')->group(function () {
         Route::post('/ask', [AiAssistantController::class, 'ask'])->name('ask');
     });
 
+    /* ================= EMPLOYEES (Admin/HR Only) ================= */
+    Route::middleware('hr')->prefix('employees')->name('employees.')->group(function () {
+        Route::get('/', [EmployeeController::class, 'index'])->name('index');
+        Route::get('/create', [EmployeeController::class, 'create'])->name('create');
+        Route::post('/', [EmployeeController::class, 'store'])->name('store');
+        Route::get('/{employee}', [EmployeeController::class, 'show'])->name('show');
+        Route::get('/{employee}/edit', [EmployeeController::class, 'edit'])->name('edit');
+        Route::put('/{employee}', [EmployeeController::class, 'update'])->name('update');
+        Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->name('destroy');
+        Route::get('/search', [EmployeeController::class, 'search'])->name('search');
+        Route::post('/{employee}/send-email', [EmployeeController::class, 'sendEmail'])->name('send.email');
+    });
+
+    /* ================= INVENTORY (Admin Only) ================= */
+    Route::middleware('admin')->prefix('inventory')->name('inventory.')->group(function () {
+        Route::get('/', [InventoryController::class, 'index'])->name('index');
+        Route::get('/create', [InventoryController::class, 'create'])->name('create');
+        Route::post('/', [InventoryController::class, 'store'])->name('store');
+        Route::get('/{inventory}', [InventoryController::class, 'show'])->name('show');
+        Route::get('/{inventory}/edit', [InventoryController::class, 'edit'])->name('edit');
+        Route::put('/{inventory}', [InventoryController::class, 'update'])->name('update');
+        Route::delete('/{inventory}', [InventoryController::class, 'destroy'])->name('destroy');
+        Route::get('/search', [InventoryController::class, 'ajaxSearch'])->name('ajax.search');
+        Route::post('/{id}/update-quantity', [InventoryController::class, 'updateQuantity'])->name('update.quantity');
+        Route::post('/bulk-delete', [InventoryController::class, 'bulkDelete'])->name('bulk.delete');
+        Route::post('/barcode-preview', [InventoryController::class, 'barcodePreview'])->name('barcode.preview');
+        Route::post('/barcode-download', [InventoryController::class, 'barcodeDownload'])->name('barcode.download');
+    });
+
     /* ================= HR DASHBOARD ================= */
     Route::middleware('hr')->prefix('hr')->name('hr.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'hrDashboard'])->name('dashboard');
@@ -248,41 +232,44 @@ Route::middleware('auth')->group(function () {
         Route::get('/department-stats', [DashboardController::class, 'getDepartmentStats'])->name('department.stats');
         Route::get('/monthly-attendance', [DashboardController::class, 'getMonthlyAttendance'])->name('monthly.attendance');
     });
+
+    /* ================= LEAVE MANAGEMENT (Admin/HR Only) ================= */
+    Route::middleware('hr')->prefix('admin/leaves')->name('leaves.')->group(function () {
+        Route::get('/manage', [LeaveController::class, 'manage'])->name('manage');
+        Route::get('/{leave}', [LeaveController::class, 'adminShow'])->name('admin-show')->where('leave', '[0-9]+');
+        Route::post('/{leave}/approve', [LeaveController::class, 'approve'])->name('approve')->where('leave', '[0-9]+');
+        Route::post('/{leave}/reject', [LeaveController::class, 'reject'])->name('reject')->where('leave', '[0-9]+');
+        Route::post('/bulk-approve', [LeaveController::class, 'bulkApprove'])->name('bulk.approve');
+        Route::post('/bulk-reject', [LeaveController::class, 'bulkReject'])->name('bulk.reject');
+        Route::get('/calendar-data', [LeaveController::class, 'calendarData'])->name('calendar.data');
+        Route::get('/export', [LeaveController::class, 'export'])->name('export');
+        Route::get('/balance/{employeeId?}', [LeaveController::class, 'getBalance'])->name('balance');
+    });
+
+    /* ================= ATTENDANCE MANAGEMENT (Admin/HR Only) ================= */
+    Route::middleware('hr')->prefix('admin/attendance')->name('attendance.')->group(function () {
+        Route::get('/manage', [AttendanceController::class, 'manage'])->name('manage');
+        Route::get('/mark', [AttendanceController::class, 'markAttendance'])->name('mark');
+        Route::post('/bulk', [AttendanceController::class, 'bulkAttendance'])->name('bulk');
+        Route::get('/report', [AttendanceController::class, 'report'])->name('report');
+        Route::get('/edit/{id}', [AttendanceController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [AttendanceController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AttendanceController::class, 'destroy'])->name('destroy');
+        Route::get('/export', [AttendanceController::class, 'export'])->name('export');
+    });
+
+    /* ================= STAFF APPROVAL (Admin Only) ================= */
+    Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/staff-approval', [StaffApprovalController::class, 'index'])->name('staff.approval');
+        Route::post('/staff-approval/{id}', [StaffApprovalController::class, 'approve'])->name('staff.approve');
+    });
 });
 
-/* ================= ADDITIONAL ROUTES (Outside Auth Group) ================= */
-// Ye routes already auth group ke andar hain, isliye yahan duplicate nahi hone chahiye
-// Aapne jo neeche likha hai wo duplicate hai, isliye comment out kiya
-
-
-Route::delete('/invoices/{id}/delete', [SalesController::class, 'destroy'])->name('invoices.delete');
-Route::delete('/customers/{customerId}/payments/delete-all', [PaymentController::class, 'destroyAll'])->name('payments.delete-all');
-Route::delete('/payments/bulk/{saleId}', [PaymentController::class, 'deleteBulk'])->name('payments.delete-bulk');
-Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
-Route::delete('/payments/bulk/{saleId}', [PaymentController::class, 'deleteBulk'])->name('payments.delete-bulk');
-Route::get('/customers/{customer}/payments', [CustomerController::class, 'payments'])->name('customers.payments');
-Route::delete('/customers/{customerId}/payments/delete-all', [PaymentController::class, 'destroyAll'])->name('payments.delete-all');
-Route::delete('/invoices/{saleId}/delete-with-payments', [SalesController::class, 'deleteWithPayments'])->name('invoices.delete-with-payments');
-
-
-    // Route::delete('/{saleId}/delete-with-payments', [SalesController::class, 'deleteWithPayments'])
-    //     ->name('sales.delete-with-payments');
-
-
-    Route::get('/customers/{id}/details', [CustomerController::class, 'getDetails'])->name('customers.details');
-
-
-
-
+/* ================= TEST ROUTES (Remove in Production) ================= */
 Route::get('/test-relationship', function() {
     try {
-        // Test 1: Check if Product model exists
         $productCount = Product::count();
-
-        // Test 2: Check if Purchase model exists
         $purchaseCount = Purchase::count();
-
-        // Test 3: Try to get a purchase with product
         $purchase = Purchase::with('product')->first();
 
         $results = [
@@ -305,7 +292,6 @@ Route::get('/test-relationship', function() {
         }
 
         return response()->json($results);
-
     } catch (\Exception $e) {
         return response()->json([
             'error' => $e->getMessage(),
@@ -314,3 +300,30 @@ Route::get('/test-relationship', function() {
         ]);
     }
 });
+
+
+// Leave Routes
+Route::middleware(['auth'])->group(function () {
+    // Staff routes
+    Route::get('/leaves/my', [LeaveController::class, 'myLeaves'])->name('leaves.my');
+    Route::post('/leaves/apply', [LeaveController::class, 'apply'])->name('leaves.apply');
+    Route::get('/leaves/create', [LeaveController::class, 'create'])->name('leaves.create');
+    Route::post('/leaves', [LeaveController::class, 'store'])->name('leaves.store');
+    Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
+    Route::post('/leaves/{id}/cancel', [LeaveController::class, 'cancel'])->name('leaves.cancel');
+
+    // Admin routes
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/admin/leaves/dashboard', [LeaveController::class, 'dashboard'])->name('leaves.dashboard');
+        Route::get('/admin/leaves/manage', [LeaveController::class, 'manage'])->name('leaves.manage');
+        Route::get('/admin/leaves/{id}', [LeaveController::class, 'adminShow'])->name('leaves.admin-show');
+        Route::post('/admin/leaves/{id}/approve', [LeaveController::class, 'approve'])->name('leaves.approve');
+        Route::post('/admin/leaves/{id}/reject', [LeaveController::class, 'reject'])->name('leaves.reject');
+    });
+});
+
+// Employee view (restricted to own leaves)
+Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
+
+// Admin view (can view any leave)
+Route::get('/admin/leaves/{id}', [LeaveController::class, 'adminShow'])->name('leaves.admin-show');

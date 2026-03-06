@@ -359,7 +359,7 @@
     }
 
     /* ================= RESPONSIVE BREAKPOINTS ================= */
-    
+
     /* Large Desktop (1200px and above) */
     @media (min-width: 1200px) {
         .container {
@@ -609,9 +609,9 @@
 
                 <form method="POST" action="{{ route('leaves.apply') }}" class="leave-form" id="leaveForm">
                     @csrf
-                    
+
                     <div class="form-group">
-                        <input type="date" name="from_date" required class="form-input @error('from_date') is-invalid @enderror" 
+                        <input type="date" name="from_date" required class="form-input @error('from_date') is-invalid @enderror"
                                value="{{ old('from_date') }}" min="{{ date('Y-m-d') }}">
                         @error('from_date')
                             <small style="color: var(--danger);">{{ $message }}</small>
@@ -619,7 +619,7 @@
                     </div>
 
                     <div class="form-group">
-                        <input type="date" name="to_date" required class="form-input @error('to_date') is-invalid @enderror" 
+                        <input type="date" name="to_date" required class="form-input @error('to_date') is-invalid @enderror"
                                value="{{ old('to_date') }}" min="{{ date('Y-m-d') }}">
                         @error('to_date')
                             <small style="color: var(--danger);">{{ $message }}</small>
@@ -640,8 +640,8 @@
                     </div>
 
                     <div class="form-group">
-                        <input type="text" name="reason" placeholder="Reason (Optional)" 
-                               class="form-input @error('reason') is-invalid @enderror" 
+                        <input type="text" name="reason" placeholder="Reason (Optional)"
+                               class="form-input @error('reason') is-invalid @enderror"
                                value="{{ old('reason') }}">
                         @error('reason')
                             <small style="color: var(--danger);">{{ $message }}</small>
@@ -680,7 +680,7 @@
                                         <span style="font-weight: 500;">{{ $leave->type }}</span>
                                     </td>
                                     <td>
-                                        <span class="status-badge 
+                                        <span class="status-badge
                                             @if($leave->status == 'Pending') status-pending
                                             @elseif($leave->status == 'Approved') status-approved
                                             @elseif($leave->status == 'Rejected') status-rejected
@@ -721,7 +721,7 @@
     document.getElementById('leaveForm')?.addEventListener('submit', function(e) {
         const fromDate = new Date(this.from_date.value);
         const toDate = new Date(this.to_date.value);
-        
+
         if (toDate < fromDate) {
             e.preventDefault();
             alert('❌ To date cannot be earlier than from date');
