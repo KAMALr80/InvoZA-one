@@ -33,6 +33,15 @@ use App\Http\Controllers\CustomerWalletController;
 // Auth
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\RegisterOtpController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\ConfirmablePasswordController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\EmailVerificationNotificationController;
+use App\Http\Controllers\Auth\PasswordController;
 
 // AI
 use App\Http\Controllers\AiController;
@@ -54,11 +63,31 @@ Route::get('/test-mail', function () {
     return 'Mail sent successfully!';
 });
 
-// Public Auth Routes
-Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login');
+// ==================== AUTH ROUTES (Public) ====================
+
+// Login Routes
+Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::post('/login', [AuthenticatedSessionController::class, 'store'])->name('login.post');
+
+// Registration Routes
+Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
+Route::post('/register', [RegisteredUserController::class, 'store'])->name('register.post');
+
+// Registration OTP Routes
+Route::get('/register-otp', [RegisterOtpController::class, 'show'])->name('register.otp.show');
+Route::post('/register-otp/verify', [RegisterOtpController::class, 'verify'])->name('register.otp.verify');
+Route::post('/register-otp/resend', [RegisterOtpController::class, 'resend'])->name('register.otp.resend');
+
+// Login OTP Routes (Shared)
 Route::get('/otp-verify', [OtpController::class, 'show'])->name('otp.verify');
 Route::post('/otp-verify', [OtpController::class, 'verify'])->name('otp.verify.post');
 Route::post('/otp-resend', [OtpController::class, 'resend'])->name('otp.resend');
+
+// Password Reset Routes
+Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 
 // Public Customer AJAX Routes
 Route::get('/customers/ajax-search', [CustomerController::class, 'ajaxSearch'])->name('customers.ajax.search');
@@ -66,7 +95,7 @@ Route::post('/customers/store-ajax', [CustomerController::class, 'storeAjax'])->
 
 /*
 |--------------------------------------------------------------------------
-| Auth Routes (Laravel Breeze)
+| Auth Routes (Laravel Breeze) - KEEP THIS
 |--------------------------------------------------------------------------
 */
 require __DIR__ . '/auth.php';
@@ -85,6 +114,23 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Email Verification Routes (Authenticated)
+    Route::get('/verify-email', [EmailVerificationPromptController::class, '__invoke'])->name('verification.notice');
+    Route::get('/verify-email/{id}/{hash}', [VerifyEmailController::class, '__invoke'])
+        ->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
+        ->middleware('throttle:6,1')->name('verification.send');
+
+    // Password Confirmation Routes
+    Route::get('/confirm-password', [ConfirmablePasswordController::class, 'show'])->name('password.confirm');
+    Route::post('/confirm-password', [ConfirmablePasswordController::class, 'store'])->name('password.confirm.post');
+
+    // Password Update Route
+    Route::put('/password', [PasswordController::class, 'update'])->name('password.update');
+
+    // Logout Route
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
     /* ================= ATTENDANCE ROUTES (Employee) ================= */
     Route::prefix('attendance')->name('attendance.')->group(function () {
@@ -301,8 +347,7 @@ Route::get('/test-relationship', function() {
     }
 });
 
-
-// Leave Routes
+// Leave Routes (Additional)
 Route::middleware(['auth'])->group(function () {
     // Staff routes
     Route::get('/leaves/my', [LeaveController::class, 'myLeaves'])->name('leaves.my');

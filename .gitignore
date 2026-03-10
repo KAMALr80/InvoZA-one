@@ -23,5 +23,17 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-python-api/chronos_cache/
+# Python cache
+__pycache__/
+
+# AI models
 *.safetensors
+*.pt
+*.bin
+
+# Chronos cache
+python-api/chronos_cache/
+
+# environment
+venv/
+.env
