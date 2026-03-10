@@ -735,6 +735,216 @@
         color: var(--text-muted);
     }
 
+    /* ================= ADD TO WALLET IMPROVED ================= */
+    .wallet-modal-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, #0f172a, #1e3a5f);
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        margin: -2rem -2rem 1.5rem -2rem;
+        color: white;
+    }
+
+    .wallet-modal-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .wallet-modal-customer-name {
+        font-size: 1.05rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .wallet-modal-balance {
+        font-size: 0.85rem;
+        opacity: 0.8;
+        margin-top: 0.2rem;
+    }
+
+    .amount-input-wrapper {
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
+
+    .amount-prefix {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--success);
+        pointer-events: none;
+    }
+
+    .amount-input-large {
+        width: 100%;
+        padding: 0.875rem 1rem 0.875rem 2.25rem;
+        border-radius: var(--radius-md);
+        border: 2px solid var(--border);
+        font-size: 1.4rem;
+        font-weight: 600;
+        transition: all 0.2s;
+        color: var(--text-primary);
+    }
+
+    .amount-input-large:focus {
+        outline: none;
+        border-color: var(--success);
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+    }
+
+    .amount-input-large.has-error {
+        border-color: var(--danger);
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+    }
+
+    .amount-error-msg {
+        font-size: 0.82rem;
+        color: var(--danger);
+        margin-top: 0.3rem;
+        min-height: 1.1rem;
+    }
+
+    .quick-amounts {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .quick-amount-btn {
+        padding: 0.55rem 0.25rem;
+        border-radius: var(--radius-md);
+        border: 1.5px solid var(--border);
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-size: 0.88rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.18s;
+        text-align: center;
+    }
+
+    .quick-amount-btn:hover {
+        background: var(--success);
+        color: white;
+        border-color: var(--success);
+        transform: translateY(-1px);
+    }
+
+    .payment-method-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .method-card {
+        border: 2px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.75rem 0.4rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.18s;
+        background: var(--bg-secondary);
+        user-select: none;
+    }
+
+    .method-card:hover {
+        border-color: var(--accent);
+        background: #eff6ff;
+    }
+
+    .method-card.selected {
+        border-color: var(--accent);
+        background: #eff6ff;
+        color: var(--accent);
+    }
+
+    .method-card-icon { font-size: 1.3rem; margin-bottom: 0.2rem; }
+    .method-card-label { font-size: 0.76rem; font-weight: 500; }
+
+    .live-summary {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border: 1.5px solid #86efac;
+        border-radius: var(--radius-md);
+        padding: 1rem 1.25rem;
+        margin: 1rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .live-summary-label {
+        font-size: 0.85rem;
+        color: #166534;
+        font-weight: 500;
+    }
+
+    .live-summary-amount {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--success);
+    }
+
+    .live-summary-new-bal {
+        font-size: 0.8rem;
+        color: #166534;
+        margin-top: 0.1rem;
+    }
+
+    .btn-wallet-submit {
+        background: linear-gradient(135deg, var(--success), #059669);
+        color: white;
+        border: none;
+        padding: 0.95rem;
+        border-radius: var(--radius-md);
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 0.5rem;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-wallet-submit:hover {
+        background: linear-gradient(135deg, #047857, #065f46);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(5,150,105,0.35);
+    }
+
+    .btn-wallet-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .btn-wallet-use-submit {
+        background: linear-gradient(135deg, var(--danger), #b91c1c);
+    }
+    .btn-wallet-use-submit:hover {
+        background: linear-gradient(135deg, #b91c1c, #991b1b);
+        box-shadow: 0 4px 12px rgba(220,38,38,0.35);
+    }
+
     .transaction-history {
         border-top: 1px solid var(--border);
         padding-top: 1.5rem;
@@ -912,7 +1122,7 @@
         right: 20px;
         padding: 1rem 1.5rem;
         border-radius: var(--radius-lg);
-        background: white;
+        background: yellow;
         box-shadow: var(--shadow-lg);
         display: flex;
         align-items: center;
@@ -1443,22 +1653,38 @@
 
 <!-- Amount Modal -->
 <div id="amountModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="amountModalTitle">Wallet Transaction</h3>
-            <button class="modal-close" onclick="closeAmountModal()">&times;</button>
+    <div class="modal-content" style="max-width: 520px;">
+
+        {{-- Customer header strip --}}
+        <div class="wallet-modal-header" id="walletModalHeader">
+            <div class="wallet-modal-avatar" id="walletModalAvatar">?</div>
+            <div>
+                <div class="wallet-modal-customer-name" id="walletModalCustomerName">Customer</div>
+                <div class="wallet-modal-balance" id="walletModalBalanceInfo">Current Balance: ₹0.00</div>
+            </div>
+            <button class="modal-close" onclick="closeAmountModal()" style="margin-left:auto; color:white; opacity:0.8;">&times;</button>
         </div>
 
         <form id="walletForm" method="POST">
             @csrf
             <input type="hidden" name="customer_id" id="walletCustomerId">
+            <input type="hidden" name="method" id="selectedMethod" value="cash">
 
+            {{-- Amount Input --}}
             <div class="form-group">
-                <label id="amountLabel">Amount (₹)</label>
-                <input type="number" name="amount" id="walletAmount" class="form-control" 
-                       step="0.01" min="1" required placeholder="Enter amount">
+                <label id="amountLabel" style="font-weight:600; font-size:0.95rem; color: var(--text-primary);">Amount to Add (₹)</label>
+                <div class="amount-input-wrapper">
+                    <span class="amount-prefix" id="amountPrefix">₹</span>
+                    <input type="number" name="amount" id="walletAmount"
+                           class="amount-input-large"
+                           step="1" min="1" required
+                           placeholder="0"
+                           oninput="onAmountChange()">
+                </div>
+                <div class="amount-error-msg" id="amountError"></div>
             </div>
 
+            {{-- Quick amount buttons --}}
             <div class="quick-amounts">
                 <button type="button" class="quick-amount-btn" onclick="setAmount(500)">₹500</button>
                 <button type="button" class="quick-amount-btn" onclick="setAmount(1000)">₹1,000</button>
@@ -1466,36 +1692,64 @@
                 <button type="button" class="quick-amount-btn" onclick="setAmount(5000)">₹5,000</button>
             </div>
 
+            {{-- Payment Method Cards --}}
             <div id="paymentSection">
                 <div class="form-group">
-                    <label>Payment Method</label>
-                    <select name="method" class="form-control">
-                        <option value="cash">Cash</option>
-                        <option value="upi">UPI</option>
-                        <option value="card">Card</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                    </select>
+                    <label style="font-weight:600; font-size:0.9rem; margin-bottom:0.65rem; display:block;">Payment Method</label>
+                    <div class="payment-method-grid">
+                        <div class="method-card selected" onclick="selectMethod('cash', this)">
+                            <div class="method-card-icon">💵</div>
+                            <div class="method-card-label">Cash</div>
+                        </div>
+                        <div class="method-card" onclick="selectMethod('upi', this)">
+                            <div class="method-card-icon">📱</div>
+                            <div class="method-card-label">UPI</div>
+                        </div>
+                        <div class="method-card" onclick="selectMethod('card', this)">
+                            <div class="method-card-icon">💳</div>
+                            <div class="method-card-label">Card</div>
+                        </div>
+                        <div class="method-card" onclick="selectMethod('bank_transfer', this)">
+                            <div class="method-card-icon">🏦</div>
+                            <div class="method-card-label">Bank</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Reference (Optional)</label>
-                    <input type="text" name="reference" class="form-control" placeholder="Transaction ID / UTR">
+                    <label>Reference No. <span style="color:var(--text-muted); font-weight:400;">(Optional)</span></label>
+                    <input type="text" name="reference" id="walletReference" class="form-control"
+                           placeholder="e.g. UPI Ref / Cheque No / UTR">
                 </div>
             </div>
 
+            {{-- Note --}}
             <div class="form-group">
-                <label>Remarks (Optional)</label>
-                <textarea name="remarks" class="form-control" rows="2" placeholder="Add note..."></textarea>
+                <label>Note <span style="color:var(--text-muted); font-weight:400;">(Optional)</span></label>
+                <input type="text" name="remarks" class="form-control"
+                       placeholder="e.g. Advance for order, Monthly deposit...">
             </div>
 
+            {{-- Use wallet info --}}
             <div id="useAdvanceInfo" class="info-box" style="display: none;">
-                <strong>Note:</strong> This amount will be deducted from wallet balance
+                ⚠️ <strong>Note:</strong> This amount will be deducted from the customer's wallet balance.
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" onclick="closeAmountModal()">Cancel</button>
-                <button type="submit" class="btn-confirm" id="confirmBtn">Process Transaction</button>
+            {{-- Live Summary --}}
+            <div class="live-summary" id="liveSummary" style="display:none;">
+                <div>
+                    <div class="live-summary-label" id="liveSummaryLabel">Adding to Wallet</div>
+                    <div class="live-summary-new-bal" id="liveSummaryNewBal">New Balance: ₹0.00</div>
+                </div>
+                <div class="live-summary-amount" id="liveSummaryAmount">₹0</div>
             </div>
+
+            {{-- Buttons --}}
+            <button type="submit" class="btn-wallet-submit" id="confirmBtn">
+                <span id="confirmBtnIcon">💳</span>
+                <span id="confirmBtnText">Add to Wallet</span>
+            </button>
+            <button type="button" style="width:100%; margin-top:0.5rem; padding:0.7rem; border:1px solid var(--border); border-radius:var(--radius-md); background:none; cursor:pointer; color:var(--text-muted); font-size:0.9rem;" onclick="closeAmountModal()">Cancel</button>
         </form>
     </div>
 </div>
@@ -1670,23 +1924,101 @@
             });
     }
 
-    // Amount modal functions
+    // ========== PAYMENT METHOD SELECTION ==========
+    let isAddMode = true; // true = add to wallet, false = use from wallet
+
+    function selectMethod(method, card) {
+        document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        document.getElementById('selectedMethod').value = method;
+    }
+
+    // ========== LIVE AMOUNT PREVIEW ==========
+    function onAmountChange() {
+        const amountInput = document.getElementById('walletAmount');
+        const amount = parseFloat(amountInput.value) || 0;
+        const errorEl = document.getElementById('amountError');
+        const summaryEl = document.getElementById('liveSummary');
+        const summaryAmountEl = document.getElementById('liveSummaryAmount');
+        const summaryNewBalEl = document.getElementById('liveSummaryNewBal');
+        const summaryLabelEl = document.getElementById('liveSummaryLabel');
+
+        // Clear errors
+        amountInput.classList.remove('has-error');
+        errorEl.textContent = '';
+
+        if (amount <= 0) {
+            summaryEl.style.display = 'none';
+            return;
+        }
+
+        if (!isAddMode && amount > currentBalance) {
+            amountInput.classList.add('has-error');
+            errorEl.textContent = `❌ Insufficient balance. Available: ₹${currentBalance.toFixed(2)}`;
+            summaryEl.style.display = 'none';
+            return;
+        }
+
+        // Show live summary
+        summaryEl.style.display = 'flex';
+        summaryAmountEl.textContent = '₹' + amount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        
+        if (isAddMode) {
+            const newBal = currentBalance + amount;
+            summaryLabelEl.textContent = '✅ Adding to Wallet';
+            summaryNewBalEl.textContent = `New Balance: ₹${newBal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            summaryEl.style.background = 'linear-gradient(135deg, #f0fdf4, #dcfce7)';
+            summaryEl.style.borderColor = '#86efac';
+            summaryAmountEl.style.color = 'var(--success)';
+            summaryLabelEl.style.color = '#166534';
+            summaryNewBalEl.style.color = '#166534';
+        } else {
+            const newBal = currentBalance - amount;
+            summaryLabelEl.textContent = '⬇️ Deducting from Wallet';
+            summaryNewBalEl.textContent = `Remaining Balance: ₹${newBal.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            summaryEl.style.background = 'linear-gradient(135deg, #fff7ed, #fef3c7)';
+            summaryEl.style.borderColor = '#fcd34d';
+            summaryAmountEl.style.color = 'var(--warning)';
+            summaryLabelEl.style.color = '#854d0e';
+            summaryNewBalEl.style.color = '#854d0e';
+        }
+    }
+
+    // ========== WALLET MODAL FUNCTIONS ==========
     function showAddAdvanceModal(customerId, customerName, balance) {
         currentCustomerId = customerId;
         currentCustomerName = customerName;
-        currentBalance = balance;
+        currentBalance = parseFloat(balance) || 0;
+        isAddMode = true;
 
+        // Set customer header
+        document.getElementById('walletModalAvatar').textContent = customerName.charAt(0).toUpperCase();
+        document.getElementById('walletModalCustomerName').textContent = customerName;
+        document.getElementById('walletModalBalanceInfo').textContent = 'Current Balance: ₹' + currentBalance.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        document.getElementById('walletModalHeader').style.background = 'linear-gradient(135deg, #0f172a, #1e3a5f)';
+
+        // Set form
         document.getElementById('walletCustomerId').value = customerId;
-        document.getElementById('amountModalTitle').textContent = 'Add to Wallet';
         document.getElementById('amountLabel').textContent = 'Amount to Add (₹)';
-        document.getElementById('confirmBtn').textContent = 'Add to Wallet';
+        document.getElementById('amountPrefix').textContent = '₹';
+        document.getElementById('amountPrefix').style.color = 'var(--success)';
         document.getElementById('paymentSection').style.display = 'block';
         document.getElementById('useAdvanceInfo').style.display = 'none';
+        document.getElementById('confirmBtn').className = 'btn-wallet-submit';
+        document.getElementById('confirmBtnIcon').textContent = '💳';
+        document.getElementById('confirmBtnText').textContent = 'Add to Wallet';
         document.getElementById('walletForm').action = '{{ route("wallet.add") }}';
         document.getElementById('walletForm').reset();
+        document.getElementById('selectedMethod').value = 'cash';
+        document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
+        document.querySelector('.method-card')?.classList.add('selected');
+        document.getElementById('liveSummary').style.display = 'none';
+        document.getElementById('amountError').textContent = '';
+        document.getElementById('walletAmount').classList.remove('has-error');
 
         closeWalletModal();
         document.getElementById('amountModal').classList.add('active');
+        setTimeout(() => document.getElementById('walletAmount').focus(), 200);
     }
 
     function showUseAdvanceModal(customerId, customerName, balance) {
@@ -1697,28 +2029,47 @@
 
         currentCustomerId = customerId;
         currentCustomerName = customerName;
-        currentBalance = balance;
+        currentBalance = parseFloat(balance) || 0;
+        isAddMode = false;
 
+        // Set customer header
+        document.getElementById('walletModalAvatar').textContent = customerName.charAt(0).toUpperCase();
+        document.getElementById('walletModalCustomerName').textContent = customerName;
+        document.getElementById('walletModalBalanceInfo').textContent = 'Available Balance: ₹' + currentBalance.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        document.getElementById('walletModalHeader').style.background = 'linear-gradient(135deg, #7f1d1d, #991b1b)';
+
+        // Set form
         document.getElementById('walletCustomerId').value = customerId;
-        document.getElementById('amountModalTitle').textContent = 'Use from Wallet';
         document.getElementById('amountLabel').textContent = 'Amount to Use (₹)';
-        document.getElementById('confirmBtn').textContent = 'Use from Wallet';
+        document.getElementById('amountPrefix').textContent = '₹';
+        document.getElementById('amountPrefix').style.color = 'var(--danger)';
         document.getElementById('paymentSection').style.display = 'none';
         document.getElementById('useAdvanceInfo').style.display = 'block';
+        document.getElementById('confirmBtn').className = 'btn-wallet-submit btn-wallet-use-submit';
+        document.getElementById('confirmBtnIcon').textContent = '➖';
+        document.getElementById('confirmBtnText').textContent = 'Deduct from Wallet';
         document.getElementById('walletForm').action = '{{ route("wallet.use") }}';
         document.getElementById('walletForm').reset();
+        document.getElementById('liveSummary').style.display = 'none';
+        document.getElementById('amountError').textContent = '';
+        document.getElementById('walletAmount').classList.remove('has-error');
 
         closeWalletModal();
         document.getElementById('amountModal').classList.add('active');
+        setTimeout(() => document.getElementById('walletAmount').focus(), 200);
     }
 
     function closeAmountModal() {
         document.getElementById('amountModal').classList.remove('active');
         document.getElementById('walletForm').reset();
+        document.getElementById('liveSummary').style.display = 'none';
+        document.getElementById('amountError').textContent = '';
+        document.getElementById('walletAmount').classList.remove('has-error');
     }
 
     function setAmount(amount) {
         document.getElementById('walletAmount').value = amount;
+        onAmountChange();
     }
 
     function proceedToAdd() {
@@ -1733,47 +2084,68 @@
         showUseAdvanceModal(currentCustomerId, currentCustomerName, currentBalance);
     }
 
-    // Form submission
+    // ========== FORM SUBMISSION ==========
     document.getElementById('walletForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const amount = document.getElementById('walletAmount').value;
+        const amount = parseFloat(document.getElementById('walletAmount').value);
+        const errorEl = document.getElementById('amountError');
+        const amountInput = document.getElementById('walletAmount');
+
         if (!amount || amount <= 0) {
-            showToast('Please enter a valid amount', 'warning');
+            amountInput.classList.add('has-error');
+            errorEl.textContent = '❌ Please enter a valid amount greater than 0';
+            amountInput.focus();
             return;
         }
 
-        if (this.action.includes('wallet.use') && amount > currentBalance) {
-            showToast('Insufficient wallet balance', 'error');
+        if (!isAddMode && amount > currentBalance) {
+            amountInput.classList.add('has-error');
+            errorEl.textContent = `❌ Insufficient balance. Available: ₹${currentBalance.toFixed(2)}`;
             return;
         }
+
+        // Show loading state on button
+        const btn = document.getElementById('confirmBtn');
+        const origIcon = document.getElementById('confirmBtnIcon').textContent;
+        const origText = document.getElementById('confirmBtnText').textContent;
+        btn.disabled = true;
+        document.getElementById('confirmBtnIcon').textContent = '⏳';
+        document.getElementById('confirmBtnText').textContent = 'Processing...';
 
         fetch(this.action, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             body: JSON.stringify({
                 customer_id: document.getElementById('walletCustomerId').value,
                 amount: amount,
-                method: document.querySelector('[name="method"]')?.value || 'cash',
-                reference: document.querySelector('[name="reference"]')?.value || '',
+                method: document.getElementById('selectedMethod').value || 'cash',
+                reference: document.getElementById('walletReference')?.value || '',
                 remarks: document.querySelector('[name="remarks"]')?.value || ''
             })
         })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                showToast(data.message || 'Transaction successful!');
+                showToast(data.message || (isAddMode ? '✅ Amount added to wallet!' : '✅ Amount deducted from wallet!'), 'success');
                 closeAmountModal();
                 setTimeout(() => location.reload(), 1500);
             } else {
-                showToast(data.message || 'Transaction failed', 'error');
+                showToast(data.message || '❌ Transaction failed', 'error');
+                btn.disabled = false;
+                document.getElementById('confirmBtnIcon').textContent = origIcon;
+                document.getElementById('confirmBtnText').textContent = origText;
             }
         })
         .catch(() => {
-            showToast('Transaction failed', 'error');
+            showToast('❌ Network error. Please try again.', 'error');
+            btn.disabled = false;
+            document.getElementById('confirmBtnIcon').textContent = origIcon;
+            document.getElementById('confirmBtnText').textContent = origText;
         });
     });
 

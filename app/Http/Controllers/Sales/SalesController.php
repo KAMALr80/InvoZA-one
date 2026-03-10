@@ -17,6 +17,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Yajra\DataTables\Facades\DataTables;
 use NumberFormatter;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SalesController extends Controller
 {
@@ -32,6 +33,363 @@ class SalesController extends Controller
         'WALLET_ADD' => 'Wallet Add',
         'INVOICE_DUE' => 'Marked as Due'
     ];
+
+    /* =========================================================
+       SEND SINGLE INVOICE VIA EMAIL - FIXED
+    ========================================================= */
+    public function sendInvoice(Request $request)
+    {
+        try {
+            $request->validate([
+                'sale_id' => 'required|exists:sales,id',
+                'recipient_email' => 'required|email',
+                'email_subject' => 'required|string|max:255',
+                'email_body' => 'nullable|string'
+            ]);
+
+            $sale = Sale::with(['customer', 'items.product'])->findOrFail($request->sale_id);
+
+            // Generate PDF
+            $pdf = Pdf::loadView('sales.invoice-pdf', [
+                'sale' => $sale,
+                'amountInWords' => $this->numberToWords($sale->grand_total)
+            ]);
+
+            // Prepare email data
+            $subject = $request->email_subject;
+            $body = $request->email_body ?? "Dear {$sale->customer->name},\n\nPlease find attached the invoice for your recent purchase.\n\nThank you for your business!";
+
+            // FIXED: Using Mail::raw for plain text email
+            Mail::raw($body, function ($message) use ($request, $pdf, $subject, $sale) {
+                $message->to($request->recipient_email)
+                        ->subject($subject)
+                        ->attachData($pdf->output(), "Invoice_{$sale->invoice_no}.pdf", [
+                            'mime' => 'application/pdf',
+                        ]);
+            });
+
+            Log::info("Single email sent successfully", [
+                'sale_id' => $sale->id,
+                'invoice_no' => $sale->invoice_no,
+                'recipient' => $request->recipient_email
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully'
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Email validation error: ' . json_encode($e->errors()));
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error: ' . implode(', ', $e->errors())
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Single email failed: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /* =========================================================
+       BULK SEND INVOICES VIA EMAIL - FIXED
+    ========================================================= */
+    public function bulkSendInvoice(Request $request)
+    {
+        try {
+            $request->validate([
+                'invoice_ids' => 'required|array|min:1',
+                'invoice_ids.*' => 'exists:sales,id',
+                'recipient_email' => 'required|email',
+                'email_subject_prefix' => 'required|string|max:255',
+                'email_body_template' => 'nullable|string'
+            ]);
+
+            $invoiceIds = $request->invoice_ids;
+            $results = [
+                'total' => count($invoiceIds),
+                'success' => 0,
+                'failed' => 0,
+                'failed_invoices' => []
+            ];
+
+            // Default template if not provided
+            $template = $request->email_body_template ?? "Dear {customer_name},\n\nPlease find attached the invoice #{invoice_no} for your recent purchase.\n\nInvoice Details:\nDate: {invoice_date}\nAmount: ₹{amount}\nDue: ₹{due}\n\nThank you for your business!";
+
+            foreach ($invoiceIds as $saleId) {
+                try {
+                    $sale = Sale::with(['customer', 'items.product'])->find($saleId);
+                    
+                    if (!$sale) {
+                        $results['failed']++;
+                        $results['failed_invoices'][] = "ID: {$saleId} - Not found";
+                        continue;
+                    }
+
+                    // Calculate due amount
+                    $totalPaid = $sale->payments()
+                        ->where('status', 'paid')
+                        ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
+                        ->sum('amount');
+                    $dueAmount = $sale->grand_total - $totalPaid;
+
+                    // Generate PDF
+                    $pdf = Pdf::loadView('sales.invoice-pdf', [
+                        'sale' => $sale,
+                        'amountInWords' => $this->numberToWords($sale->grand_total)
+                    ]);
+
+                    // Prepare subject and body
+                    $subject = $request->email_subject_prefix . " - Invoice #{$sale->invoice_no}";
+                    
+                    // Replace placeholders in body
+                    $body = str_replace(
+                        ['{customer_name}', '{invoice_no}', '{invoice_date}', '{amount}', '{due}'],
+                        [
+                            $sale->customer->name ?? 'Customer',
+                            $sale->invoice_no,
+                            $sale->sale_date->format('d M Y'),
+                            number_format($sale->grand_total, 2),
+                            number_format($dueAmount, 2)
+                        ],
+                        $template
+                    );
+
+                    // FIXED: Using Mail::raw for plain text email
+                    Mail::raw($body, function ($message) use ($request, $pdf, $subject, $sale) {
+                        $message->to($request->recipient_email)
+                                ->subject($subject)
+                                ->attachData($pdf->output(), "Invoice_{$sale->invoice_no}.pdf", [
+                                    'mime' => 'application/pdf',
+                                ]);
+                    });
+
+                    $results['success']++;
+                    
+                    Log::info("Bulk email sent for invoice #{$sale->invoice_no}");
+
+                } catch (\Exception $e) {
+                    $results['failed']++;
+                    $results['failed_invoices'][] = "Invoice #{$sale->invoice_no}: " . $e->getMessage();
+                    
+                    Log::error("Bulk email failed for sale ID {$saleId}: " . $e->getMessage());
+                }
+            }
+
+            $message = "Emails sent: {$results['success']} successful, {$results['failed']} failed";
+            
+            return response()->json([
+                'success' => $results['success'] > 0,
+                'message' => $message,
+                'results' => $results
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error: ' . implode(', ', $e->errors())
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Bulk email failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send bulk emails: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /* =========================================================
+       SEND DUE INVOICE REMINDER (For Single Invoice)
+    ========================================================= */
+    public function sendDueReminder(Request $request)
+    {
+        try {
+            $request->validate([
+                'sale_id' => 'required|exists:sales,id',
+                'recipient_email' => 'required|email'
+            ]);
+
+            $sale = Sale::with('customer')->findOrFail($request->sale_id);
+
+            // Calculate due amount
+            $totalPaid = $sale->payments()
+                ->where('status', 'paid')
+                ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
+                ->sum('amount');
+            $dueAmount = $sale->grand_total - $totalPaid;
+
+            // Generate PDF
+            $pdf = Pdf::loadView('sales.invoice-pdf', [
+                'sale' => $sale,
+                'amountInWords' => $this->numberToWords($sale->grand_total)
+            ]);
+
+            // Create reminder subject and body
+            $subject = "Payment Reminder: Invoice #{$sale->invoice_no} - Due: ₹" . number_format($dueAmount, 2);
+            $body = "Dear {$sale->customer->name},\n\n"
+                  . "This is a friendly reminder that you have an outstanding invoice.\n\n"
+                  . "Invoice #: {$sale->invoice_no}\n"
+                  . "Date: {$sale->sale_date->format('d M Y')}\n"
+                  . "Total Amount: ₹" . number_format($sale->grand_total, 2) . "\n"
+                  . "Due Amount: ₹" . number_format($dueAmount, 2) . "\n\n"
+                  . "Please make the payment at your earliest convenience.\n\n"
+                  . "Thank you for your business!";
+
+            // Send email
+            Mail::raw($body, function ($message) use ($request, $pdf, $subject, $sale) {
+                $message->to($request->recipient_email)
+                        ->subject($subject)
+                        ->attachData($pdf->output(), "Invoice_{$sale->invoice_no}.pdf", [
+                            'mime' => 'application/pdf',
+                        ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => "Reminder sent for Invoice #{$sale->invoice_no}"
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Due reminder failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send reminder: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /* =========================================================
+       BULK SEND DUE REMINDERS (For Multiple Invoices)
+    ========================================================= */
+    public function bulkSendDueReminders(Request $request)
+    {
+        try {
+            $request->validate([
+                'customer_id' => 'required|exists:customers,id',
+                'invoice_ids' => 'required|array|min:1',
+                'invoice_ids.*' => 'exists:sales,id',
+                'recipient_email' => 'required|email'
+            ]);
+
+            $customer = Customer::find($request->customer_id);
+            $invoiceIds = $request->invoice_ids;
+            
+            $results = [
+                'total' => count($invoiceIds),
+                'success' => 0,
+                'failed' => 0,
+                'total_due' => 0
+            ];
+
+            $invoiceList = [];
+
+            foreach ($invoiceIds as $saleId) {
+                try {
+                    $sale = Sale::with('customer')->find($saleId);
+                    
+                    if (!$sale) {
+                        $results['failed']++;
+                        continue;
+                    }
+
+                    // Calculate due
+                    $totalPaid = $sale->payments()
+                        ->where('status', 'paid')
+                        ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
+                        ->sum('amount');
+                    $dueAmount = $sale->grand_total - $totalPaid;
+                    
+                    $results['total_due'] += $dueAmount;
+                    
+                    $invoiceList[] = [
+                        'no' => $sale->invoice_no,
+                        'date' => $sale->sale_date->format('d M Y'),
+                        'total' => $sale->grand_total,
+                        'due' => $dueAmount
+                    ];
+                    
+                    // Generate and attach PDF for this invoice
+                    $pdf = Pdf::loadView('sales.invoice-pdf', [
+                        'sale' => $sale,
+                        'amountInWords' => $this->numberToWords($sale->grand_total)
+                    ]);
+
+                    // Create reminder email
+                    $subject = "Payment Reminder: Invoice #{$sale->invoice_no} - Due: ₹" . number_format($dueAmount, 2);
+                    $body = "Dear {$customer->name},\n\n"
+                          . "This is a friendly reminder that you have an outstanding invoice.\n\n"
+                          . "Invoice #: {$sale->invoice_no}\n"
+                          . "Date: {$sale->sale_date->format('d M Y')}\n"
+                          . "Total Amount: ₹" . number_format($sale->grand_total, 2) . "\n"
+                          . "Due Amount: ₹" . number_format($dueAmount, 2) . "\n\n"
+                          . "Please make the payment at your earliest convenience.\n\n"
+                          . "Thank you for your business!";
+
+                    // Send email
+                    Mail::raw($body, function ($message) use ($request, $pdf, $subject, $sale) {
+                        $message->to($request->recipient_email)
+                                ->subject($subject)
+                                ->attachData($pdf->output(), "Invoice_{$sale->invoice_no}.pdf", [
+                                    'mime' => 'application/pdf',
+                                ]);
+                    });
+
+                    $results['success']++;
+
+                } catch (\Exception $e) {
+                    $results['failed']++;
+                    Log::error("Bulk due reminder failed for sale ID {$saleId}: " . $e->getMessage());
+                }
+            }
+
+            $message = "Reminders sent: {$results['success']} successful, {$results['failed']} failed";
+            
+            return response()->json([
+                'success' => $results['success'] > 0,
+                'message' => $message,
+                'results' => $results,
+                'invoice_list' => $invoiceList
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk due reminders failed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send reminders: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Convert number to words
+     */
+    private function numberToWords($num)
+    {
+        $ones = [
+            0 => 'Zero', 1 => 'One', 2 => 'Two', 3 => 'Three', 4 => 'Four', 5 => 'Five',
+            6 => 'Six', 7 => 'Seven', 8 => 'Eight', 9 => 'Nine', 10 => 'Ten',
+            11 => 'Eleven', 12 => 'Twelve', 13 => 'Thirteen', 14 => 'Fourteen',
+            15 => 'Fifteen', 16 => 'Sixteen', 17 => 'Seventeen', 18 => 'Eighteen',
+            19 => 'Nineteen', 20 => 'Twenty', 30 => 'Thirty', 40 => 'Forty', 50 => 'Fifty',
+            60 => 'Sixty', 70 => 'Seventy', 80 => 'Eighty', 90 => 'Ninety'
+        ];
+        
+        $num = (int)$num; // Convert to integer for words
+        
+        if ($num < 20) return $ones[$num];
+        if ($num < 100) return $ones[floor($num/10)*10] . ($num%10 > 0 ? ' ' . $ones[$num%10] : '');
+        if ($num < 1000) return $ones[floor($num/100)] . ' Hundred' . ($num%100 > 0 ? ' ' . $this->numberToWords($num%100) : '');
+        if ($num < 100000) return $this->numberToWords(floor($num/1000)) . ' Thousand' . ($num%1000 > 0 ? ' ' . $this->numberToWords($num%1000) : '');
+        if ($num < 10000000) return $this->numberToWords(floor($num/100000)) . ' Lakh' . ($num%100000 > 0 ? ' ' . $this->numberToWords($num%100000) : '');
+        return $this->numberToWords(floor($num/10000000)) . ' Crore' . ($num%10000000 > 0 ? ' ' . $this->numberToWords($num%10000000) : '');
+    }
 
     /* =========================================================
        DATATABLE FOR AJAX
@@ -484,283 +842,283 @@ class SalesController extends Controller
     /* =========================================================
        DELETE INVOICE WITH ALL PAYMENTS - FIXED VERSION
     ========================================================= */
+    public function deleteWithPayments($saleId)
+    {
+        DB::beginTransaction();
 
-public function deleteWithPayments($saleId)
-{
-    DB::beginTransaction();
+        try {
+            $sale = Sale::with(['items', 'payments', 'customer'])->lockForUpdate()->findOrFail($saleId);
+            $customer = $sale->customer;
 
-    try {
-        $sale = Sale::with(['items', 'payments', 'customer'])->lockForUpdate()->findOrFail($saleId);
-        $customer = $sale->customer;
-
-        if (!$customer) {
-            throw new \Exception('Customer not found for this sale');
-        }
-
-        Log::info("========== 🗑️ DELETE WITH PAYMENTS STARTED ==========");
-        Log::info("Deleting invoice #{$sale->invoice_no} (ID: {$saleId})");
-        Log::info("Customer: {$customer->name} (ID: {$customer->id})");
-
-        // ========== STEP 1: GET CURRENT BALANCES ==========
-        $currentWalletBalance = $this->getCurrentWalletBalance($customer->id);
-        $currentOpenBalance = $customer->open_balance;
-
-        Log::info("Current balances:");
-        Log::info("  • Wallet balance: ₹{$currentWalletBalance}");
-        Log::info("  • Open balance: ₹{$currentOpenBalance}");
-
-        // Trackers
-        $walletAdjustment = 0;
-        $openBalanceAdjustment = 0;
-        $affectedInvoiceIds = [];
-        $processedWallets = [];
-        $totalCashToWallet = 0;
-
-        // ========== STEP 2: FIND AFFECTED INVOICES (jo advance use karte hain) ==========
-        Log::info("🔍 STEP 2: Finding affected invoices...");
-
-        foreach ($sale->payments as $payment) {
-            // Case: Is invoice ne kisi aur ka advance use kiya hai
-            if ($payment->remarks === 'ADVANCE_USED' && $payment->source_wallet_id) {
-                $otherUsers = Payment::where('source_wallet_id', $payment->source_wallet_id)
-                    ->where('sale_id', '!=', $saleId)
-                    ->where('remarks', 'ADVANCE_USED')
-                    ->pluck('sale_id')
-                    ->toArray();
-
-                $affectedInvoiceIds = array_merge($affectedInvoiceIds, $otherUsers);
-                Log::info("  • Source wallet ID {$payment->source_wallet_id} used in invoices: " . json_encode($otherUsers));
+            if (!$customer) {
+                throw new \Exception('Customer not found for this sale');
             }
 
-            // Case: Is invoice ne excess diya jo doosron ne use kiya
-            if (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD']) && $payment->wallet_id) {
-                $users = Payment::where('source_wallet_id', $payment->wallet_id)
-                    ->where('remarks', 'ADVANCE_USED')
-                    ->pluck('sale_id')
-                    ->toArray();
+            Log::info("========== 🗑️ DELETE WITH PAYMENTS STARTED ==========");
+            Log::info("Deleting invoice #{$sale->invoice_no} (ID: {$saleId})");
+            Log::info("Customer: {$customer->name} (ID: {$customer->id})");
 
-                $affectedInvoiceIds = array_merge($affectedInvoiceIds, $users);
-                Log::info("  • Credit wallet ID {$payment->wallet_id} used in invoices: " . json_encode($users));
+            // ========== STEP 1: GET CURRENT BALANCES ==========
+            $currentWalletBalance = $this->getCurrentWalletBalance($customer->id);
+            $currentOpenBalance = $customer->open_balance;
+
+            Log::info("Current balances:");
+            Log::info("  • Wallet balance: ₹{$currentWalletBalance}");
+            Log::info("  • Open balance: ₹{$currentOpenBalance}");
+
+            // Trackers
+            $walletAdjustment = 0;
+            $openBalanceAdjustment = 0;
+            $affectedInvoiceIds = [];
+            $processedWallets = [];
+            $totalCashToWallet = 0;
+
+            // ========== STEP 2: FIND AFFECTED INVOICES (jo advance use karte hain) ==========
+            Log::info("🔍 STEP 2: Finding affected invoices...");
+
+            foreach ($sale->payments as $payment) {
+                // Case: Is invoice ne kisi aur ka advance use kiya hai
+                if ($payment->remarks === 'ADVANCE_USED' && $payment->source_wallet_id) {
+                    $otherUsers = Payment::where('source_wallet_id', $payment->source_wallet_id)
+                        ->where('sale_id', '!=', $saleId)
+                        ->where('remarks', 'ADVANCE_USED')
+                        ->pluck('sale_id')
+                        ->toArray();
+
+                    $affectedInvoiceIds = array_merge($affectedInvoiceIds, $otherUsers);
+                    Log::info("  • Source wallet ID {$payment->source_wallet_id} used in invoices: " . json_encode($otherUsers));
+                }
+
+                // Case: Is invoice ne excess diya jo doosron ne use kiya
+                if (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD']) && $payment->wallet_id) {
+                    $users = Payment::where('source_wallet_id', $payment->wallet_id)
+                        ->where('remarks', 'ADVANCE_USED')
+                        ->pluck('sale_id')
+                        ->toArray();
+
+                    $affectedInvoiceIds = array_merge($affectedInvoiceIds, $users);
+                    Log::info("  • Credit wallet ID {$payment->wallet_id} used in invoices: " . json_encode($users));
+                }
             }
-        }
 
-        $affectedInvoiceIds = array_unique($affectedInvoiceIds);
-        Log::info("Total affected invoices: " . count($affectedInvoiceIds));
+            $affectedInvoiceIds = array_unique($affectedInvoiceIds);
+            Log::info("Total affected invoices: " . count($affectedInvoiceIds));
 
-        // ========== STEP 3: COLLECT CASH FROM AFFECTED INVOICES ==========
-        Log::info("🔍 STEP 3: Collecting cash from affected invoices...");
+            // ========== STEP 3: COLLECT CASH FROM AFFECTED INVOICES ==========
+            Log::info("🔍 STEP 3: Collecting cash from affected invoices...");
 
-        foreach ($affectedInvoiceIds as $invId) {
-            $inv = Sale::with('payments')->find($invId);
-            if ($inv) {
-                foreach ($inv->payments as $payment) {
-                    if (in_array($payment->remarks, ['INVOICE', 'EMI_DOWN'])) {
-                        $totalCashToWallet += $payment->amount;
-                        Log::info("  • Invoice #{$inv->invoice_no}: Cash ₹{$payment->amount}");
+            foreach ($affectedInvoiceIds as $invId) {
+                $inv = Sale::with('payments')->find($invId);
+                if ($inv) {
+                    foreach ($inv->payments as $payment) {
+                        if (in_array($payment->remarks, ['INVOICE', 'EMI_DOWN'])) {
+                            $totalCashToWallet += $payment->amount;
+                            Log::info("  • Invoice #{$inv->invoice_no}: Cash ₹{$payment->amount}");
+                        }
                     }
                 }
             }
-        }
 
-        Log::info("Total cash to add to wallet: ₹{$totalCashToWallet}");
+            Log::info("Total cash to add to wallet: ₹{$totalCashToWallet}");
 
-        // ========== STEP 4: PROCESS MAIN INVOICE KE PAYMENTS ==========
-        Log::info("🔍 STEP 4: Processing main invoice payments...");
+            // ========== STEP 4: PROCESS MAIN INVOICE KE PAYMENTS ==========
+            Log::info("🔍 STEP 4: Processing main invoice payments...");
 
-        foreach ($sale->payments as $payment) {
-            Log::info("-----------------------------------");
-            Log::info("Processing payment ID: {$payment->id}");
-            Log::info("  • Remarks: {$payment->remarks}");
-            Log::info("  • Amount: ₹{$payment->amount}");
+            foreach ($sale->payments as $payment) {
+                Log::info("-----------------------------------");
+                Log::info("Processing payment ID: {$payment->id}");
+                Log::info("  • Remarks: {$payment->remarks}");
+                Log::info("  • Amount: ₹{$payment->amount}");
 
-            // CASE 1: CASH/INVOICE PAYMENT
-            if (in_array($payment->remarks, ['INVOICE', 'EMI_DOWN'])) {
-                $openBalanceAdjustment += $payment->amount;
-                Log::info("  → Type: CASH PAYMENT");
-                Log::info("  → Effect: +₹{$payment->amount} to open balance");
-            }
-
-            // CASE 2: WALLET ADD/EXCESS (Credit) - Ye doosron ne use kiya hoga
-            elseif (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD'])) {
-                if ($payment->wallet_id && !in_array($payment->wallet_id, $processedWallets)) {
-                    // Ye credit delete ho raha hai - wallet balance GHATEGA
-                    $walletAdjustment -= $payment->amount;
-                    $processedWallets[] = $payment->wallet_id;
-
-                    Log::info("  → Type: WALLET CREDIT");
-                    Log::info("  → Effect: -₹{$payment->amount} to wallet balance");
-
-                    CustomerWallet::where('id', $payment->wallet_id)->delete();
-                    Log::info("  ✅ Deleted wallet credit ID: {$payment->wallet_id}");
-                }
-            }
-
-            // CASE 3: WALLET USED (Debit) - Isne kisi aur ka advance use kiya
-            elseif ($payment->remarks === 'ADVANCE_USED') {
-                if ($payment->wallet_id && !in_array($payment->wallet_id, $processedWallets)) {
-                    // Ye debit delete ho raha hai - wallet balance BADHEGA
-                    $walletAdjustment += $payment->amount;
-                    $processedWallets[] = $payment->wallet_id;
-
-                    Log::info("  → Type: WALLET DEBIT");
-                    Log::info("  → Effect: +₹{$payment->amount} to wallet balance");
-
-                    CustomerWallet::where('id', $payment->wallet_id)->delete();
-                    Log::info("  ✅ Deleted wallet debit ID: {$payment->wallet_id}");
+                // CASE 1: CASH/INVOICE PAYMENT
+                if (in_array($payment->remarks, ['INVOICE', 'EMI_DOWN'])) {
+                    $openBalanceAdjustment += $payment->amount;
+                    Log::info("  → Type: CASH PAYMENT");
+                    Log::info("  → Effect: +₹{$payment->amount} to open balance");
                 }
 
-                $openBalanceAdjustment += $payment->amount;
-                Log::info("  → Also: +₹{$payment->amount} to open balance");
-            }
+                // CASE 2: WALLET ADD/EXCESS (Credit) - Ye doosron ne use kiya hoga
+                elseif (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD'])) {
+                    if ($payment->wallet_id && !in_array($payment->wallet_id, $processedWallets)) {
+                        // Ye credit delete ho raha hai - wallet balance GHATEGA
+                        $walletAdjustment -= $payment->amount;
+                        $processedWallets[] = $payment->wallet_id;
 
-            $payment->delete();
-            Log::info("  ✅ Deleted payment record");
-        }
+                        Log::info("  → Type: WALLET CREDIT");
+                        Log::info("  → Effect: -₹{$payment->amount} to wallet balance");
 
-        // ========== STEP 5: PROCESS AFFECTED INVOICES (UNHE DUE KARO) ==========
-        if (!empty($affectedInvoiceIds)) {
-            Log::info("🔍 STEP 5: Processing affected invoices...");
+                        CustomerWallet::where('id', $payment->wallet_id)->delete();
+                        Log::info("  ✅ Deleted wallet credit ID: {$payment->wallet_id}");
+                    }
+                }
 
-            foreach ($affectedInvoiceIds as $affectedId) {
-                $affectedSale = Sale::with('payments')->find($affectedId);
-                if ($affectedSale) {
-                    Log::info("-----------------------------------");
-                    Log::info("Processing affected invoice #{$affectedSale->invoice_no}");
+                // CASE 3: WALLET USED (Debit) - Isne kisi aur ka advance use kiya
+                elseif ($payment->remarks === 'ADVANCE_USED') {
+                    if ($payment->wallet_id && !in_array($payment->wallet_id, $processedWallets)) {
+                        // Ye debit delete ho raha hai - wallet balance BADHEGA
+                        $walletAdjustment += $payment->amount;
+                        $processedWallets[] = $payment->wallet_id;
 
-                    // Affected invoice ke saare payments delete karo
-                    foreach ($affectedSale->payments as $payment) {
-                        Log::info("  Deleting payment ID: {$payment->id} (₹{$payment->amount})");
+                        Log::info("  → Type: WALLET DEBIT");
+                        Log::info("  → Effect: +₹{$payment->amount} to wallet balance");
 
-                        // Agar wallet payment hai to wallet adjustment karo
-                        if ($payment->remarks === 'ADVANCE_USED' && $payment->wallet_id) {
-                            if (!in_array($payment->wallet_id, $processedWallets)) {
-                                // Debit delete - wallet balance BADHEGA
-                                $walletAdjustment += $payment->amount;
-                                $processedWallets[] = $payment->wallet_id;
-                                CustomerWallet::where('id', $payment->wallet_id)->delete();
-                                Log::info("    → Wallet debit deleted: +₹{$payment->amount}");
-                            }
-                        }
-
-                        // EXCESS_TO_ADVANCE payments - ye affected invoice ki apni excess hai
-                        if (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD']) && $payment->wallet_id) {
-                            if (!in_array($payment->wallet_id, $processedWallets)) {
-                                // Credit delete - wallet balance GHATEGA
-                                $walletAdjustment -= $payment->amount;
-                                $processedWallets[] = $payment->wallet_id;
-                                CustomerWallet::where('id', $payment->wallet_id)->delete();
-                                Log::info("    → Wallet credit deleted: -₹{$payment->amount}");
-                            }
-                        }
-
-                        // Note: Cash payments already counted in STEP 3
-                        $payment->delete();
+                        CustomerWallet::where('id', $payment->wallet_id)->delete();
+                        Log::info("  ✅ Deleted wallet debit ID: {$payment->wallet_id}");
                     }
 
-                    // Affected invoice ko DUE karo
-                    $affectedSale->payment_status = 'unpaid';
-                    $affectedSale->paid_amount = 0;
-                    $affectedSale->save();
+                    $openBalanceAdjustment += $payment->amount;
+                    Log::info("  → Also: +₹{$payment->amount} to open balance");
+                }
 
-                    Log::info("  ✅ Invoice #{$affectedSale->invoice_no} marked as DUE");
+                $payment->delete();
+                Log::info("  ✅ Deleted payment record");
+            }
 
-                    // Open balance adjustment for affected invoice
-                    $openBalanceAdjustment += $affectedSale->grand_total;
-                    Log::info("  → Added ₹{$affectedSale->grand_total} to open balance");
+            // ========== STEP 5: PROCESS AFFECTED INVOICES (UNHE DUE KARO) ==========
+            if (!empty($affectedInvoiceIds)) {
+                Log::info("🔍 STEP 5: Processing affected invoices...");
+
+                foreach ($affectedInvoiceIds as $affectedId) {
+                    $affectedSale = Sale::with('payments')->find($affectedId);
+                    if ($affectedSale) {
+                        Log::info("-----------------------------------");
+                        Log::info("Processing affected invoice #{$affectedSale->invoice_no}");
+
+                        // Affected invoice ke saare payments delete karo
+                        foreach ($affectedSale->payments as $payment) {
+                            Log::info("  Deleting payment ID: {$payment->id} (₹{$payment->amount})");
+
+                            // Agar wallet payment hai to wallet adjustment karo
+                            if ($payment->remarks === 'ADVANCE_USED' && $payment->wallet_id) {
+                                if (!in_array($payment->wallet_id, $processedWallets)) {
+                                    // Debit delete - wallet balance BADHEGA
+                                    $walletAdjustment += $payment->amount;
+                                    $processedWallets[] = $payment->wallet_id;
+                                    CustomerWallet::where('id', $payment->wallet_id)->delete();
+                                    Log::info("    → Wallet debit deleted: +₹{$payment->amount}");
+                                }
+                            }
+
+                            // EXCESS_TO_ADVANCE payments - ye affected invoice ki apni excess hai
+                            if (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD']) && $payment->wallet_id) {
+                                if (!in_array($payment->wallet_id, $processedWallets)) {
+                                    // Credit delete - wallet balance GHATEGA
+                                    $walletAdjustment -= $payment->amount;
+                                    $processedWallets[] = $payment->wallet_id;
+                                    CustomerWallet::where('id', $payment->wallet_id)->delete();
+                                    Log::info("    → Wallet credit deleted: -₹{$payment->amount}");
+                                }
+                            }
+
+                            // Note: Cash payments already counted in STEP 3
+                            $payment->delete();
+                        }
+
+                        // Affected invoice ko DUE karo
+                        $affectedSale->payment_status = 'unpaid';
+                        $affectedSale->paid_amount = 0;
+                        $affectedSale->save();
+
+                        Log::info("  ✅ Invoice #{$affectedSale->invoice_no} marked as DUE");
+
+                        // Open balance adjustment for affected invoice
+                        $openBalanceAdjustment += $affectedSale->grand_total;
+                        Log::info("  → Added ₹{$affectedSale->grand_total} to open balance");
+                    }
                 }
             }
-        }
 
-        // ========== STEP 6: ADD CASH TO WALLET ==========
-        if ($totalCashToWallet > 0) {
-            Log::info("🔍 STEP 6: Adding ₹{$totalCashToWallet} cash to wallet...");
+            // ========== STEP 6: ADD CASH TO WALLET ==========
+            if ($totalCashToWallet > 0) {
+                Log::info("🔍 STEP 6: Adding ₹{$totalCashToWallet} cash to wallet...");
 
-            $currentBalance = $this->getCurrentWalletBalance($customer->id);
-            $newBalance = $currentBalance + $totalCashToWallet;
+                $currentBalance = $this->getCurrentWalletBalance($customer->id);
+                $newBalance = $currentBalance + $totalCashToWallet;
 
-            $wallet = CustomerWallet::create([
-                'customer_id' => $customer->id,
-                'type' => 'credit',
-                'amount' => $totalCashToWallet,
-                'balance' => $newBalance,
-                'reference' => 'Cash recovered from affected invoices'
+                $wallet = CustomerWallet::create([
+                    'customer_id' => $customer->id,
+                    'type' => 'credit',
+                    'amount' => $totalCashToWallet,
+                    'balance' => $newBalance,
+                    'reference' => 'Cash recovered from affected invoices'
+                ]);
+
+                // Reset wallet adjustment since we're creating new credit
+                $walletAdjustment = $totalCashToWallet;
+
+                Log::info("  ✅ Created wallet credit ID: {$wallet->id} for ₹{$totalCashToWallet}");
+            }
+
+            // ========== STEP 7: RESTORE STOCK ==========
+            Log::info("🔍 STEP 7: Restoring stock...");
+
+            foreach ($sale->items as $item) {
+                if ($item->product) {
+                    $item->product->increment('quantity', $item->quantity);
+                    Log::info("  ✅ Restored {$item->quantity} units");
+                }
+                $item->delete();
+            }
+
+            // ========== STEP 8: DELETE EMI PLAN ==========
+            if ($sale->emiPlan) {
+                $sale->emiPlan->delete();
+                Log::info("  ✅ EMI plan deleted");
+            }
+
+            // ========== STEP 9: DELETE MAIN SALE ==========
+            $sale->delete();
+            Log::info("  ✅ Main sale deleted");
+
+            // ========== STEP 10: CALCULATE FINAL BALANCES ==========
+            $newWalletBalance = $currentWalletBalance + $walletAdjustment;
+            $newOpenBalance = $currentOpenBalance + $openBalanceAdjustment;
+
+            $newWalletBalance = max(0, $newWalletBalance);
+            $newOpenBalance = max(0, $newOpenBalance);
+
+            // ========== STEP 11: UPDATE CUSTOMER ==========
+            $customer->wallet_balance = $newWalletBalance;
+            $customer->open_balance = $newOpenBalance;
+            $customer->save();
+
+            Log::info("Final balances:");
+            Log::info("  • Wallet: ₹{$newWalletBalance}");
+            Log::info("  • Open: ₹{$newOpenBalance}");
+
+            DB::commit();
+
+            $message = "✅ Invoice #{$sale->invoice_no} deleted successfully!\n";
+            if (!empty($affectedInvoiceIds)) {
+                $message .= "📄 " . count($affectedInvoiceIds) . " affected invoice(s) marked as DUE\n";
+            }
+            $message .= "💰 Cash added to wallet: ₹" . number_format($totalCashToWallet, 2) . "\n";
+            $message .= "💼 New wallet balance: ₹" . number_format($newWalletBalance, 2) . "\n";
+            $message .= "📊 New open balance: ₹" . number_format($newOpenBalance, 2);
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'deleted_invoice' => $sale->invoice_no,
+                    'affected_invoices' => $affectedInvoiceIds,
+                    'affected_count' => count($affectedInvoiceIds),
+                    'cash_to_wallet' => $totalCashToWallet,
+                    'new_wallet_balance' => $newWalletBalance,
+                    'new_open_balance' => $newOpenBalance
+                ]
             ]);
 
-            // Reset wallet adjustment since we're creating new credit
-            $walletAdjustment = $totalCashToWallet;
-
-            Log::info("  ✅ Created wallet credit ID: {$wallet->id} for ₹{$totalCashToWallet}");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('❌ DELETE ERROR: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting invoice: ' . $e->getMessage()
+            ], 500);
         }
-
-        // ========== STEP 7: RESTORE STOCK ==========
-        Log::info("🔍 STEP 7: Restoring stock...");
-
-        foreach ($sale->items as $item) {
-            if ($item->product) {
-                $item->product->increment('quantity', $item->quantity);
-                Log::info("  ✅ Restored {$item->quantity} units");
-            }
-            $item->delete();
-        }
-
-        // ========== STEP 8: DELETE EMI PLAN ==========
-        if ($sale->emiPlan) {
-            $sale->emiPlan->delete();
-            Log::info("  ✅ EMI plan deleted");
-        }
-
-        // ========== STEP 9: DELETE MAIN SALE ==========
-        $sale->delete();
-        Log::info("  ✅ Main sale deleted");
-
-        // ========== STEP 10: CALCULATE FINAL BALANCES ==========
-        $newWalletBalance = $currentWalletBalance + $walletAdjustment;
-        $newOpenBalance = $currentOpenBalance + $openBalanceAdjustment;
-
-        $newWalletBalance = max(0, $newWalletBalance);
-        $newOpenBalance = max(0, $newOpenBalance);
-
-        // ========== STEP 11: UPDATE CUSTOMER ==========
-        $customer->wallet_balance = $newWalletBalance;
-        $customer->open_balance = $newOpenBalance;
-        $customer->save();
-
-        Log::info("Final balances:");
-        Log::info("  • Wallet: ₹{$newWalletBalance}");
-        Log::info("  • Open: ₹{$newOpenBalance}");
-
-        DB::commit();
-
-        $message = "✅ Invoice #{$sale->invoice_no} deleted successfully!\n";
-        if (!empty($affectedInvoiceIds)) {
-            $message .= "📄 " . count($affectedInvoiceIds) . " affected invoice(s) marked as DUE\n";
-        }
-        $message .= "💰 Cash added to wallet: ₹" . number_format($totalCashToWallet, 2) . "\n";
-        $message .= "💼 New wallet balance: ₹" . number_format($newWalletBalance, 2) . "\n";
-        $message .= "📊 New open balance: ₹" . number_format($newOpenBalance, 2);
-
-        return response()->json([
-            'success' => true,
-            'message' => $message,
-            'data' => [
-                'deleted_invoice' => $sale->invoice_no,
-                'affected_invoices' => $affectedInvoiceIds,
-                'affected_count' => count($affectedInvoiceIds),
-                'cash_to_wallet' => $totalCashToWallet,
-                'new_wallet_balance' => $newWalletBalance,
-                'new_open_balance' => $newOpenBalance
-            ]
-        ]);
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('❌ DELETE ERROR: ' . $e->getMessage());
-        return response()->json([
-            'success' => false,
-            'message' => 'Error deleting invoice: ' . $e->getMessage()
-        ], 500);
     }
-}
+
     /* =========================================================
        HELPER METHODS
     ========================================================= */

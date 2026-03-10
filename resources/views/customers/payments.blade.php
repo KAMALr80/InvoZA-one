@@ -12,6 +12,7 @@
             --danger: #dc2626;
             --warning: #d97706;
             --purple: #7c3aed;
+            --info: #0ea5e9;
             --text-main: #1e293b;
             --text-muted: #64748b;
             --border: #e2e8f0;
@@ -105,6 +106,93 @@
             color: #0f172a;
         }
 
+        /* ================= BULK ACTIONS BAR ================= */
+        .bulk-actions-bar {
+            background: var(--bg-white);
+            padding: 0.75rem 2rem;
+            border-bottom: 2px solid var(--primary);
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .bulk-actions-bar.show {
+            display: flex;
+        }
+
+        .bulk-select-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .bulk-select-info strong {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .bulk-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .bulk-btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bulk-btn-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .bulk-btn-info:hover:not(:disabled) {
+            background: #0284c7;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .bulk-btn-info:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .bulk-btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .bulk-btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .bulk-btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .bulk-btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
         /* ================= STATS GRID ================= */
         .stats-grid {
             display: grid;
@@ -170,42 +258,63 @@
             color: var(--primary);
         }
 
-        /* ================= OPEN BALANCE CARD ================= */
-        .open-balance-card {
+        .stat-value.info {
+            color: var(--info);
+        }
+
+        /* ================= DUE BALANCE CARD ================= */
+        .due-balance-card {
             background: var(--bg-white);
-            padding: 1rem 2rem;
+            padding: 1.5rem 2rem;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 2rem;
+            flex-wrap: wrap;
         }
 
-        .open-balance-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            font-size: 0.9rem;
+        .due-balance-label {
             font-weight: 600;
-            display: inline-flex;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .due-balance-amount {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--danger);
+        }
+
+        .due-balance-breakdown {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-left: auto;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .breakdown-item {
+            display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .open-balance-badge.due {
-            background: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #fecaca;
+        .breakdown-label {
+            color: var(--text-muted);
         }
 
-        .open-balance-badge.advance {
-            background: #dcfce7;
-            color: #059669;
-            border: 1px solid #86efac;
+        .breakdown-value {
+            font-weight: 600;
+            color: var(--text-main);
         }
 
-        .open-balance-badge.zero {
-            background: #f1f5f9;
-            color: #475569;
-            border: 1px solid var(--border);
+        .breakdown-value.success {
+            color: var(--success);
+        }
+
+        .breakdown-value.danger {
+            color: var(--danger);
         }
 
         /* ================= TABLE CONTAINER ================= */
@@ -220,6 +329,9 @@
             font-weight: 600;
             margin-bottom: 1rem;
             color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         /* ================= BADGES ================= */
@@ -266,6 +378,22 @@
             background: #fee2e2;
             color: #991b1b;
             border: 1px solid #f87171;
+        }
+
+        /* ================= CHECKBOX STYLES ================= */
+        .invoice-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .select-all-row {
+            background: #f0f9ff !important;
+        }
+
+        .select-all-row td {
+            padding: 0.5rem 1rem;
         }
 
         /* ================= TABLES ================= */
@@ -317,6 +445,7 @@
             display: flex;
             gap: 0.25rem;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .btn-sm {
@@ -338,6 +467,12 @@
             background: #f1f5f9;
         }
 
+        .btn-sm.sending {
+            opacity: 0.7;
+            cursor: wait;
+            pointer-events: none;
+        }
+
         .btn-danger:hover {
             background: var(--danger);
             color: white;
@@ -354,6 +489,26 @@
             background: var(--warning);
             color: white;
             border-color: var(--warning);
+        }
+
+        .btn-info {
+            color: var(--info);
+            border-color: var(--info);
+        }
+
+        .btn-info:hover {
+            background: var(--info);
+            color: white;
+        }
+
+        .btn-success {
+            color: var(--success);
+            border-color: var(--success);
+        }
+
+        .btn-success:hover {
+            background: var(--success);
+            color: white;
         }
 
         /* ================= TEXT UTILITIES ================= */
@@ -389,6 +544,107 @@
             color: var(--warning);
         }
 
+        .text-info {
+            color: var(--info);
+        }
+
+        /* ================= TOAST ================= */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid;
+            display: none;
+            z-index: 10001;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast.info {
+            border-left-color: var(--info);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ================= LOADING OVERLAY ================= */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .progress-text {
+            font-size: 1rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--info));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         /* ================= EMPTY STATE ================= */
         .empty-state {
             text-align: center;
@@ -415,63 +671,6 @@
         .empty-text {
             color: var(--text-muted);
             margin-bottom: 1.5rem;
-        }
-
-        /* ================= LOADING OVERLAY ================= */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(4px);
-            z-index: 10000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #e2e8f0;
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        /* ================= TOAST ================= */
-        .toast {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 0.75rem 1.5rem;
-            background: white;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-lg);
-            border-left: 4px solid;
-            display: none;
-            z-index: 10001;
-            min-width: 300px;
-        }
-
-        .toast.success {
-            border-left-color: var(--success);
-        }
-
-        .toast.error {
-            border-left-color: var(--danger);
-        }
-
-        .toast.warning {
-            border-left-color: var(--warning);
         }
 
         /* ================= RESPONSIVE ================= */
@@ -504,7 +703,43 @@
             }
 
             .data-table {
-                min-width: 1000px;
+                min-width: 1200px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-sm {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .due-balance-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .due-balance-breakdown {
+                margin-left: 0;
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .bulk-actions-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .bulk-buttons {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .bulk-btn {
+                width: 100%;
+                justify-content: center;
             }
         }
 
@@ -512,7 +747,9 @@
 
             .btn-group,
             .loading-overlay,
-            .toast {
+            .toast,
+            .bulk-actions-bar,
+            .invoice-checkbox {
                 display: none !important;
             }
 
@@ -550,27 +787,31 @@
         $totalUsed = $walletTransactions->where('type', 'debit')->sum('amount');
         $currentBalance = $walletTransactions->first()?->balance ?? 0;
 
-        // Payment Calculations
-        $totalReceived = $allPayments->sum('amount');
+        // ========== SMART DUE CALCULATION ==========
+        // Total Invoice Amount
+        $totalInvoiceAmount = $invoices->sum('grand_total');
+        
+        // Total Paid Amount (Cash + Wallet Used)
+        $totalPaidAmount = $allPayments
+            ->where('status', 'paid')
+            ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
+            ->sum('amount');
+        
+        // Total Due Amount (Invoice Total - Paid Amount)
+        $totalDueAmount = max(0, $totalInvoiceAmount - $totalPaidAmount);
+        
+        // Payment Breakdown
         $invoicePaymentsTotal = $allPayments->whereIn('remarks', ['INVOICE', 'EMI_DOWN'])->sum('amount');
         $walletUsedTotal = $allPayments->where('remarks', 'ADVANCE_USED')->sum('amount');
         $walletAdditionsTotal = $allPayments
             ->whereIn('remarks', ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD'])
             ->sum('amount');
+        
         $appliedToInvoices = $invoicePaymentsTotal + $walletUsedTotal;
-        $totalInvoiceGrandTotal = $invoices->sum('grand_total');
-        $totalDueAmount = $totalInvoiceGrandTotal - $appliedToInvoices;
+        $totalReceived = $allPayments->sum('amount');
+        
+        // Net Position (Wallet Balance - Total Due)
         $netPosition = $currentBalance - $totalDueAmount;
-
-        // Open Balance Status
-        $openBalance = $customer->open_balance ?? 0;
-        $openBalanceStatus = $openBalance > 0 ? 'due' : ($openBalance < 0 ? 'advance' : 'zero');
-        $openBalanceDisplay =
-            $openBalance > 0
-                ? 'Due: ₹' . number_format($openBalance, 2)
-                : ($openBalance < 0
-                    ? 'Advance: ₹' . number_format(abs($openBalance), 2)
-                    : 'Clear (₹0)');
 
         // Invoice Summaries
         $invoiceSummaries = [];
@@ -581,6 +822,7 @@
         $totalReceivedAmount = 0;
         $totalAppliedToInvoice = 0;
         $totalDueAmt = 0;
+        $dueInvoicesCount = 0;
 
         foreach ($invoices as $inv) {
             $invoicePayments = $allPayments->where('sale_id', $inv->id);
@@ -598,6 +840,10 @@
             $status = $dueAmount <= 0 ? 'paid' : ($appliedToThisInvoice > 0 ? 'partial' : 'unpaid');
             if ($inv->payment_status === 'emi') {
                 $status = 'emi';
+            }
+
+            if ($dueAmount > 0) {
+                $dueInvoicesCount++;
             }
 
             $totalGrandAmount += $inv->grand_total;
@@ -622,6 +868,7 @@
                 'status' => $status,
                 'payment_count' => $invoicePayments->count(),
                 'has_emi' => $inv->payment_status === 'emi',
+                'customer_email' => $customer->email ?? ''
             ];
         }
 
@@ -634,6 +881,10 @@
             {{-- Loading Overlay --}}
             <div id="loadingOverlay" class="loading-overlay">
                 <div class="spinner"></div>
+                <div class="progress-text" id="loadingText">Processing...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
             </div>
 
             {{-- Header Card --}}
@@ -654,12 +905,41 @@
                 </div>
             </div>
 
-            {{-- Open Balance Card --}}
-            <div class="open-balance-card">
-                <span>📊 Open Balance:</span>
-                <span class="open-balance-badge {{ $openBalanceStatus }}">
-                    {{ $openBalanceDisplay }}
-                </span>
+            {{-- SMART DUE BALANCE CARD - Only Due, No Advance --}}
+            <div class="due-balance-card">
+                <span class="due-balance-label">💰 Total Outstanding:</span>
+                <span class="due-balance-amount">{{ formatCurrency($totalDueAmount) }}</span>
+                
+                <div class="due-balance-breakdown">
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">📄 Total Invoices:</span>
+                        <span class="breakdown-value">{{ formatCurrency($totalInvoiceAmount) }}</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">✅ Total Paid:</span>
+                        <span class="breakdown-value success">{{ formatCurrency($totalPaidAmount) }}</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">💰 Wallet Balance:</span>
+                        <span class="breakdown-value {{ $currentBalance > 0 ? 'success' : 'text-muted' }}">
+                            {{ formatCurrency($currentBalance) }}
+                        </span>
+                    </div>
+                    @if($netPosition != 0)
+                    <div class="breakdown-item">
+                        <span class="breakdown-label">⚖️ Net Position:</span>
+                        <span class="breakdown-value {{ $netPosition > 0 ? 'success' : ($netPosition < 0 ? 'danger' : '') }}">
+                            @if($netPosition > 0)
+                                +{{ formatCurrency($netPosition) }}
+                            @elseif($netPosition < 0)
+                                {{ formatCurrency($netPosition) }}
+                            @else
+                                {{ formatCurrency(0) }}
+                            @endif
+                        </span>
+                    </div>
+                    @endif
+                </div>
             </div>
 
             {{-- Stats Cards --}}
@@ -671,7 +951,7 @@
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">📊</div>
-                    <div class="stat-label">Total Due</div>
+                    <div class="stat-label">Total Invoice Due</div>
                     <div class="stat-value danger">{{ formatCurrency($totalDueAmount) }}</div>
                 </div>
                 <div class="stat-card">
@@ -723,14 +1003,49 @@
                 </div>
             </div>
 
+            {{-- BULK ACTIONS BAR --}}
+            <div id="bulkActionsBar" class="bulk-actions-bar">
+                <div class="bulk-select-info">
+                    <span>📋 <strong id="selectedCount">0</strong> invoices selected</span>
+                    <span>💰 Total Due: <strong id="selectedTotalDue">₹0.00</strong></span>
+                </div>
+                <div class="bulk-buttons">
+                    <button class="bulk-btn bulk-btn-info" onclick="sendBulkReminders()" id="bulkEmailBtn" disabled>
+                        <span>📧📧</span>
+                        Send Bulk Reminders
+                    </button>
+                    <button class="bulk-btn bulk-btn-secondary" onclick="clearAllSelections()">
+                        <span>✕</span>
+                        Clear All
+                    </button>
+                </div>
+            </div>
+
             {{-- Invoice Table --}}
             <div class="table-container">
                 <h3 class="section-title">📋 Invoice-wise Summary</h3>
 
                 @if (count($invoiceSummaries) > 0)
+                    {{-- Select All Row --}}
+                    <div class="select-all-row">
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="width: 40px; text-align: center;">
+                                    <input type="checkbox" id="selectAllCheckbox" class="invoice-checkbox" onchange="toggleSelectAll(this)">
+                                </td>
+                                <td colspan="10">
+                                    <label for="selectAllCheckbox" style="font-weight: 600; color: var(--primary); cursor: pointer;">
+                                        Select All Due Invoices ({{ $dueInvoicesCount }} invoices with due amount)
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
                     <table class="data-table" id="invoicesTable">
                         <thead>
                             <tr>
+                                <th style="width: 40px;">✓</th>
                                 <th>Date</th>
                                 <th>Invoice #</th>
                                 <th>Status</th>
@@ -746,7 +1061,19 @@
                         </thead>
                         <tbody>
                             @foreach ($invoiceSummaries as $inv)
-                                <tr>
+                                <tr data-id="{{ $inv['id'] }}" 
+                                    data-invoice="{{ $inv['invoice_no'] }}" 
+                                    data-due="{{ $inv['due'] }}"
+                                    data-email="{{ $inv['customer_email'] }}">
+                                    <td style="text-align: center;">
+                                        @if($inv['due'] > 0)
+                                            <input type="checkbox" class="invoice-checkbox row-checkbox" 
+                                                   data-id="{{ $inv['id'] }}"
+                                                   data-invoice="{{ $inv['invoice_no'] }}"
+                                                   data-due="{{ $inv['due'] }}"
+                                                   onchange="updateBulkSelection()">
+                                        @endif
+                                    </td>
                                     <td>{{ $inv['date'] }}</td>
                                     <td>
                                         <a href="{{ route('sales.show', $inv['id']) }}"
@@ -774,11 +1101,22 @@
                                         <div class="btn-group">
                                             <a href="{{ route('sales.show', $inv['id']) }}" class="btn-sm"
                                                 title="View">👁️</a>
+                                            
+                                            {{-- DIRECT EMAIL ICON - No Modal, No Form, Click = Instant Send --}}
+                                            @if($inv['due'] > 0 && $customer->email)
+                                                <button class="btn-sm btn-info email-btn" 
+                                                    onclick="sendSingleReminder({{ $inv['id'] }}, '{{ $inv['invoice_no'] }}', {{ $inv['due'] }}, this)"
+                                                    title="Send Payment Reminder - Instant">
+                                                    <span>📧</span>
+                                                </button>
+                                            @endif
+                                            
                                             @if ($inv['payment_count'] > 0)
                                                 <button class="btn-sm btn-danger"
                                                     onclick="bulkDeletePayments({{ $inv['id'] }}, '{{ $inv['invoice_no'] }}', {{ $inv['total_received'] }})"
                                                     title="Delete Payments">🗑️</button>
                                             @endif
+                                            
                                             <button class="btn-sm btn-warning"
                                                 onclick="deleteInvoiceWithPayments({{ $inv['id'] }}, '{{ $inv['invoice_no'] }}', {{ $inv['total_received'] }})"
                                                 title="Delete Invoice">❌</button>
@@ -789,6 +1127,7 @@
                         </tbody>
                         <tfoot>
                             <tr class="total-row">
+                                <td></td>
                                 <td colspan="3" class="text-right">Total:</td>
                                 <td class="text-right">{{ formatCurrency($totalGrandAmount) }}</td>
                                 <td class="text-right text-primary">{{ formatCurrency($totalCashPayments) }}</td>
@@ -833,7 +1172,6 @@
                         <tbody>
                             @foreach ($walletTransactions as $trans)
                                 @php
-                                    // Ensure balance is never negative in display
                                     $displayBalance = max(0, $trans->balance);
                                 @endphp
                                 <tr>
@@ -864,9 +1202,15 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <script>
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+        const customerName = "{{ $customer->name }}";
+        const customerEmail = "{{ $customer->email }}";
+        
+        // Selected invoices for bulk actions
+        let selectedInvoices = [];
 
         // Initialize DataTables
         $(document).ready(function() {
@@ -874,7 +1218,7 @@
                 $('#invoicesTable').DataTable({
                     pageLength: 25,
                     order: [
-                        [0, 'desc']
+                        [1, 'desc']
                     ],
                     language: {
                         search: "Search:",
@@ -884,7 +1228,10 @@
                             previous: "Previous",
                             next: "Next"
                         }
-                    }
+                    },
+                    columnDefs: [
+                        { orderable: false, targets: [0, 11] }
+                    ]
                 });
             }
 
@@ -917,15 +1264,244 @@
         }
 
         // Loading overlay
-        function showLoading() {
+        function showLoading(showProgress = false) {
             document.getElementById('loadingOverlay').style.display = 'flex';
+            if (!showProgress) {
+                document.querySelector('.progress-bar').style.display = 'none';
+            } else {
+                document.querySelector('.progress-bar').style.display = 'block';
+            }
         }
 
         function hideLoading() {
             document.getElementById('loadingOverlay').style.display = 'none';
         }
 
-        // Bulk delete payments
+        function updateProgress(percent, message) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            if (message) {
+                document.getElementById('loadingText').textContent = message;
+            }
+        }
+
+        // ========== SINGLE INSTANT REMINDER - NO MODAL, NO FORM ==========
+        function sendSingleReminder(invoiceId, invoiceNo, dueAmount, button) {
+            if (!customerEmail) {
+                showToast('❌ Customer email not available', 'error');
+                return;
+            }
+
+            // Prevent double-click
+            if (button.classList.contains('sending')) {
+                return;
+            }
+            
+            // Add sending state
+            button.classList.add('sending');
+            button.innerHTML = '<span>⏳</span>';
+            
+            const formattedDue = '₹' + parseFloat(dueAmount).toFixed(2);
+            const subject = `Payment Reminder: Invoice #${invoiceNo} - Due: ${formattedDue}`;
+            const body = `Dear ${customerName},
+
+This is a friendly reminder that the following invoice has an outstanding balance:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Invoice #: ${invoiceNo}
+Due Amount: ${formattedDue}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Please make the payment at your earliest convenience.
+
+Thank you for your business!`;
+
+            // Send email instantly
+            fetch('{{ route("sales.send-invoice") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    sale_id: invoiceId,
+                    recipient_email: customerEmail,
+                    email_subject: subject,
+                    email_body: body
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                button.classList.remove('sending');
+                button.innerHTML = '<span>📧</span>';
+                
+                if (data.success) {
+                    showToast(`✅ Reminder sent for Invoice #${invoiceNo}`, 'success');
+                } else {
+                    showToast(`❌ Failed: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                button.classList.remove('sending');
+                button.innerHTML = '<span>📧</span>';
+                showToast('❌ Error sending email', 'error');
+                console.error('Error:', error);
+            });
+        }
+
+        // ========== BULK INSTANT REMINDERS - NO MODAL, NO FORM ==========
+        function sendBulkReminders() {
+            if (selectedInvoices.length === 0) {
+                showToast('Please select at least one invoice', 'warning');
+                return;
+            }
+            
+            if (!customerEmail) {
+                showToast('❌ Customer email not available', 'error');
+                return;
+            }
+            
+            // Disable bulk button
+            const bulkBtn = document.getElementById('bulkEmailBtn');
+            bulkBtn.disabled = true;
+            bulkBtn.innerHTML = '<span>⏳</span> Sending...';
+            
+            // Show progress
+            showLoading(true);
+            updateProgress(0, `Sending 0/${selectedInvoices.length} emails...`);
+            
+            let sentCount = 0;
+            let failedCount = 0;
+            let totalInvoices = selectedInvoices.length;
+            
+            // Send emails one by one
+            selectedInvoices.forEach((invoice, index) => {
+                const formattedDue = '₹' + invoice.due.toFixed(2);
+                const subject = `Payment Reminder: Invoice #${invoice.invoice} - Due: ${formattedDue}`;
+                const body = `Dear ${customerName},
+
+This is a friendly reminder that you have an outstanding invoice:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Invoice #: ${invoice.invoice}
+Due Amount: ${formattedDue}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Please make the payment at your earliest convenience.
+
+Thank you for your business!`;
+                
+                fetch('{{ route("sales.send-invoice") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        sale_id: invoice.id,
+                        recipient_email: customerEmail,
+                        email_subject: subject,
+                        email_body: body
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        sentCount++;
+                    } else {
+                        failedCount++;
+                    }
+                })
+                .catch(() => {
+                    failedCount++;
+                })
+                .finally(() => {
+                    // Update progress
+                    const progress = Math.round(((index + 1) / totalInvoices) * 100);
+                    updateProgress(progress, `Sending ${index + 1}/${totalInvoices} emails...`);
+                    
+                    // If this is the last invoice, show summary
+                    if (index === totalInvoices - 1) {
+                        setTimeout(() => {
+                            hideLoading();
+                            bulkBtn.disabled = false;
+                            bulkBtn.innerHTML = '<span>📧📧</span> Send Bulk Reminders';
+                            
+                            if (sentCount > 0) {
+                                showToast(`✅ ${sentCount} reminders sent! ${failedCount > 0 ? `(${failedCount} failed)` : ''}`, 
+                                         failedCount > 0 ? 'warning' : 'success');
+                            } else {
+                                showToast('❌ Failed to send emails', 'error');
+                            }
+                            
+                            // Clear selections
+                            clearAllSelections();
+                        }, 500);
+                    }
+                });
+            });
+        }
+
+        // ========== BULK SELECTION FUNCTIONS ==========
+        function updateBulkSelection() {
+            selectedInvoices = [];
+            let totalDue = 0;
+            
+            document.querySelectorAll('.row-checkbox:checked').forEach(checkbox => {
+                const id = checkbox.dataset.id;
+                const invoice = checkbox.dataset.invoice;
+                const due = parseFloat(checkbox.dataset.due);
+                
+                selectedInvoices.push({
+                    id: id,
+                    invoice: invoice,
+                    due: due
+                });
+                
+                totalDue += due;
+            });
+            
+            // Update UI
+            document.getElementById('selectedCount').textContent = selectedInvoices.length;
+            document.getElementById('selectedTotalDue').textContent = '₹' + totalDue.toFixed(2);
+            
+            // Show/hide bulk actions bar
+            const bulkBar = document.getElementById('bulkActionsBar');
+            const bulkBtn = document.getElementById('bulkEmailBtn');
+            
+            if (selectedInvoices.length > 0) {
+                bulkBar.classList.add('show');
+                bulkBtn.disabled = false;
+            } else {
+                bulkBar.classList.remove('show');
+                bulkBtn.disabled = true;
+            }
+            
+            // Update select all checkbox
+            const totalDueCheckboxes = document.querySelectorAll('.row-checkbox').length;
+            const checkedCheckboxes = document.querySelectorAll('.row-checkbox:checked').length;
+            const selectAll = document.getElementById('selectAllCheckbox');
+            
+            if (selectAll) {
+                selectAll.checked = totalDueCheckboxes > 0 && totalDueCheckboxes === checkedCheckboxes;
+                selectAll.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalDueCheckboxes;
+            }
+        }
+
+        function toggleSelectAll(checkbox) {
+            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = checkbox.checked);
+            updateBulkSelection();
+        }
+
+        function clearAllSelections() {
+            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('selectAllCheckbox').checked = false;
+            document.getElementById('selectAllCheckbox').indeterminate = false;
+            updateBulkSelection();
+        }
+
+        // ========== DELETE FUNCTIONS ==========
         function bulkDeletePayments(id, no, amount) {
             if (!confirm(`Delete all payments for #${no} (₹${amount})?`)) return;
             showLoading();
@@ -949,7 +1525,6 @@
                 });
         }
 
-        // Delete invoice with payments
         function deleteInvoiceWithPayments(id, no, amount) {
             if (!confirm(`Delete Invoice #${no} and all payments?`)) return;
             showLoading();

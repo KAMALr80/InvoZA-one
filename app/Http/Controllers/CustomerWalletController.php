@@ -20,11 +20,11 @@ class CustomerWalletController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'amount' => 'required|numeric|min:1|max:9999999.99',
-            'method' => 'required|in:cash,upi,card,net_banking',
-            'sale_id' => 'nullable|exists:sales,id',
-            'transaction_id' => 'nullable|string|max:255',
-            'remarks' => 'nullable|string|max:500'
+            'amount'      => 'required|numeric|min:1|max:9999999.99',
+            'method'      => 'nullable|in:cash,upi,card,net_banking,bank_transfer',
+            'sale_id'     => 'nullable|exists:sales,id',
+            'reference'   => 'nullable|string|max:255',
+            'remarks'     => 'nullable|string|max:500'
         ]);
 
         DB::beginTransaction();
@@ -39,22 +39,22 @@ class CustomerWalletController extends Controller
             // Create wallet entry (credit)
             $wallet = new CustomerWallet();
             $wallet->customer_id = $customer->id;
-            $wallet->type = 'credit';
-            $wallet->amount = $request->amount;
-            $wallet->balance = $newBalance;
-            $wallet->reference = $request->remarks ?? ($request->sale_id ? 'Added from invoice' : 'Wallet add');
+            $wallet->type        = 'credit';
+            $wallet->amount      = $request->amount;
+            $wallet->balance     = $newBalance;
+            $wallet->reference   = $request->remarks ?? ($request->sale_id ? 'Added from invoice' : 'Wallet add');
             $wallet->save();
 
             // Create payment record
             $payment = new Payment();
-            $payment->customer_id = $customer->id;
-            $payment->sale_id = $request->sale_id;
-            $payment->amount = $request->amount;
-            $payment->method = $request->method;
-            $payment->transaction_id = $request->transaction_id;
-            $payment->remarks = 'WALLET_ADD';
-            $payment->status = 'paid';
-            $payment->wallet_id = $wallet->id;
+            $payment->customer_id    = $customer->id;
+            $payment->sale_id        = $request->sale_id;
+            $payment->amount         = $request->amount;
+            $payment->method         = $request->method ?? 'cash';
+            $payment->transaction_id = $request->reference;
+            $payment->remarks        = 'WALLET_ADD';
+            $payment->status         = 'paid';
+            $payment->wallet_id      = $wallet->id;
             $payment->save();
 
             // Update customer's wallet_balance
@@ -68,22 +68,33 @@ class CustomerWalletController extends Controller
                 $this->recalculateInvoiceStatus($request->sale_id);
             }
 
-            $message = '💰 ₹' . number_format($request->amount, 2) . ' added to wallet successfully!<br>';
-            $message .= 'Current wallet balance: ₹' . number_format($newBalance, 2);
+            $plainMessage = '₹' . number_format($request->amount, 2) . ' added to wallet! New balance: ₹' . number_format($newBalance, 2);
+            $htmlMessage  = '💰 ₹' . number_format($request->amount, 2) . ' added to wallet successfully!<br>Current wallet balance: ₹' . number_format($newBalance, 2);
 
-            if ($request->sale_id) {
-                $sale = Sale::find($request->sale_id);
-                $message .= '<br>Added from Invoice #' . $sale->invoice_no;
+            // Return JSON for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success'     => true,
+                    'message'     => '✅ ' . $plainMessage,
+                    'new_balance' => $newBalance,
+                ]);
             }
 
-            return redirect()->back()->with('success', $message);
+            return redirect()->back()->with('success', $htmlMessage);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Wallet Add Error: ' . $e->getMessage(), [
                 'request' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace'   => $e->getTraceAsString()
             ]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ Error: ' . $e->getMessage()
+                ], 422);
+            }
 
             return redirect()->back()
                 ->with('error', 'Error adding to wallet: ' . $e->getMessage())
@@ -98,9 +109,9 @@ class CustomerWalletController extends Controller
     {
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'amount' => 'required|numeric|min:1|max:9999999.99',
-            'sale_id' => 'nullable|exists:sales,id',
-            'remarks' => 'nullable|string|max:500'
+            'amount'      => 'required|numeric|min:1|max:9999999.99',
+            'sale_id'     => 'nullable|exists:sales,id',
+            'remarks'     => 'nullable|string|max:500'
         ]);
 
         DB::beginTransaction();
@@ -113,7 +124,11 @@ class CustomerWalletController extends Controller
 
             // Check balance before processing
             if ($currentBalance < $request->amount) {
-                throw new \Exception('Insufficient wallet balance! Available: ₹' . number_format($currentBalance, 2));
+                $msg = 'Insufficient wallet balance! Available: ₹' . number_format($currentBalance, 2);
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'message' => '❌ ' . $msg], 422);
+                }
+                throw new \Exception($msg);
             }
 
             $newBalance = $currentBalance - $request->amount;
@@ -124,21 +139,21 @@ class CustomerWalletController extends Controller
             // Create wallet entry (debit)
             $wallet = new CustomerWallet();
             $wallet->customer_id = $customer->id;
-            $wallet->type = 'debit';
-            $wallet->amount = $request->amount;
-            $wallet->balance = $newBalance;
-            $wallet->reference = $request->remarks ?? ($request->sale_id ? 'Used for invoice' : 'Wallet withdrawal');
+            $wallet->type        = 'debit';
+            $wallet->amount      = $request->amount;
+            $wallet->balance     = $newBalance;
+            $wallet->reference   = $request->remarks ?? ($request->sale_id ? 'Used for invoice' : 'Wallet withdrawal');
             $wallet->save();
 
             // Create payment record
             $payment = new Payment();
-            $payment->customer_id = $customer->id;
-            $payment->sale_id = $request->sale_id;
-            $payment->amount = $request->amount;
-            $payment->method = 'wallet';
-            $payment->remarks = 'ADVANCE_USED';
-            $payment->status = 'paid';
-            $payment->wallet_id = $wallet->id;
+            $payment->customer_id     = $customer->id;
+            $payment->sale_id         = $request->sale_id;
+            $payment->amount          = $request->amount;
+            $payment->method          = 'wallet';
+            $payment->remarks         = 'ADVANCE_USED';
+            $payment->status          = 'paid';
+            $payment->wallet_id       = $wallet->id;
             $payment->source_wallet_id = $sourceWalletId;
             $payment->save();
 
@@ -153,22 +168,33 @@ class CustomerWalletController extends Controller
                 $this->recalculateInvoiceStatus($request->sale_id);
             }
 
-            $message = '💰 ₹' . number_format($request->amount, 2) . ' used from wallet successfully!<br>';
-            $message .= 'Remaining wallet balance: ₹' . number_format($newBalance, 2);
+            $plainMessage = '₹' . number_format($request->amount, 2) . ' deducted from wallet! Remaining: ₹' . number_format($newBalance, 2);
+            $htmlMessage  = '💰 ₹' . number_format($request->amount, 2) . ' used from wallet successfully!<br>Remaining wallet balance: ₹' . number_format($newBalance, 2);
 
-            if ($request->sale_id) {
-                $sale = Sale::find($request->sale_id);
-                $message .= '<br>Applied to Invoice #' . $sale->invoice_no;
+            // Return JSON for AJAX requests
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success'     => true,
+                    'message'     => '✅ ' . $plainMessage,
+                    'new_balance' => $newBalance,
+                ]);
             }
 
-            return redirect()->back()->with('success', $message);
+            return redirect()->back()->with('success', $htmlMessage);
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Wallet Use Error: ' . $e->getMessage(), [
                 'request' => $request->all(),
-                'trace' => $e->getTraceAsString()
+                'trace'   => $e->getTraceAsString()
             ]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '❌ Error: ' . $e->getMessage()
+                ], 422);
+            }
 
             return redirect()->back()
                 ->with('error', 'Error using wallet: ' . $e->getMessage())

@@ -41,7 +41,13 @@
             <div class="stat-icon">💰</div>
             <div class="stat-content">
                 <div class="stat-label">Today's Sales</div>
-                <div class="stat-value" id="todaySalesValue">₹ {{ number_format($todaySales ?? 0, 2) }}</div>
+                <div class="stat-value" id="todaySalesValue">
+                    @if(($todaySales ?? 0) > 0)
+                        ₹ {{ number_format($todaySales, 2) }}
+                    @else
+                        <span class="no-sale">🚫 No sales today</span>
+                    @endif
+                </div>
                 <div class="stat-desc">Revenue generated today</div>
             </div>
         </div>
@@ -122,12 +128,12 @@
         <div class="chart-container">
             <div class="chart-header">
                 <div>
-                    <h3 class="chart-title" id="aiChartTitle">🤖 AI Sales Forecast (15 Days)</h3>
+                    <h3 class="chart-title" id="aiChartTitle">🤖 Chronos-2 AI Forecast</h3>
                     <p class="chart-subtitle">Last 15 days actual + Next 15 days AI prediction</p>
                 </div>
                 <div class="api-status" id="apiStatus">
                     <span class="status-indicator loading"></span>
-                    <span id="statusText">Connecting to AI...</span>
+                    <span id="statusText">Connecting to Chronos-2 AI...</span>
                 </div>
             </div>
             <div class="chart-canvas-container" style="position: relative;">
@@ -339,13 +345,13 @@
             });
         }
 
-        // ============= AI SALES FORECAST CHART - FIXED =============
+        // ============= AI SALES FORECAST CHART - CHRONOS-2 READY =============
         const aiSalesCtx = document.getElementById('aiSalesChart');
         let aiSalesChart;
 
         if (aiSalesCtx) {
             // Show loading state
-            updateAPIStatus('loading', 'Connecting to AI...');
+            updateAPIStatus('loading', 'Connecting to Chronos-2 AI...');
 
             // Fetch data from Python API
             fetch('http://localhost:5001/api/sales-forecast')
@@ -355,15 +361,21 @@
 
                     if (data.success && data.data) {
                         createLiveSalesChart(data.data);
-                        updateAPIStatus('online', 'Live Data');
 
-                        // Update today's sale card
+                        // Update API status with model info
+                        const modelName = data.model_used || 'Chronos-2 AI';
+                        updateAPIStatus('online', `🤖 ${modelName}`);
+
+                        // Update today's sale card from API data
                         const todayValue = data.data.analysis?.today_actual ||
-                                         (data.data.past_data ? data.data.past_data[data.data.past_data.length - 1] : 1030);
-                        if (todayValue) {
-                            const todayCard = document.getElementById('todaySalesValue');
-                            if (todayCard) {
+                                         (data.data.past_data ? data.data.past_data[data.data.past_data.length - 1] : 0);
+
+                        const todayCard = document.getElementById('todaySalesValue');
+                        if (todayCard) {
+                            if (todayValue > 0) {
                                 todayCard.innerHTML = '₹ ' + parseFloat(todayValue).toFixed(2);
+                            } else {
+                                todayCard.innerHTML = '<span class="no-sale">🚫 No sales today</span>';
                             }
                         }
 
@@ -377,7 +389,7 @@
                 })
                 .catch(error => {
                     console.error('Error fetching forecast:', error);
-                    updateAPIStatus('offline', 'Using sample data (API offline)');
+                    updateAPIStatus('offline', '⚠️ Using sample data (API offline)');
                     createSampleChart();
                 });
         }
@@ -396,11 +408,44 @@
             // Get today's value
             const todayValue = chartData.past_data[chartData.past_data.length - 1];
 
-            // Update title
+            // Update title with today's value
             const titleEl = document.getElementById('aiChartTitle');
             if (titleEl) {
-                titleEl.innerHTML = `🤖 AI Sales Forecast (Today: ₹${parseFloat(todayValue).toFixed(0)})`;
+                if (todayValue > 0) {
+                    titleEl.innerHTML = `🤖 Chronos-2 AI Forecast (Today: ₹${parseFloat(todayValue).toFixed(0)})`;
+                } else {
+                    titleEl.innerHTML = `🤖 Chronos-2 AI Forecast (No sales today)`;
+                }
             }
+
+            // FIX: Ensure all dates are from correct year (2026)
+            const currentYear = new Date().getFullYear().toString();
+
+            const pastLabels = chartData.past_labels.map(date => {
+                // Extract year from date string
+                const dateYear = date.substring(0, 4);
+                if (dateYear !== currentYear) {
+                    // Replace with current year
+                    return currentYear + date.substring(4);
+                }
+                return date;
+            });
+
+            const futureLabels = chartData.future_labels.map(date => {
+                const dateYear = date.substring(0, 4);
+                if (dateYear !== currentYear) {
+                    return currentYear + date.substring(4);
+                }
+                return date;
+            });
+
+            // Combine fixed labels
+            const allLabels = [...pastLabels, ...futureLabels];
+
+            // Calculate max value for Y-axis scaling
+            const allValues = [...chartData.past_data, ...chartData.future_data].filter(v => v !== null);
+            const maxValue = allValues.length > 0 ? Math.max(...allValues) * 1.1 : 2000; // Add 10% padding
+            const suggestedMax = Math.ceil(maxValue / 500) * 500; // Round up to nearest 500
 
             // Create gradients
             const pastGradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -411,15 +456,12 @@
             futureGradient.addColorStop(0, 'rgba(139, 92, 246, 0.2)');
             futureGradient.addColorStop(1, 'rgba(139, 92, 246, 0.0)');
 
-            // Combine labels
-            const allLabels = [...chartData.past_labels, ...chartData.future_labels];
-
             // Destroy old chart if exists
             if (aiSalesChart) {
                 aiSalesChart.destroy();
             }
 
-            // Create new chart
+            // Create new chart with fixed labels and proper Y-axis scaling
             aiSalesChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -427,7 +469,7 @@
                     datasets: [
                         {
                             label: 'Actual Sales (Last 15 Days)',
-                            data: [...chartData.past_data, ...Array(15).fill(null)],
+                            data: [...chartData.past_data, ...Array(chartData.future_data.length).fill(null)],
                             borderColor: '#3b82f6',
                             backgroundColor: pastGradient,
                             borderWidth: 3,
@@ -438,8 +480,8 @@
                             pointHoverRadius: 6
                         },
                         {
-                            label: 'AI Prediction (Next 15 Days)',
-                            data: [...Array(15).fill(null), ...chartData.future_data],
+                            label: 'Chronos-2 AI Prediction',
+                            data: [...Array(chartData.past_data.length).fill(null), ...chartData.future_data],
                             borderColor: '#8b5cf6',
                             backgroundColor: futureGradient,
                             borderWidth: 3,
@@ -493,17 +535,31 @@
                                 maxTicksLimit: 8,
                                 maxRotation: 45,
                                 minRotation: 45,
-                                font: { size: 10 }
+                                font: { size: 10 },
+                                callback: function(val, index) {
+                                    const label = this.getLabelForValue(val);
+                                    // Show only MM-DD format to save space
+                                    if (label && label.length >= 10) {
+                                        const monthDay = label.substring(5); // Returns "03-07"
+                                        // Optionally add day name for better readability
+                                        const date = new Date(label);
+                                        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                                        return `${monthDay} (${dayName})`;
+                                    }
+                                    return label;
+                                }
                             }
                         },
                         y: {
-                            beginAtZero: false,
+                            beginAtZero: true,
                             grid: { color: 'rgba(229, 231, 235, 0.5)' },
+                            suggestedMax: suggestedMax,
                             ticks: {
                                 callback: function(value) {
                                     return '₹' + value.toLocaleString('en-IN');
                                 },
-                                font: { size: 10 }
+                                font: { size: 10 },
+                                stepSize: Math.ceil(suggestedMax / 10) // Dynamic step size
                             }
                         }
                     }
@@ -536,7 +592,7 @@
 
             // Add label
             const label = document.createElement('span');
-            label.innerText = 'PREDICTION START';
+            label.innerText = 'CHRONOS-2 PREDICTION START';
             label.style.position = 'absolute';
             label.style.top = '10px';
             label.style.left = '10px';
@@ -572,7 +628,7 @@
                 futureLabels.push(d.toISOString().split('T')[0]);
             }
 
-            // Sample data (realistic values around ₹1000)
+            // Sample data (realistic values)
             const samplePast = [1030, 1000, 1040, 575, 1950, 1110, 530, 1065, 550, 1140, 500, 1350, 480, 995, 510];
             const sampleFuture = [1050, 1070, 1100, 1080, 1120, 1150, 1180, 1200, 1220, 1250, 1280, 1300, 1320, 1350, 1380];
 
@@ -596,7 +652,7 @@
                             fill: false
                         },
                         {
-                            label: 'AI Prediction (Sample)',
+                            label: 'Chronos-2 AI (Sample)',
                             data: [...Array(15).fill(null), ...sampleFuture],
                             borderColor: '#8b5cf6',
                             borderWidth: 3,
@@ -613,7 +669,22 @@
                         legend: { display: true }
                     },
                     scales: {
-                        x: { ticks: { maxTicksLimit: 8 } }
+                        x: {
+                            ticks: {
+                                maxTicksLimit: 8,
+                                callback: function(val, index) {
+                                    const label = this.getLabelForValue(val);
+                                    return label.substring(5); // MM-DD format
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: 2000,
+                            ticks: {
+                                stepSize: 500
+                            }
+                        }
                     }
                 }
             });
@@ -641,17 +712,24 @@
                 return;
             }
 
+            // Add confidence color class
+            let confidenceClass = '';
+            if (analysis.confidence_score >= 95) confidenceClass = 'excellent';
+            else if (analysis.confidence_score >= 90) confidenceClass = 'good';
+            else if (analysis.confidence_score >= 80) confidenceClass = 'average';
+            else confidenceClass = 'low';
+
             container.innerHTML = `
                 <div class="ai-insights-panel">
-                    <h4>🤖 AI Sales Insights</h4>
+                    <h4>🤖 Chronos-2 AI Insights</h4>
                     <div class="insight-grid">
                         <div class="insight-item">
                             <span class="insight-label">Today's Actual</span>
-                            <span class="insight-value">₹${(analysis.today_actual || 1030).toFixed(2)}</span>
+                            <span class="insight-value">${analysis.today_actual > 0 ? '₹' + analysis.today_actual.toFixed(2) : '🚫 No sales'}</span>
                         </div>
                         <div class="insight-item">
                             <span class="insight-label">Tomorrow's Prediction</span>
-                            <span class="insight-value">₹${(analysis.tomorrow_prediction || 1050).toFixed(2)}</span>
+                            <span class="insight-value">₹${(analysis.tomorrow_prediction || 0).toFixed(2)}</span>
                         </div>
                         <div class="insight-item">
                             <span class="insight-label">Trend</span>
@@ -674,8 +752,11 @@
                         </div>
                         <div class="insight-item">
                             <span class="insight-label">Confidence</span>
-                            <span class="insight-value">${analysis.confidence_score?.toFixed(1) || 85}%</span>
+                            <span class="insight-value ${confidenceClass}">${analysis.confidence_score?.toFixed(1) || 85}%</span>
                         </div>
+                    </div>
+                    <div class="model-badge">
+                        🚀 Powered by Chronos-2 Foundation Model (2026)
                     </div>
                 </div>
             `;
@@ -824,6 +905,15 @@
         margin-bottom: 4px;
         line-height: 1;
         word-break: break-word;
+    }
+
+    .no-sale {
+        font-size: 18px;
+        color: #ffd700;
+        background: rgba(255, 215, 0, 0.1);
+        padding: 5px 10px;
+        border-radius: 8px;
+        display: inline-block;
     }
 
     .stat-desc {
@@ -1363,6 +1453,34 @@
         color: #ef4444;
     }
 
+    .insight-value.excellent {
+        color: #10b981;
+        font-weight: 800;
+    }
+
+    .insight-value.good {
+        color: #3b82f6;
+    }
+
+    .insight-value.average {
+        color: #f59e0b;
+    }
+
+    .insight-value.low {
+        color: #ef4444;
+    }
+
+    .model-badge {
+        margin-top: 15px;
+        padding: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
     /* Print Styles */
     @media print {
         .dashboard-container {
@@ -1373,7 +1491,8 @@
         .inventory-btn,
         .reorder-btn,
         .header-date,
-        .api-status {
+        .api-status,
+        .model-badge {
             display: none !important;
         }
 

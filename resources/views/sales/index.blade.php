@@ -695,6 +695,11 @@
             color: var(--text-main);
         }
 
+        .action-menu-item.email:hover {
+            color: var(--info);
+            background: #e0f2fe;
+        }
+
         .action-menu-item.delete:hover {
             color: var(--danger);
             background: #fee2e2;
@@ -1119,7 +1124,7 @@
         }
 
         /* ================= RESPONSIVE BREAKPOINTS ================= */
-        
+
         /* Large Desktop (1200px and above) */
         @media (min-width: 1200px) {
             .stats-grid {
@@ -1347,11 +1352,11 @@
                 <div class="loading-overlay" id="loadingOverlay">
                     <div class="export-progress">
                         <div class="loading-spinner"></div>
-                        <h3 style="margin: 20px 0 10px; color: #1e293b;">Generating Report</h3>
+                        <h3 style="margin: 20px 0 10px; color: #1e293b;">Processing Request</h3>
                         <div class="progress-bar">
                             <div class="progress-fill" id="progressFill"></div>
                         </div>
-                        <div class="progress-text" id="progressText">Preparing data...</div>
+                        <div class="progress-text" id="progressText">Please wait...</div>
                     </div>
                 </div>
 
@@ -1533,17 +1538,17 @@
                         <span id="selectedCount">0 items selected</span>
                     </div>
                     <div class="action-buttons" style="gap: 8px;">
-                        <button class="action-btn" id="bulkPrint" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;">
+                        <button class="action-btn" id="bulkPrint" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;" title="Print Selected">
                             <span>🖨️</span>
-                            Print
                         </button>
-                        <button class="action-btn" id="bulkExportBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                        <button class="action-btn" id="bulkExportBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;" title="Export Selected">
                             <span>📤</span>
-                            Export
                         </button>
-                        <button class="action-btn" id="bulkDelete" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+                        <button class="action-btn" id="bulkEmailBtn" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white;" title="Email Selected Invoices">
+                            <span>📧</span>
+                        </button>
+                        <button class="action-btn" id="bulkDelete" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;" title="Delete Selected">
                             <span>🗑️</span>
-                            Delete
                         </button>
                     </div>
                 </div>
@@ -1577,10 +1582,14 @@
                             </thead>
                             <tbody id="salesTableBody">
                                 @forelse ($sales as $sale)
-                                    <tr data-id="{{ $sale->id }}" data-invoice="{{ $sale->invoice_no }}"
+                                    <tr data-id="{{ $sale->id }}" 
+                                        data-invoice="{{ $sale->invoice_no }}"
                                         data-customer="{{ $sale->customer->name ?? 'Walk-in Customer' }}"
-                                        data-status="{{ $sale->payment_status }}" data-amount="{{ $sale->grand_total }}"
-                                        data-date="{{ $sale->sale_date }}" data-customer-id="{{ $sale->customer_id }}">
+                                        data-status="{{ $sale->payment_status }}" 
+                                        data-amount="{{ $sale->grand_total }}"
+                                        data-date="{{ $sale->sale_date }}" 
+                                        data-customer-id="{{ $sale->customer_id }}"
+                                        data-customer-email="{{ $sale->customer->email ?? '' }}">
                                         <td>
                                             <input type="checkbox" class="row-checkbox table-checkbox">
                                         </td>
@@ -1603,6 +1612,20 @@
                                                         <span>✏️</span>
                                                         Edit Sale
                                                     </a>
+
+                                                    {{-- ✨ DIRECT EMAIL OPTION (NO MODAL) --}}
+                                                    @if($sale->customer && $sale->customer->email)
+                                                        <a href="#" onclick="sendSingleEmail('{{ $sale->id }}', '{{ $sale->customer->email }}', '{{ $sale->invoice_no }}'); return false;" class="action-menu-item email">
+                                                            <span>📧</span>
+                                                            Email Invoice
+                                                        </a>
+                                                    @else
+                                                        <span class="action-menu-item email" style="opacity:0.5; cursor:not-allowed;" title="No customer email available">
+                                                            <span>📧</span>
+                                                            Email Invoice
+                                                        </span>
+                                                    @endif
+
                                                     <a href="{{ route('sales.invoice', $sale->id) }}" target="_blank" class="action-menu-item print">
                                                         <span>🖨️</span>
                                                         Print Invoice
@@ -1650,6 +1673,9 @@
                                                     </div>
                                                     <div class="customer-mobile">
                                                         {{ $sale->customer->mobile ?? 'No contact' }}
+                                                        @if($sale->customer && $sale->customer->email)
+                                                            <span style="margin-left:8px; color:#0ea5e9;" title="Email available">📧</span>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             </div>
@@ -1784,7 +1810,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <script>
-        // ✅ SIMPLE AND RELIABLE ACTION MENU - NO BLINKING
+        // ✅ ACTION MENU FUNCTIONS
         let activeMenuId = null;
         let hideTimeout = null;
 
@@ -1834,7 +1860,7 @@
                     }
                 }
                 hideTimeout = null;
-            }, 200); // 200ms delay gives user time to move from button to menu
+            }, 200);
         }
 
         // Close all menus when clicking outside
@@ -1854,7 +1880,188 @@
             }
         });
 
-        // Main initialization
+        // ✅ DIRECT SINGLE EMAIL FUNCTION (NO MODAL, NO CONFIRMATION)
+        function sendSingleEmail(saleId, customerEmail, invoiceNo) {
+            if (!customerEmail) {
+                alert('Cannot send email: Customer email not available');
+                return;
+            }
+
+            // Show loading (optional - can remove if you want even faster)
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('show');
+                document.getElementById('progressText').textContent = 'Sending email...';
+            }
+
+            // Send email via AJAX
+            fetch('{{ route("sales.send-invoice") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    sale_id: saleId,
+                    recipient_email: customerEmail,
+                    email_subject: `Invoice #${invoiceNo} from {{ config('app.name') }}`,
+                    email_body: `Dear Customer,\n\nPlease find attached the invoice #${invoiceNo} for your recent purchase.\n\nThank you for your business!`
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('show');
+                }
+
+                if (data.success) {
+                    // Show success toast instead of alert
+                    showToast(`✅ Email sent to ${customerEmail}`, 'success');
+                } else {
+                    showToast(`❌ Error: ${data.message}`, 'error');
+                }
+            })
+            .catch(error => {
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('show');
+                }
+                showToast('❌ Error sending email', 'error');
+                console.error('Error:', error);
+            });
+        }
+
+        // ✅ BULK EMAIL FUNCTION (NO MODAL, NO CONFIRMATION)
+        function sendBulkEmail() {
+            const selectedIds = getSelectedIds();
+            
+            if (selectedIds.length === 0) {
+                showToast('Please select at least one invoice', 'warning');
+                return;
+            }
+
+            // Collect selected rows with email
+            const rowsWithEmail = [];
+            const rowsWithoutEmail = [];
+
+            selectedIds.forEach(id => {
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                const customerEmail = row?.dataset.customerEmail;
+                const invoiceNo = row?.dataset.invoice;
+
+                if (customerEmail) {
+                    rowsWithEmail.push({ id, email: customerEmail, invoice: invoiceNo });
+                } else {
+                    rowsWithoutEmail.push(invoiceNo || id);
+                }
+            });
+
+            if (rowsWithEmail.length === 0) {
+                showToast('None of the selected invoices have customer email addresses', 'warning');
+                return;
+            }
+
+            if (rowsWithoutEmail.length > 0) {
+                showToast(`${rowsWithEmail.length} emails sending, ${rowsWithoutEmail.length} skipped (no email)`, 'info');
+            }
+
+            // Show loading
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('show');
+                document.getElementById('progressText').textContent = `Sending ${rowsWithEmail.length} emails...`;
+            }
+
+            let sentCount = 0;
+            let failedCount = 0;
+
+            // Send emails one by one
+            const promises = rowsWithEmail.map(item => {
+                return fetch('{{ route("sales.send-invoice") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        sale_id: item.id,
+                        recipient_email: item.email,
+                        email_subject: `Invoice #${item.invoice} from {{ config('app.name') }}`,
+                        email_body: `Dear Customer,\n\nPlease find attached the invoice #${item.invoice} for your recent purchase.\n\nThank you for your business!`
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        sentCount++;
+                    } else {
+                        failedCount++;
+                    }
+                })
+                .catch(() => {
+                    failedCount++;
+                });
+            });
+
+            Promise.all(promises).then(() => {
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('show');
+                }
+
+                showToast(`✅ Emails sent: ${sentCount} successful, ${failedCount} failed`, 
+                         failedCount > 0 ? 'warning' : 'success');
+                
+                // Uncheck all checkboxes
+                document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
+                document.getElementById('selectAll').checked = false;
+                updateBulkActions();
+            });
+        }
+
+        // ✅ TOAST FUNCTION
+        function showToast(message, type = 'success') {
+            // Create toast element if it doesn't exist
+            let toast = document.getElementById('globalToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'globalToast';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    color: white;
+                    font-weight: 500;
+                    z-index: 10000;
+                    display: none;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                    animation: slideIn 0.3s ease;
+                `;
+                document.body.appendChild(toast);
+            }
+
+            // Set color based on type
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            toast.style.background = colors[type] || colors.info;
+
+            // Set message and show
+            toast.textContent = message;
+            toast.style.display = 'block';
+
+            // Hide after 3 seconds
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // ✅ MAIN INITIALIZATION
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Sales Management Dashboard Loaded');
 
@@ -1874,6 +2081,7 @@
             const bulkDelete = document.getElementById('bulkDelete');
             const bulkPrint = document.getElementById('bulkPrint');
             const bulkExportBtn = document.getElementById('bulkExportBtn');
+            const bulkEmailBtn = document.getElementById('bulkEmailBtn');
             const salesTableBody = document.getElementById('salesTableBody');
             const allRows = Array.from(document.querySelectorAll('#salesTableBody tr[data-id]'));
 
@@ -2115,6 +2323,9 @@
                 return selectedIds;
             }
 
+            // Make getSelectedIds globally available for bulk email function
+            window.getSelectedIds = getSelectedIds;
+
             // Bulk delete
             if (bulkDelete) {
                 bulkDelete.addEventListener('click', function() {
@@ -2166,6 +2377,11 @@
                         });
                     }
                 });
+            }
+
+            // Bulk email
+            if (bulkEmailBtn) {
+                bulkEmailBtn.addEventListener('click', sendBulkEmail);
             }
 
             // Export functionality

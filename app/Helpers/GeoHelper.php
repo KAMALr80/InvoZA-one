@@ -4,17 +4,26 @@ namespace App\Helpers;
 
 class GeoHelper
 {
-    public static function distanceKm($lat1, $lng1, $lat2, $lng2)
+    /**
+     * Calculate distance between two coordinates in km (Haversine formula)
+     */
+    public static function distanceKm($lat1, $lon1, $lat2, $lon2): float
     {
-        $earthRadius = 6371;
+        if (!$lat1 || !$lon1 || !$lat2 || !$lon2) {
+            return PHP_FLOAT_MAX;
+        }
 
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLng = deg2rad($lng2 - $lng1);
+        $earthRadius = 6371; // km
 
-        $a = sin($dLat/2) ** 2 +
+        $latDelta = deg2rad($lat2 - $lat1);
+        $lonDelta = deg2rad($lon2 - $lon1);
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
              cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLng/2) ** 2;
+             sin($lonDelta / 2) * sin($lonDelta / 2);
 
-        return $earthRadius * (2 * atan2(sqrt($a), sqrt(1-$a)));
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return round($earthRadius * $c, 2);
     }
 }

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http; // Add this for API calls
+use Illuminate\Support\Facades\Http;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Employee;
@@ -79,7 +79,7 @@ class DashboardController extends Controller
             $lowStockProducts = Product::where('quantity', '<=', 5)->get();
 
             /* =====================================================
-               🤖 AI SALES PREDICTION - FIXED: Using Python API
+               🤖 AI SALES PREDICTION - Using Python API
             ===================================================== */
             $aiPrediction = $this->getAIPredictionFromAPI();
 
@@ -107,12 +107,14 @@ class DashboardController extends Controller
             if ($aiPrediction && isset($aiPrediction['data'])) {
                 $futureLabels = $aiPrediction['data']['future_labels'] ?? [];
                 $futureData = $aiPrediction['data']['future_data'] ?? [];
+                $analysis = $aiPrediction['data']['analysis'] ?? [];
             } else {
                 // Sample future data if API fails
                 $futureLabels = collect(range(1, 15))->map(fn ($d) =>
                     Carbon::now()->addDays($d)->format('Y-m-d')
-                );
-                $futureData = collect(range(1, 15))->map(fn () => $averageSale * 1.1);
+                )->toArray();
+                $futureData = collect(range(1, 15))->map(fn () => $averageSale * 1.1)->toArray();
+                $analysis = [];
             }
 
             // Attendance data for chart
@@ -344,6 +346,11 @@ class DashboardController extends Controller
             if ($response->successful()) {
                 $data = $response->json();
                 Log::info('AI API Response received', ['data' => $data]);
+
+                // Check if LSTM model is being used
+                $modelUsed = $data['model_used'] ?? 'Moving Average';
+                Log::info("AI Model in use: {$modelUsed}");
+
                 return $data;
             }
 
@@ -356,18 +363,40 @@ class DashboardController extends Controller
             Log::error('AI API connection failed: ' . $e->getMessage());
         }
 
+        // Get today's actual sale for fallback
+        $todayActual = Sale::whereDate('sale_date', today())->sum('grand_total') ?: 1000;
+
         // Return default structure if API fails
         return [
             'success' => false,
             'data' => [
-                'future_labels' => collect(range(1, 15))->map(fn ($d) => Carbon::now()->addDays($d)->format('Y-m-d'))->toArray(),
-                'future_data' => collect(range(1, 15))->map(fn () => 1000)->toArray(),
+                'future_labels' => collect(range(1, 15))->map(fn ($d) =>
+                    Carbon::now()->addDays($d)->format('Y-m-d')
+                )->toArray(),
+                'future_data' => collect(range(1, 15))->map(fn () => $todayActual * 1.05)->toArray(),
+                'future_lower' => collect(range(1, 15))->map(fn () => $todayActual * 0.9)->toArray(),
+                'future_upper' => collect(range(1, 15))->map(fn () => $todayActual * 1.2)->toArray(),
                 'analysis' => [
-                    'today_actual' => Sale::whereDate('sale_date', today())->sum('grand_total') ?: 1000,
-                    'tomorrow_prediction' => 1050,
+                    'today_actual' => $todayActual,
+                    'tomorrow_prediction' => $todayActual * 1.05,
                     'trend' => 'stable',
-                    'percentage_change' => 0,
-                    'confidence_score' => 75
+                    'percentage_change' => 5,
+                    'weekly_average' => $todayActual,
+                    'confidence_score' => 75,
+                    'best_day' => [
+                        'date' => Carbon::now()->addDays(7)->format('Y-m-d'),
+                        'sales' => $todayActual * 1.15
+                    ],
+                    'worst_day' => [
+                        'date' => Carbon::now()->addDays(3)->format('Y-m-d'),
+                        'sales' => $todayActual * 0.95
+                    ],
+                    'top_factors' => [
+                        ['Weekend Effect', 0.35],
+                        ['Recent Trend', 0.30],
+                        ['Day of Week', 0.20],
+                        ['Monthly Pattern', 0.15]
+                    ]
                 ]
             ]
         ];

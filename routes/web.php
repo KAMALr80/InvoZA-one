@@ -327,3 +327,9 @@ Route::get('/leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show'
 
 // Admin view (can view any leave)
 Route::get('/admin/leaves/{id}', [LeaveController::class, 'adminShow'])->name('leaves.admin-show');
+
+// Email routes
+Route::post('/sales/send-invoice', [App\Http\Controllers\Sales\SalesController::class, 'sendInvoice'])->name('sales.send-invoice');
+Route::post('/sales/bulk-send-invoice', [App\Http\Controllers\Sales\SalesController::class, 'bulkSendInvoice'])->name('sales.bulk-send-invoice');
+Route::post('/sales/send-due-reminder', [App\Http\Controllers\Sales\SalesController::class, 'sendDueReminder'])->name('sales.send-due-reminder');
+Route::post('/sales/bulk-send-due-reminders', [App\Http\Controllers\Sales\SalesController::class, 'bulkSendDueReminders'])->name('sales.bulk-send-due-reminders');
