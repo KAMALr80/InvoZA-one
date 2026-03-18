@@ -70,7 +70,16 @@ class AuthenticatedSessionController extends Controller
         $user->login_attempts = 0;
         $user->save();
 
-        /* ================= STEP 5: Process location data ================= */
+        /* ================= STEP 5: CHECK IF USER IS ADMIN - NO OTP REQUIRED ================= */
+        if ($user->role === 'admin') {
+            Log::info('Admin login - bypassing OTP', [
+                'user_id' => $user->id,
+                'email' => $user->email
+            ]);
+            return $this->directLogin($user, $request);
+        }
+
+        /* ================= STEP 6: Process location data for non-admin users ================= */
         $userLat = $request->lat;
         $userLng = $request->lng;
 
@@ -78,7 +87,7 @@ class AuthenticatedSessionController extends Controller
         $officeLng = env('OFFICE_LNG', '72.955568');
         $allowedRadius = (float) env('ALLOWED_RADIUS_KM', 1);
 
-        /* ================= STEP 6: Location-based decision ================= */
+        /* ================= STEP 7: Location-based decision for non-admin users ================= */
 
         // CASE A: Location OFF/DENIED → EMAIL OTP REQUIRED
         if (!$userLat || !$userLng) {
@@ -96,14 +105,14 @@ class AuthenticatedSessionController extends Controller
             (float) $userLng
         );
 
-        // Log location for audit (using your existing columns)
+        // Log location for audit
         $this->logLoginLocation($user, $userLat, $userLng, $distance);
 
         // CASE B: Outside office radius → EMAIL OTP REQUIRED
         if ($distance > $allowedRadius) {
             return $this->sendLoginOtp(
                 $user,
-                "📍 You are {$distance}km from office (max allowed: {$allowedRadius}km). OTP sent for verification."
+                "📍 You are " . number_format($distance, 2) . "km from office (max allowed: {$allowedRadius}km). OTP sent for verification."
             );
         }
 
@@ -147,6 +156,7 @@ class AuthenticatedSessionController extends Controller
         Log::info('Login OTP sent', [
             'user_id' => $user->id,
             'email' => $user->email,
+            'role' => $user->role,
             'ip' => request()->ip()
         ]);
 
@@ -178,6 +188,7 @@ class AuthenticatedSessionController extends Controller
         Log::info('Direct login successful', [
             'user_id' => $user->id,
             'email' => $user->email,
+            'role' => $user->role,
             'ip' => $request->ip()
         ]);
 
@@ -209,6 +220,7 @@ class AuthenticatedSessionController extends Controller
                 Log::warning('Account locked due to failed logins', [
                     'user_id' => $user->id,
                     'email' => $user->email,
+                    'role' => $user->role,
                     'ip' => $request->ip()
                 ]);
             }
@@ -317,16 +329,17 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Log login location (using your existing columns)
+     * Log login location
      */
     private function logLoginLocation(User $user, float $lat, float $lng, float $distance): void
     {
         Log::info('Login location', [
             'user_id' => $user->id,
             'email' => $user->email,
+            'role' => $user->role,
             'latitude' => $lat,
             'longitude' => $lng,
-            'distance_from_office' => $distance . 'km',
+            'distance_from_office' => number_format($distance, 2) . 'km',
             'ip' => request()->ip(),
             'time' => now()->toDateTimeString()
         ]);
@@ -343,6 +356,7 @@ class AuthenticatedSessionController extends Controller
             Log::info('User logged out', [
                 'user_id' => $user->id,
                 'email' => $user->email,
+                'role' => $user->role,
                 'ip' => $request->ip()
             ]);
         }
