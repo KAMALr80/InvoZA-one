@@ -1,10 +1,10 @@
+{{-- resources/views/logistics/agents/edit.blade.php --}}
 @extends('layouts.app')
 
-@section('page-title', 'Edit Agent - ' . $agent->name)
+@section('title', 'Edit Agent - ' . $agent->name)
 
 @section('content')
     <style>
-        /* ================= PROFESSIONAL ATTRACTIVE EDIT AGENT STYLES ================= */
         * {
             margin: 0;
             padding: 0;
@@ -17,10 +17,8 @@
             min-height: 100vh;
         }
 
-        /* ================= MAIN CONTAINER ================= */
         .edit-page {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
             padding: clamp(16px, 3vw, 30px);
             width: 100%;
         }
@@ -31,15 +29,11 @@
             width: 100%;
         }
 
-        /* ================= MAIN CARD ================= */
         .edit-card {
             background: #ffffff;
             border-radius: 30px;
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
             overflow: hidden;
-            width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
             animation: slideIn 0.5s ease;
         }
 
@@ -55,7 +49,6 @@
             }
         }
 
-        /* ================= HEADER ================= */
         .edit-header {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             padding: clamp(1.5rem, 4vw, 2rem);
@@ -111,12 +104,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-weight: 700;
             font-size: 2.5rem;
             flex-shrink: 0;
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-            border: 3px solid rgba(255, 255, 255, 0.3);
             animation: float 3s ease-in-out infinite;
         }
 
@@ -132,15 +122,10 @@
             }
         }
 
-        .header-info {
-            flex: 1;
-        }
-
         .header-title {
             font-size: clamp(1.5rem, 5vw, 2rem);
             font-weight: 700;
             margin: 0 0 0.5rem 0;
-            line-height: 1.2;
             display: flex;
             align-items: center;
             gap: 1rem;
@@ -154,22 +139,20 @@
             font-size: 0.9rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .status-badge.available {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: #10b981;
             color: white;
         }
 
         .status-badge.busy {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: #f59e0b;
             color: white;
         }
 
         .status-badge.offline {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
+            background: #6b7280;
             color: white;
         }
 
@@ -179,6 +162,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .header-actions {
@@ -193,7 +177,6 @@
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 30px;
-            font-size: clamp(0.9rem, 2vw, 1rem);
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -201,18 +184,14 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            white-space: nowrap;
-            backdrop-filter: blur(5px);
         }
 
         .header-btn:hover {
             background: white;
             color: #1e293b;
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        /* ================= FORM SECTIONS ================= */
         .form-section {
             padding: clamp(1.5rem, 4vw, 2rem);
             border-bottom: 1px solid #e5e7eb;
@@ -223,22 +202,6 @@
 
         .form-section:hover {
             background: #f8fafc;
-        }
-
-        .form-section::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 2rem;
-            right: 2rem;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #667eea, transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .form-section:hover::after {
-            opacity: 1;
         }
 
         .section-header {
@@ -259,11 +222,6 @@
             color: white;
             font-size: 1.5rem;
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .form-section:hover .section-icon {
-            transform: scale(1.1) rotate(5deg);
         }
 
         .section-title {
@@ -279,7 +237,6 @@
             margin: 0.25rem 0 0;
         }
 
-        /* ================= FORM GRID ================= */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -303,25 +260,11 @@
 
         .form-label i {
             color: #667eea;
-            font-size: 1rem;
         }
 
         .required-star {
             color: #ef4444;
             margin-left: 0.25rem;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
         }
 
         .form-control {
@@ -333,7 +276,6 @@
             color: #1e293b;
             background: white;
             transition: all 0.3s ease;
-            font-family: inherit;
         }
 
         .form-control:focus {
@@ -342,231 +284,74 @@
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
-        .form-control:hover {
-            border-color: #94a3b8;
-        }
-
         .form-control[readonly] {
             background: #f1f5f9;
-            color: #475569;
         }
 
-        textarea.form-control {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1rem;
-        }
-
-        /* ================= CHECKBOX STYLES ================= */
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            background: #f8fafc;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
-        }
-
-        .checkbox-group:hover {
-            border-color: #667eea;
-            background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
-        }
-
-        .checkbox-input {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-            accent-color: #667eea;
-        }
-
-        .checkbox-label {
-            font-weight: 500;
-            color: #1e293b;
-            cursor: pointer;
-            font-size: 0.95rem;
-        }
-
-        /* ================= FILE UPLOAD ================= */
-        .file-upload {
-            border: 2px dashed #e5e7eb;
+        .map-preview {
+            height: 300px;
             border-radius: 16px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: #f8fafc;
-        }
-
-        .file-upload:hover {
-            border-color: #667eea;
-            background: white;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
-        }
-
-        .file-upload input {
-            display: none;
-        }
-
-        .file-upload-label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.75rem;
-            cursor: pointer;
-        }
-
-        .file-upload-icon {
-            font-size: 3rem;
-            color: #667eea;
-            animation: bounce 2s ease-in-out infinite;
-        }
-
-        @keyframes bounce {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
-        }
-
-        .file-upload-text {
-            font-weight: 700;
-            color: #1e293b;
-            font-size: 1.1rem;
-        }
-
-        .file-upload-hint {
-            font-size: 0.85rem;
-            color: #64748b;
-        }
-
-        /* ================= FILE PREVIEW ================= */
-        .file-preview {
             margin-top: 1rem;
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            animation: fadeIn 0.3s ease;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+        .map-preview:hover {
+            border-color: #667eea;
         }
 
-        .file-preview-item {
-            background: linear-gradient(135deg, #667eea10, #764ba210);
-            padding: 0.5rem 1rem;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            border: 1px solid #667eea30;
-            color: #1e293b;
-        }
-
-        .file-preview-remove {
-            color: #ef4444;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1.2rem;
-            padding: 0 0.25rem;
-            border-radius: 50%;
-            transition: all 0.2s ease;
-        }
-
-        .file-preview-remove:hover {
-            background: #fee2e2;
-            color: #dc2626;
-            transform: scale(1.2);
-        }
-
-        /* ================= CURRENT DOCUMENTS ================= */
-        .current-doc {
+        .location-detect-btn {
             margin-top: 0.5rem;
             padding: 0.75rem 1rem;
-            background: #f1f5f9;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.95rem;
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
-            animation: slideInRight 0.3s ease;
-        }
-
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .current-doc:hover {
-            border-color: #667eea;
-            background: white;
-            transform: translateX(5px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
-        }
-
-        .current-doc a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .current-doc a:hover {
-            text-decoration: underline;
-        }
-
-        .delete-doc {
-            color: #ef4444;
             cursor: pointer;
-            font-size: 1.2rem;
-            padding: 0.5rem;
-            border-radius: 8px;
-            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.3s ease;
         }
 
-        .delete-doc:hover {
-            background: #fee2e2;
-            transform: scale(1.1) rotate(90deg);
+        .location-detect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
         }
 
-        /* ================= SERVICE AREAS GRID ================= */
+        .performance-stats {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+
+        .performance-item {
+            text-align: center;
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .performance-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .performance-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
         .service-areas-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -583,27 +368,128 @@
             align-items: center;
             gap: 0.75rem;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
 
         .service-area-item:hover {
             border-color: #667eea;
             background: white;
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
         }
 
-        .service-area-item .checkbox-input {
+        .service-area-item.selected {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-color: #667eea;
+            border-width: 2px;
+        }
+
+        .checkbox-input {
             width: 18px;
             height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
         }
 
-        .service-area-item .checkbox-label {
+        .checkbox-label {
             font-size: 0.95rem;
             font-weight: 500;
             cursor: pointer;
+            flex: 1;
         }
 
-        /* ================= ACTION BUTTONS ================= */
+        .current-doc {
+            margin-top: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #f1f5f9;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .current-doc:hover {
+            border-color: #667eea;
+            background: white;
+        }
+
+        .current-doc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .delete-doc {
+            color: #ef4444;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .delete-doc:hover {
+            background: #fee2e2;
+            transform: scale(1.1);
+        }
+
+        .file-upload {
+            border: 2px dashed #e5e7eb;
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            margin-top: 0.5rem;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .file-preview {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .file-preview-item {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .file-preview-remove {
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0 0.25rem;
+        }
+
         .action-buttons {
             display: flex;
             gap: 1rem;
@@ -625,28 +511,6 @@
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
-            white-space: nowrap;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn:hover::before {
-            width: 300px;
-            height: 300px;
         }
 
         .btn-primary {
@@ -660,10 +524,6 @@
             box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
         .btn-secondary {
             background: #f1f5f9;
             color: #475569;
@@ -673,30 +533,18 @@
         .btn-secondary:hover {
             background: #e2e8f0;
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
         }
 
         .btn-danger {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
-            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
         }
 
         .btn-danger:hover {
             transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
         }
 
-        .btn i {
-            font-size: 1.1rem;
-            transition: transform 0.3s ease;
-        }
-
-        .btn:hover i {
-            transform: scale(1.2);
-        }
-
-        /* ================= ALERTS ================= */
         .alert {
             padding: 1rem 1.5rem;
             border-radius: 16px;
@@ -705,7 +553,6 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            animation: slideIn 0.3s ease;
         }
 
         .alert-error {
@@ -720,16 +567,6 @@
             color: #065f46;
         }
 
-        .alert ul {
-            margin: 0;
-            padding-left: 1.5rem;
-        }
-
-        .alert i {
-            font-size: 1.2rem;
-        }
-
-        /* ================= TOAST ================= */
         .toast {
             position: fixed;
             top: 30px;
@@ -740,9 +577,7 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
             border-left: 4px solid;
             display: none;
-            z-index: 9999;
-            max-width: 400px;
-            width: calc(100% - 60px);
+            z-index: 10000;
             animation: slideInRight 0.3s ease;
         }
 
@@ -766,26 +601,6 @@
             border-left-color: #ef4444;
         }
 
-        .toast.warning {
-            border-left-color: #f59e0b;
-        }
-
-        .toast-content {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: #1e293b;
-        }
-
-        .toast-icon {
-            font-size: 1.5rem;
-        }
-
-        .toast-message {
-            font-weight: 500;
-        }
-
-        /* ================= LOADING OVERLAY ================= */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -817,25 +632,10 @@
             }
         }
 
-        .loading-text {
-            color: #1e293b;
-            font-weight: 600;
-            font-size: 1.1rem;
-            background: white;
-            padding: 1rem 2rem;
-            border-radius: 30px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        /* ================= RESPONSIVE ================= */
         @media (max-width: 768px) {
             .header-left {
                 flex-direction: column;
                 text-align: center;
-            }
-
-            .header-title {
-                justify-content: center;
             }
 
             .form-grid {
@@ -855,20 +655,8 @@
                 grid-template-columns: 1fr;
             }
 
-            .toast {
-                left: 15px;
-                right: 15px;
-                width: calc(100% - 30px);
-            }
-        }
-
-        @media print {
-
-            .header-actions,
-            .action-buttons,
-            .file-upload,
-            .btn {
-                display: none !important;
+            .map-preview {
+                height: 250px;
             }
         }
     </style>
@@ -876,28 +664,23 @@
     <div class="edit-page">
         <div class="container">
             <div class="edit-card">
-                {{-- Loading Overlay --}}
                 <div id="loadingOverlay" class="loading-overlay">
                     <div class="spinner"></div>
                     <div class="loading-text">Updating agent data...</div>
                 </div>
 
-                {{-- Header --}}
                 <div class="edit-header">
                     <div class="header-content">
                         <div class="header-left">
-                            <div class="header-avatar">
-                                {{ substr($agent->name, 0, 1) }}
-                            </div>
-                            <div class="header-info">
+                            <div class="header-avatar">{{ substr($agent->name, 0, 1) }}</div>
+                            <div>
                                 <div class="header-title">
                                     {{ $agent->name }}
-                                    <span class="status-badge {{ $agent->status }}">
-                                        {{ ucfirst($agent->status) }}
-                                    </span>
+                                    <span class="status-badge {{ $agent->status }}">{{ ucfirst($agent->status) }}</span>
                                 </div>
                                 <div class="header-subtitle">
-                                    <span><i class="fas fa-id-card"></i> {{ $agent->agent_code }}</span>
+                                    <span><i class="fas fa-id-card"></i>
+                                        {{ $agent->agent_code ?? 'AG' . str_pad($agent->id, 4, '0', STR_PAD_LEFT) }}</span>
                                     <span>•</span>
                                     <span><i class="fas fa-phone"></i> {{ $agent->phone }}</span>
                                     @if ($agent->email)
@@ -908,19 +691,17 @@
                             </div>
                         </div>
                         <div class="header-actions">
-                            <a href="{{ route('logistics.agents.show', $agent->id) }}" class="header-btn">
-                                <i class="fas fa-arrow-left"></i> Back to Profile
-                            </a>
+                            <a href="{{ route('logistics.agents.show', $agent->id) }}" class="header-btn"><i
+                                    class="fas fa-arrow-left"></i> Back to Profile</a>
                         </div>
                     </div>
                 </div>
 
-                {{-- Error Messages --}}
                 @if ($errors->any())
                     <div class="form-section" style="padding-bottom: 0;">
                         <div class="alert alert-error">
                             <i class="fas fa-exclamation-circle"></i>
-                            <ul>
+                            <ul style="margin:0; padding-left:1rem;">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
@@ -929,29 +710,37 @@
                     </div>
                 @endif
 
-                {{-- Success Message --}}
                 @if (session('success'))
                     <div class="form-section" style="padding-bottom: 0;">
                         <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            {{ session('success') }}
+                            <i class="fas fa-check-circle"></i> {{ session('success') }}
                         </div>
                     </div>
                 @endif
 
-                {{-- Last Updated Info --}}
                 <div class="form-section" style="padding-bottom: 0;">
-                    <div
-                        style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; background: linear-gradient(135deg, #f8fafc, #e2e8f0); padding: 1rem 1.5rem; border-radius: 16px; border: 1px solid #e5e7eb;">
-                        <span style="font-weight: 600; color: #475569;"><i class="fas fa-calendar-alt"></i> Last
-                            Updated:</span>
-                        <span style="color: #64748b;">{{ $agent->updated_at->format('d M Y, h:i A') }}</span>
-                        <span style="font-weight: 600; color: #475569; margin-left: auto;"><i class="fas fa-clock"></i>
-                            {{ $agent->updated_at->diffForHumans() }}</span>
+                    <div class="performance-stats">
+                        <div class="performance-item">
+                            <div class="performance-value">{{ $agent->total_deliveries ?? 0 }}</div>
+                            <div class="performance-label">Total Deliveries</div>
+                        </div>
+                        <div class="performance-item">
+                            <div class="performance-value">{{ number_format($agent->rating ?? 4.5, 1) }} ★</div>
+                            <div class="performance-label">Rating</div>
+                        </div>
+                        <div class="performance-item">
+                            <div class="performance-value">{{ $agent->successful_deliveries ?? 0 }}</div>
+                            <div class="performance-label">Successful</div>
+                        </div>
+                        <div class="performance-item">
+                            <div class="performance-value">
+                                {{ $agent->total_deliveries > 0 ? round(($agent->successful_deliveries / $agent->total_deliveries) * 100) : 0 }}%
+                            </div>
+                            <div class="performance-label">Success Rate</div>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Form --}}
                 <form method="POST" action="{{ route('logistics.agents.update', $agent->id) }}"
                     enctype="multipart/form-data" id="agentForm">
                     @csrf
@@ -966,92 +755,77 @@
                                 <p class="section-subtitle">Update agent's personal details</p>
                             </div>
                         </div>
-
                         <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-user"></i>
-                                    Full Name <span class="required-star">*</span>
-                                </label>
+                                <label class="form-label"><i class="fas fa-user"></i> Full Name <span
+                                        class="required-star">*</span></label>
                                 <input type="text" name="name" class="form-control"
-                                    value="{{ old('name', $agent->name) }}" required placeholder="Enter full name">
+                                    value="{{ old('name', $agent->name) }}" required>
                             </div>
-
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-phone"></i>
-                                    Phone Number <span class="required-star">*</span>
-                                </label>
+                                <label class="form-label"><i class="fas fa-phone"></i> Phone Number <span
+                                        class="required-star">*</span></label>
                                 <input type="text" name="phone" class="form-control"
-                                    value="{{ old('phone', $agent->phone) }}" required
-                                    placeholder="10 digit mobile number">
+                                    value="{{ old('phone', $agent->phone) }}" required>
                             </div>
-
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-envelope"></i>
-                                    Email
-                                </label>
+                                <label class="form-label"><i class="fas fa-envelope"></i> Email</label>
                                 <input type="email" name="email" class="form-control"
-                                    value="{{ old('email', $agent->email) }}" placeholder="email@example.com">
+                                    value="{{ old('email', $agent->email) }}">
                             </div>
-
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-phone-alt"></i>
-                                    Alternate Phone
-                                </label>
+                                <label class="form-label"><i class="fas fa-phone-alt"></i> Alternate Phone</label>
                                 <input type="text" name="alternate_phone" class="form-control"
-                                    value="{{ old('alternate_phone', $agent->alternate_phone) }}"
-                                    placeholder="Alternate contact number">
+                                    value="{{ old('alternate_phone', $agent->alternate_phone) }}">
                             </div>
                         </div>
                     </div>
 
-                    {{-- Address Information --}}
+                    {{-- Location Information with Google Maps --}}
                     <div class="form-section">
                         <div class="section-header">
                             <div class="section-icon"><i class="fas fa-map-marker-alt"></i></div>
                             <div>
-                                <h3 class="section-title">Address Information</h3>
-                                <p class="section-subtitle">Update agent's address details</p>
+                                <h3 class="section-title">Location Information</h3>
+                                <p class="section-subtitle">Update agent's current location</p>
                             </div>
                         </div>
 
-                        <div class="form-grid">
-                            <div class="form-group" style="grid-column: 1/-1;">
-                                <label class="form-label">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    Address
-                                </label>
-                                <textarea name="address" class="form-control" placeholder="Complete address">{{ old('address', $agent->address) }}</textarea>
-                            </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-search"></i> Search Address / Current
+                                Location</label>
+                            <input type="text" id="location-search" class="form-control"
+                                placeholder="Search for address or drop pin on map" autocomplete="off"
+                                value="{{ $agent->current_location }}">
+                            <button type="button" id="detect-location" class="location-detect-btn">
+                                <i class="fas fa-location-dot"></i> Update from Current Location
+                            </button>
+                        </div>
 
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-city"></i>
-                                    City
-                                </label>
-                                <input type="text" name="city" class="form-control"
-                                    value="{{ old('city', $agent->city) }}" placeholder="City">
-                            </div>
+                        <div id="map-preview" class="map-preview"></div>
 
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-map"></i>
-                                    State
-                                </label>
-                                <input type="text" name="state" class="form-control"
-                                    value="{{ old('state', $agent->state) }}" placeholder="State">
-                            </div>
+                        <input type="hidden" name="current_latitude" id="latitude"
+                            value="{{ old('current_latitude', $agent->current_latitude) }}">
+                        <input type="hidden" name="current_longitude" id="longitude"
+                            value="{{ old('current_longitude', $agent->current_longitude) }}">
+                        <input type="hidden" name="current_location" id="current_location"
+                            value="{{ old('current_location', $agent->current_location) }}">
 
+                        <div class="form-grid" style="margin-top: 1rem;">
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-mail-bulk"></i>
-                                    Pincode
-                                </label>
-                                <input type="text" name="pincode" class="form-control"
-                                    value="{{ old('pincode', $agent->pincode) }}" placeholder="Pincode">
+                                <label class="form-label"><i class="fas fa-city"></i> City</label>
+                                <input type="text" name="city" id="city" class="form-control"
+                                    value="{{ old('city', $agent->city) }}" readonly style="background:#f8fafc;">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-map"></i> State</label>
+                                <input type="text" name="state" id="state" class="form-control"
+                                    value="{{ old('state', $agent->state) }}" readonly style="background:#f8fafc;">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-mail-bulk"></i> Pincode</label>
+                                <input type="text" name="pincode" id="pincode" class="form-control"
+                                    value="{{ old('pincode', $agent->pincode) }}" readonly style="background:#f8fafc;">
                             </div>
                         </div>
                     </div>
@@ -1065,48 +839,31 @@
                                 <p class="section-subtitle">Update vehicle and license details</p>
                             </div>
                         </div>
-
                         <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-motorcycle"></i>
-                                    Vehicle Type
-                                </label>
+                                <label class="form-label"><i class="fas fa-motorcycle"></i> Vehicle Type</label>
                                 <select name="vehicle_type" class="form-control">
                                     <option value="">Select Vehicle</option>
                                     <option value="bike"
                                         {{ old('vehicle_type', $agent->vehicle_type) == 'bike' ? 'selected' : '' }}>🏍️
                                         Bike</option>
-                                    <option value="cycle"
-                                        {{ old('vehicle_type', $agent->vehicle_type) == 'cycle' ? 'selected' : '' }}>🚲
-                                        Cycle</option>
+                                    <option value="scooter"
+                                        {{ old('vehicle_type', $agent->vehicle_type) == 'scooter' ? 'selected' : '' }}>🛵
+                                        Scooter</option>
                                     <option value="van"
                                         {{ old('vehicle_type', $agent->vehicle_type) == 'van' ? 'selected' : '' }}>🚐 Van
                                     </option>
-                                    <option value="truck"
-                                        {{ old('vehicle_type', $agent->vehicle_type) == 'truck' ? 'selected' : '' }}>🚛
-                                        Truck</option>
                                 </select>
                             </div>
-
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-hashtag"></i>
-                                    Vehicle Number
-                                </label>
+                                <label class="form-label"><i class="fas fa-hashtag"></i> Vehicle Number</label>
                                 <input type="text" name="vehicle_number" class="form-control"
-                                    value="{{ old('vehicle_number', $agent->vehicle_number) }}"
-                                    placeholder="e.g., GJ01AB1234">
+                                    value="{{ old('vehicle_number', $agent->vehicle_number) }}">
                             </div>
-
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-id-card"></i>
-                                    License Number
-                                </label>
+                                <label class="form-label"><i class="fas fa-id-card"></i> License Number</label>
                                 <input type="text" name="license_number" class="form-control"
-                                    value="{{ old('license_number', $agent->license_number) }}"
-                                    placeholder="Driving license number">
+                                    value="{{ old('license_number', $agent->license_number) }}">
                             </div>
                         </div>
                     </div>
@@ -1120,13 +877,9 @@
                                 <p class="section-subtitle">Update employment and compensation</p>
                             </div>
                         </div>
-
                         <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-briefcase"></i>
-                                    Employment Type
-                                </label>
+                                <label class="form-label"><i class="fas fa-briefcase"></i> Employment Type</label>
                                 <select name="employment_type" class="form-control">
                                     <option value="full_time"
                                         {{ old('employment_type', $agent->employment_type) == 'full_time' ? 'selected' : '' }}>
@@ -1139,106 +892,20 @@
                                         Contract</option>
                                 </select>
                             </div>
-
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    Joining Date
-                                </label>
+                                <label class="form-label"><i class="fas fa-calendar-alt"></i> Joining Date</label>
                                 <input type="date" name="joining_date" class="form-control"
                                     value="{{ old('joining_date', $agent->joining_date ? $agent->joining_date->format('Y-m-d') : '') }}">
                             </div>
-
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-rupee-sign"></i>
-                                    Salary (₹)
-                                </label>
+                                <label class="form-label"><i class="fas fa-rupee-sign"></i> Salary (₹)</label>
                                 <input type="number" name="salary" class="form-control"
-                                    value="{{ old('salary', $agent->salary) }}" step="0.01" min="0"
-                                    placeholder="0.00">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-percent"></i>
-                                    Commission Type
-                                </label>
-                                <select name="commission_type" class="form-control">
-                                    <option value="">No Commission</option>
-                                    <option value="fixed"
-                                        {{ old('commission_type', $agent->commission_type) == 'fixed' ? 'selected' : '' }}>
-                                        Fixed Amount</option>
-                                    <option value="percentage"
-                                        {{ old('commission_type', $agent->commission_type) == 'percentage' ? 'selected' : '' }}>
-                                        Percentage</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-coins"></i>
-                                    Commission Value
-                                </label>
-                                <input type="number" name="commission_value" class="form-control"
-                                    value="{{ old('commission_value', $agent->commission_value) }}" step="0.01"
-                                    min="0" placeholder="0">
+                                    value="{{ old('salary', $agent->salary) }}" step="0.01" min="0">
                             </div>
                         </div>
                     </div>
 
-                    {{-- Bank Details --}}
-                    <div class="form-section">
-                        <div class="section-header">
-                            <div class="section-icon"><i class="fas fa-university"></i></div>
-                            <div>
-                                <h3 class="section-title">Bank Details</h3>
-                                <p class="section-subtitle">Update bank account information</p>
-                            </div>
-                        </div>
-
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-university"></i>
-                                    Bank Name
-                                </label>
-                                <input type="text" name="bank_name" class="form-control"
-                                    value="{{ old('bank_name', $agent->bank_name) }}"
-                                    placeholder="e.g., State Bank of India">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-credit-card"></i>
-                                    Account Number
-                                </label>
-                                <input type="text" name="account_number" class="form-control"
-                                    value="{{ old('account_number', $agent->account_number) }}"
-                                    placeholder="Bank account number">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-code"></i>
-                                    IFSC Code
-                                </label>
-                                <input type="text" name="ifsc_code" class="form-control"
-                                    value="{{ old('ifsc_code', $agent->ifsc_code) }}" placeholder="e.g., SBIN0001234">
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-mobile-alt"></i>
-                                    UPI ID
-                                </label>
-                                <input type="text" name="upi_id" class="form-control"
-                                    value="{{ old('upi_id', $agent->upi_id) }}" placeholder="agent@bank">
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Service Areas --}}
+                    {{-- Service Areas (All cities from seeder) --}}
                     <div class="form-section">
                         <div class="section-header">
                             <div class="section-icon"><i class="fas fa-map-marked-alt"></i></div>
@@ -1249,51 +916,42 @@
                         </div>
 
                         @php
-                            $serviceAreas = $agent->service_areas ? json_decode($agent->service_areas, true) : [];
-                            $oldAreas = old('service_areas', $serviceAreas);
+                            $serviceAreas = $agent->service_areas
+                                ? (is_array($agent->service_areas)
+                                    ? $agent->service_areas
+                                    : json_decode($agent->service_areas, true))
+                                : [];
+                            $oldAreas = old('service_areas', $serviceAreas ?? []);
+                            $allCities = [
+                                'Ahmedabad',
+                                'Gandhinagar',
+                                'Surat',
+                                'Vadodara',
+                                'Rajkot',
+                                'Bhavnagar',
+                                'Anand',
+                                'Jamnagar',
+                                'Junagadh',
+                            ];
                         @endphp
 
-                        <div class="service-areas-grid">
-                            <div class="service-area-item">
-                                <input type="checkbox" name="service_areas[]" value="Ahmedabad" class="checkbox-input"
-                                    id="area1" {{ in_array('Ahmedabad', $oldAreas) ? 'checked' : '' }}>
-                                <label for="area1" class="checkbox-label">Ahmedabad</label>
-                            </div>
-                            <div class="service-area-item">
-                                <input type="checkbox" name="service_areas[]" value="Gandhinagar" class="checkbox-input"
-                                    id="area2" {{ in_array('Gandhinagar', $oldAreas) ? 'checked' : '' }}>
-                                <label for="area2" class="checkbox-label">Gandhinagar</label>
-                            </div>
-                            <div class="service-area-item">
-                                <input type="checkbox" name="service_areas[]" value="Surat" class="checkbox-input"
-                                    id="area3" {{ in_array('Surat', $oldAreas) ? 'checked' : '' }}>
-                                <label for="area3" class="checkbox-label">Surat</label>
-                            </div>
-                            <div class="service-area-item">
-                                <input type="checkbox" name="service_areas[]" value="Vadodara" class="checkbox-input"
-                                    id="area4" {{ in_array('Vadodara', $oldAreas) ? 'checked' : '' }}>
-                                <label for="area4" class="checkbox-label">Vadodara</label>
-                            </div>
-                            <div class="service-area-item">
-                                <input type="checkbox" name="service_areas[]" value="Rajkot" class="checkbox-input"
-                                    id="area5" {{ in_array('Rajkot', $oldAreas) ? 'checked' : '' }}>
-                                <label for="area5" class="checkbox-label">Rajkot</label>
-                            </div>
-                            <div class="service-area-item">
-                                <input type="checkbox" name="service_areas[]" value="Bhavnagar" class="checkbox-input"
-                                    id="area6" {{ in_array('Bhavnagar', $oldAreas) ? 'checked' : '' }}>
-                                <label for="area6" class="checkbox-label">Bhavnagar</label>
-                            </div>
-                            <div class="service-area-item">
-                                <input type="checkbox" name="service_areas[]" value="Jamnagar" class="checkbox-input"
-                                    id="area7" {{ in_array('Jamnagar', $oldAreas) ? 'checked' : '' }}>
-                                <label for="area7" class="checkbox-label">Jamnagar</label>
-                            </div>
-                            <div class="service-area-item">
-                                <input type="checkbox" name="service_areas[]" value="Junagadh" class="checkbox-input"
-                                    id="area8" {{ in_array('Junagadh', $oldAreas) ? 'checked' : '' }}>
-                                <label for="area8" class="checkbox-label">Junagadh</label>
-                            </div>
+                        <div class="service-areas-grid" id="serviceAreasContainer">
+                            @foreach ($allCities as $city)
+                                <div class="service-area-item" data-area="{{ $city }}">
+                                    <input type="checkbox" name="service_areas[]" value="{{ $city }}"
+                                        class="checkbox-input" id="area_{{ strtolower(str_replace(' ', '_', $city)) }}"
+                                        {{ in_array($city, $oldAreas) ? 'checked' : '' }}>
+                                    <label for="area_{{ strtolower(str_replace(' ', '_', $city)) }}"
+                                        class="checkbox-label">{{ $city }}</label>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label class="form-label"><i class="fas fa-plus-circle"></i> Additional Areas</label>
+                            <input type="text" name="additional_areas" class="form-control"
+                                value="{{ old('additional_areas', implode(', ', array_diff($oldAreas, $allCities))) }}"
+                                placeholder="Enter additional areas separated by commas">
                         </div>
                     </div>
 
@@ -1308,19 +966,14 @@
                         </div>
 
                         <div class="form-grid">
-                            {{-- Aadhar Card --}}
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-id-card"></i>
-                                    Aadhar Card
-                                </label>
+                                <label class="form-label"><i class="fas fa-id-card"></i> Aadhar Card</label>
                                 @if ($agent->aadhar_card)
                                     <div class="current-doc">
-                                        <a href="{{ Storage::url($agent->aadhar_card) }}" target="_blank">
-                                            <i class="fas fa-file-pdf"></i> View Current Aadhar
-                                        </a>
-                                        <span class="delete-doc" onclick="markForDeletion('aadhar')"
-                                            title="Remove this document"><i class="fas fa-trash-alt"></i></span>
+                                        <a href="{{ Storage::url($agent->aadhar_card) }}" target="_blank"><i
+                                                class="fas fa-file-pdf"></i> View Current Aadhar</a>
+                                        <span class="delete-doc" onclick="markForDeletion('aadhar')"><i
+                                                class="fas fa-trash-alt"></i></span>
                                         <input type="hidden" name="delete_aadhar" id="delete_aadhar" value="0">
                                     </div>
                                 @endif
@@ -1329,27 +982,20 @@
                                         onchange="previewFile(this, 'aadhar_preview')">
                                     <div class="file-upload-label">
                                         <span class="file-upload-icon"><i class="fas fa-cloud-upload-alt"></i></span>
-                                        <span
-                                            class="file-upload-text">{{ $agent->aadhar_card ? 'Replace Aadhar Card' : 'Upload Aadhar Card' }}</span>
-                                        <span class="file-upload-hint">JPG, PNG or PDF (Max 2MB)</span>
+                                        <span>{{ $agent->aadhar_card ? 'Replace Aadhar Card' : 'Upload Aadhar Card' }}</span>
                                     </div>
                                 </div>
                                 <div id="aadhar_preview" class="file-preview"></div>
                             </div>
 
-                            {{-- Driving License --}}
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-id-card"></i>
-                                    Driving License
-                                </label>
+                                <label class="form-label"><i class="fas fa-id-card"></i> Driving License</label>
                                 @if ($agent->driving_license)
                                     <div class="current-doc">
-                                        <a href="{{ Storage::url($agent->driving_license) }}" target="_blank">
-                                            <i class="fas fa-file-pdf"></i> View Current License
-                                        </a>
-                                        <span class="delete-doc" onclick="markForDeletion('license')"
-                                            title="Remove this document"><i class="fas fa-trash-alt"></i></span>
+                                        <a href="{{ Storage::url($agent->driving_license) }}" target="_blank"><i
+                                                class="fas fa-file-pdf"></i> View Current License</a>
+                                        <span class="delete-doc" onclick="markForDeletion('license')"><i
+                                                class="fas fa-trash-alt"></i></span>
                                         <input type="hidden" name="delete_license" id="delete_license" value="0">
                                     </div>
                                 @endif
@@ -1358,27 +1004,20 @@
                                         accept="image/*,.pdf" onchange="previewFile(this, 'license_preview')">
                                     <div class="file-upload-label">
                                         <span class="file-upload-icon"><i class="fas fa-cloud-upload-alt"></i></span>
-                                        <span
-                                            class="file-upload-text">{{ $agent->driving_license ? 'Replace License' : 'Upload Driving License' }}</span>
-                                        <span class="file-upload-hint">JPG, PNG or PDF (Max 2MB)</span>
+                                        <span>{{ $agent->driving_license ? 'Replace License' : 'Upload Driving License' }}</span>
                                     </div>
                                 </div>
                                 <div id="license_preview" class="file-preview"></div>
                             </div>
 
-                            {{-- Photo --}}
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-camera"></i>
-                                    Profile Photo
-                                </label>
+                                <label class="form-label"><i class="fas fa-camera"></i> Profile Photo</label>
                                 @if ($agent->photo)
                                     <div class="current-doc">
-                                        <a href="{{ Storage::url($agent->photo) }}" target="_blank">
-                                            <i class="fas fa-image"></i> View Current Photo
-                                        </a>
-                                        <span class="delete-doc" onclick="markForDeletion('photo')"
-                                            title="Remove this document"><i class="fas fa-trash-alt"></i></span>
+                                        <a href="{{ Storage::url($agent->photo) }}" target="_blank"><i
+                                                class="fas fa-image"></i> View Current Photo</a>
+                                        <span class="delete-doc" onclick="markForDeletion('photo')"><i
+                                                class="fas fa-trash-alt"></i></span>
                                         <input type="hidden" name="delete_photo" id="delete_photo" value="0">
                                     </div>
                                 @endif
@@ -1387,9 +1026,7 @@
                                         onchange="previewFile(this, 'photo_preview')">
                                     <div class="file-upload-label">
                                         <span class="file-upload-icon"><i class="fas fa-cloud-upload-alt"></i></span>
-                                        <span
-                                            class="file-upload-text">{{ $agent->photo ? 'Replace Photo' : 'Upload Photo' }}</span>
-                                        <span class="file-upload-hint">JPG or PNG (Max 2MB)</span>
+                                        <span>{{ $agent->photo ? 'Replace Photo' : 'Upload Photo' }}</span>
                                     </div>
                                 </div>
                                 <div id="photo_preview" class="file-preview"></div>
@@ -1397,7 +1034,7 @@
                         </div>
                     </div>
 
-                    {{-- Status & Active --}}
+                    {{-- Status --}}
                     <div class="form-section">
                         <div class="section-header">
                             <div class="section-icon"><i class="fas fa-toggle-on"></i></div>
@@ -1406,13 +1043,9 @@
                                 <p class="section-subtitle">Update agent status and activity</p>
                             </div>
                         </div>
-
                         <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-toggle-on"></i>
-                                    Current Status
-                                </label>
+                                <label class="form-label"><i class="fas fa-toggle-on"></i> Current Status</label>
                                 <select name="status" class="form-control">
                                     <option value="available"
                                         {{ old('status', $agent->status) == 'available' ? 'selected' : '' }}>✅ Available -
@@ -1425,9 +1058,9 @@
                                         available</option>
                                 </select>
                             </div>
-
                             <div class="form-group">
-                                <div class="checkbox-group">
+                                <div class="checkbox-group"
+                                    style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;">
                                     <input type="checkbox" name="is_active" id="is_active" value="1"
                                         class="checkbox-input" {{ old('is_active', $agent->is_active) ? 'checked' : '' }}>
                                     <label for="is_active" class="checkbox-label">Agent is active and can receive
@@ -1437,54 +1070,262 @@
                         </div>
                     </div>
 
-                    {{-- Action Buttons --}}
                     <div class="action-buttons">
-                        <a href="{{ route('logistics.agents.show', $agent->id) }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancel
-                        </a>
-                        <button type="submit" class="btn btn-primary" id="submitBtn">
-                            <i class="fas fa-save"></i> Update Agent
-                        </button>
+                        <a href="{{ route('logistics.agents.show', $agent->id) }}" class="btn btn-secondary"><i
+                                class="fas fa-times"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i> Update
+                            Agent</button>
                     </div>
                 </form>
 
-                {{-- Delete Form --}}
                 <div class="action-buttons"
-                    style="justify-content: flex-start; padding-top: 0; border-top: 2px dashed #e5e7eb; margin-top: 0;">
+                    style="justify-content: flex-start; padding-top: 0; border-top: 2px dashed #e5e7eb;">
                     <form method="POST" action="{{ route('logistics.agents.destroy', $agent->id) }}"
-                        onsubmit="return confirm('⚠️ Are you sure you want to delete this agent?\n\nThis action cannot be undone and will remove all associated data.')">
+                        onsubmit="return confirm('⚠️ Are you sure you want to delete this agent?')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i> Delete Agent Permanently
-                        </button>
+                        <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Delete Agent
+                            Permanently</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Toast --}}
     <div id="toast" class="toast"></div>
 
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY') }}&libraries=places&callback=initMap"
+        async defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
     <script>
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.innerHTML = `
-            <div class="toast-content">
-                <span class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span>
-                <span class="toast-message">${message}</span>
-            </div>
-        `;
-            toast.className = 'toast ' + type;
-            toast.style.display = 'block';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
+        let map, marker, geocoder, autocompleteService;
+
+        function initMap() {
+            const defaultLat = 22.524768;
+            const defaultLng = 72.955568;
+            const existingLat = parseFloat(document.getElementById('latitude').value);
+            const existingLng = parseFloat(document.getElementById('longitude').value);
+            const centerLat = existingLat && existingLat !== 0 ? existingLat : defaultLat;
+            const centerLng = existingLng && existingLng !== 0 ? existingLng : defaultLng;
+
+            map = new google.maps.Map(document.getElementById('map-preview'), {
+                center: {
+                    lat: centerLat,
+                    lng: centerLng
+                },
+                zoom: 13,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                styles: [{
+                    featureType: 'poi',
+                    elementType: 'labels',
+                    stylers: [{
+                        visibility: 'off'
+                    }]
+                }]
+            });
+
+            geocoder = new google.maps.Geocoder();
+            autocompleteService = new google.maps.places.AutocompleteService();
+
+            if (existingLat && existingLat !== 0) {
+                marker = new google.maps.Marker({
+                    position: {
+                        lat: existingLat,
+                        lng: existingLng
+                    },
+                    map: map,
+                    title: 'Agent Location',
+                    draggable: true,
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                        scaledSize: new google.maps.Size(40, 40)
+                    }
+                });
+                google.maps.event.addListener(marker, 'dragend', function() {
+                    updateLocationFromLatLng(marker.getPosition().lat(), marker.getPosition().lng());
+                });
+            } else {
+                map.addListener('click', function(e) {
+                    if (marker) marker.setMap(null);
+                    marker = new google.maps.Marker({
+                        position: e.latLng,
+                        map: map,
+                        title: 'Agent Location',
+                        draggable: true,
+                        icon: {
+                            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                            scaledSize: new google.maps.Size(40, 40)
+                        }
+                    });
+                    updateLocationFromLatLng(e.latLng.lat(), e.latLng.lng());
+                    google.maps.event.addListener(marker, 'dragend', function() {
+                        updateLocationFromLatLng(marker.getPosition().lat(), marker.getPosition().lng());
+                    });
+                });
+            }
+
+            setupPlaceAutocomplete();
         }
+
+        function setupPlaceAutocomplete() {
+            const input = document.getElementById('location-search');
+            let debounceTimer;
+
+            input.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value.trim();
+                if (query.length < 3) return;
+
+                debounceTimer = setTimeout(() => {
+                    autocompleteService.getPlacePredictions({
+                        input: query,
+                        types: ['address'],
+                        componentRestrictions: {
+                            country: 'IN'
+                        }
+                    }, (predictions, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK && predictions &&
+                            predictions.length) {
+                            const place = predictions[0];
+                            geocoder.geocode({
+                                placeId: place.place_id
+                            }, (results, status) => {
+                                if (status === 'OK' && results[0]) {
+                                    const location = results[0].geometry.location;
+                                    if (marker) marker.setMap(null);
+                                    marker = new google.maps.Marker({
+                                        position: location,
+                                        map: map,
+                                        title: 'Agent Location',
+                                        draggable: true,
+                                        icon: {
+                                            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                                            scaledSize: new google.maps.Size(40, 40)
+                                        }
+                                    });
+                                    map.setCenter(location);
+                                    map.setZoom(15);
+                                    updateLocationFromLatLng(location.lat(), location
+                                .lng());
+                                    input.value = results[0].formatted_address;
+                                }
+                            });
+                        }
+                    });
+                }, 300);
+            });
+        }
+
+        document.getElementById('detect-location').addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                showToast('Geolocation not supported', 'error');
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner" style="width:20px;height:20px;"></span> Detecting...';
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    if (marker) marker.setMap(null);
+                    marker = new google.maps.Marker({
+                        position: {
+                            lat: lat,
+                            lng: lng
+                        },
+                        map: map,
+                        title: 'Agent Location',
+                        draggable: true,
+                        icon: {
+                            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                            scaledSize: new google.maps.Size(40, 40)
+                        }
+                    });
+                    map.setCenter({
+                        lat: lat,
+                        lng: lng
+                    });
+                    map.setZoom(15);
+                    updateLocationFromLatLng(lat, lng);
+
+                    document.getElementById('detect-location').disabled = false;
+                    document.getElementById('detect-location').innerHTML =
+                        '<i class="fas fa-location-dot"></i> Update from Current Location';
+                },
+                function(error) {
+                    showToast('Could not detect location', 'error');
+                    document.getElementById('detect-location').disabled = false;
+                    document.getElementById('detect-location').innerHTML =
+                        '<i class="fas fa-location-dot"></i> Update from Current Location';
+                }
+            );
+        });
+
+        function updateLocationFromLatLng(lat, lng) {
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+
+            geocoder.geocode({
+                location: {
+                    lat: lat,
+                    lng: lng
+                }
+            }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    document.getElementById('current_location').value = results[0].formatted_address;
+                    document.getElementById('location-search').value = results[0].formatted_address;
+
+                    const components = {};
+                    results[0].address_components.forEach(comp => {
+                        const type = comp.types[0];
+                        components[type] = comp;
+                    });
+
+                    if (components.locality) document.getElementById('city').value = components.locality.long_name;
+                    if (components.administrative_area_level_1) document.getElementById('state').value = components
+                        .administrative_area_level_1.long_name;
+                    if (components.postal_code) document.getElementById('pincode').value = components.postal_code
+                        .long_name;
+
+                    autoSelectServiceAreas(components.locality?.long_name || '');
+                }
+            });
+        }
+
+        function autoSelectServiceAreas(city) {
+            const cityLower = city.toLowerCase();
+            const cities = ['ahmedabad', 'gandhinagar', 'surat', 'vadodara', 'rajkot', 'bhavnagar', 'anand', 'jamnagar',
+                'junagadh'
+            ];
+
+            cities.forEach(area => {
+                const checkbox = document.querySelector(
+                    `input[value="${area.charAt(0).toUpperCase() + area.slice(1)}"]`);
+                const container = document.querySelector(
+                    `.service-area-item[data-area="${area.charAt(0).toUpperCase() + area.slice(1)}"]`);
+                if (checkbox && cityLower.includes(area)) {
+                    checkbox.checked = true;
+                    if (container) container.classList.add('selected');
+                }
+            });
+        }
+
+        document.querySelectorAll('.service-area-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                const checkbox = this.querySelector('.checkbox-input');
+                checkbox.checked = !checkbox.checked;
+                if (checkbox.checked) {
+                    this.classList.add('selected');
+                } else {
+                    this.classList.remove('selected');
+                }
+            });
+        });
 
         function previewFile(input, previewId) {
             const preview = document.getElementById(previewId);
@@ -1492,20 +1333,16 @@
 
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-
-                // Check file size (2MB limit)
                 if (file.size > 2 * 1024 * 1024) {
                     showToast('File size must be less than 2MB', 'error');
                     input.value = '';
                     return;
                 }
-
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-preview-item';
-                fileItem.innerHTML = `
-                <span><i class="fas fa-file"></i> ${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
-                <span class="file-preview-remove" onclick="removeFile('${input.id}', '${previewId}')"><i class="fas fa-times-circle"></i></span>
-            `;
+                fileItem.innerHTML =
+                    `<span><i class="fas fa-file"></i> ${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
+                                  <span class="file-preview-remove" onclick="removeFile('${input.id}', '${previewId}')"><i class="fas fa-times-circle"></i></span>`;
                 preview.appendChild(fileItem);
             }
         }
@@ -1520,86 +1357,29 @@
             if (confirm(`Remove current ${type} document?`)) {
                 document.getElementById(`delete_${type}`).value = '1';
                 showToast(`${type} document will be removed when you save`, 'warning');
-
-                // Hide the current doc section
                 const docSection = event.target.closest('.current-doc');
-                if (docSection) {
-                    docSection.style.opacity = '0.5';
-                    docSection.style.pointerEvents = 'none';
-                }
+                if (docSection) docSection.style.opacity = '0.5';
             }
         }
 
-        // Form validation before submit
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = `<div class="toast-content"><span>${type === 'success' ? '✅' : '❌'}</span> ${message}</div>`;
+            toast.className = 'toast ' + type;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
         document.getElementById('agentForm').addEventListener('submit', function(e) {
-            const required = ['name', 'phone'];
-            let missing = [];
-
-            required.forEach(field => {
-                const input = document.querySelector(`[name="${field}"]`);
-                if (!input.value || input.value.trim() === '') {
-                    missing.push(field.replace('_', ' '));
-                }
-            });
-
-            if (missing.length > 0) {
-                e.preventDefault();
-                showToast('Please fill required fields: ' + missing.join(', '), 'error');
-                return;
-            }
-
-            // Phone number validation
             const phone = document.querySelector('[name="phone"]').value;
-            const phoneRegex = /^[0-9]{10}$/;
-            if (!phoneRegex.test(phone)) {
+            if (!/^[0-9]{10}$/.test(phone)) {
                 e.preventDefault();
                 showToast('Please enter a valid 10-digit phone number', 'error');
                 return;
             }
-
-            // Show loading overlay
             document.getElementById('loadingOverlay').style.display = 'flex';
         });
 
-        // Warn before leaving if changes made
-        let formChanged = false;
-        document.getElementById('agentForm').addEventListener('input', () => formChanged = true);
-
-        window.addEventListener('beforeunload', function(e) {
-            if (formChanged) {
-                e.preventDefault();
-                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-            }
-        });
-
-        // Character count and validation styling
-        document.querySelectorAll('input[type="text"], textarea, select').forEach(field => {
-            field.addEventListener('input', function() {
-                this.style.borderColor = this.value ? '#10b981' : '#e5e7eb';
-            });
-
-            // Trigger on load
-            if (field.value) {
-                field.style.borderColor = '#10b981';
-            }
-        });
-
-        // Add animation to checkboxes
-        document.querySelectorAll('.checkbox-input').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    this.closest('.checkbox-group, .service-area-item').style.background =
-                        'linear-gradient(135deg, #667eea10, #764ba210)';
-                } else {
-                    this.closest('.checkbox-group, .service-area-item').style.background = '#f8fafc';
-                }
-            });
-
-            // Trigger on load
-            if (checkbox.checked) {
-                checkbox.closest('.checkbox-group, .service-area-item').style.background =
-                    'linear-gradient(135deg, #667eea10, #764ba210)';
-            }
-        });
+        window.initMap = initMap;
     </script>
 @endsection

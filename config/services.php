@@ -14,6 +14,17 @@ return [
     |
     */
 
+
+    'google' => [
+        'maps_api_key' => env('GOOGLE_MAPS_API_KEY', ''),
+        'default_lat' => env('GOOGLE_DEFAULT_LAT', 22.524768),
+        'default_lng' => env('GOOGLE_DEFAULT_LNG', 72.955568),
+    ],
+
+    'trackingmore' => [
+        'api_key' => env('TRACKINGMORE_API_KEY', ''),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
@@ -33,12 +44,10 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
-
-
     ],
-    'openai' => [
-    'key' => env('OPENAI_API_KEY'),
-],
 
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+    ],
 
 ];

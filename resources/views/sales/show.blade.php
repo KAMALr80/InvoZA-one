@@ -1701,7 +1701,7 @@
 
                                         @if ($shipment->tracking_number)
                                             <div style="margin-top: 0.5rem; text-align: right;">
-                                                <a href="{{ route('logistics.track', $shipment->tracking_number) }}"
+                                                <a href="{{ route('logistics.live-track', $shipment->tracking_number) }}"
                                                     target="_blank" class="shipment-tracking-link">
                                                     <span>🔍</span> Track Shipment
                                                 </a>
@@ -1811,137 +1811,140 @@
                     </div>
                 @endif
 
-             {{-- ================= ✅ FIXED: ITEMS TABLE WITH PROPER MRP DISPLAY ================= --}}
-<div class="items-section">
-    <h3 class="section-title">🛒 Items Purchased</h3>
+                {{-- ================= ✅ FIXED: ITEMS TABLE WITH PROPER MRP DISPLAY ================= --}}
+                <div class="items-section">
+                    <h3 class="section-title">🛒 Items Purchased</h3>
 
-    <div class="table-responsive">
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th style="width: 50px;">#</th>
-                    <th>Product</th>
-                    <th class="text-right">MRP (₹)</th>
-                    <th class="text-right">Selling Price (₹)</th>
-                    <th class="text-right">Discount (₹)</th>
-                    <th class="text-center">Qty</th>
-                    <th class="text-right">Total (₹)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($sale->items as $index => $item)
-                    @php
-                        // ✅ Original MRP from sale_items table
-                        $originalMrp = $item->mrp ?? 0;
+                    <div class="table-responsive">
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Product</th>
+                                    <th class="text-right">MRP (₹)</th>
+                                    <th class="text-right">Selling Price (₹)</th>
+                                    <th class="text-right">Discount (₹)</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-right">Total (₹)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($sale->items as $index => $item)
+                                    @php
+                                        // ✅ Original MRP from sale_items table
+                                        $originalMrp = $item->mrp ?? 0;
 
-                        // ✅ Selling price from sale_items
-                        $sellingPrice = $item->price;
+                                        // ✅ Selling price from sale_items
+                                        $sellingPrice = $item->price;
 
-                        // ✅ Check if selling price is greater than MRP
-                        $isPriceIncreased = ($sellingPrice > $originalMrp && $originalMrp > 0);
+                                        // ✅ Check if selling price is greater than MRP
+                                        $isPriceIncreased = $sellingPrice > $originalMrp && $originalMrp > 0;
 
-                        // ✅ For price increased items: MRP = Selling Price, Discount = 0
-                        // ✅ For discounted items: MRP = Original MRP, Discount = Original MRP - Selling Price
-                        if ($isPriceIncreased) {
-                            $displayMrp = $sellingPrice;
-                            $displayDiscount = 0;
-                        } else {
-                            $displayMrp = $originalMrp;
-                            $displayDiscount = max(0, $originalMrp - $sellingPrice);
-                        }
+                                        // ✅ For price increased items: MRP = Selling Price, Discount = 0
+                                        // ✅ For discounted items: MRP = Original MRP, Discount = Original MRP - Selling Price
+                                        if ($isPriceIncreased) {
+                                            $displayMrp = $sellingPrice;
+                                            $displayDiscount = 0;
+                                        } else {
+                                            $displayMrp = $originalMrp;
+                                            $displayDiscount = max(0, $originalMrp - $sellingPrice);
+                                        }
 
-                        // ✅ If MRP is 0, use selling price
-                        if ($originalMrp == 0) {
-                            $displayMrp = $sellingPrice;
-                            $displayDiscount = 0;
-                        }
-                    @endphp
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>
-                            <div style="font-weight: 600;">{{ $item->product->name ?? 'Product Deleted' }}</div>
-                            @if ($item->product && $item->product->product_code)
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">Code: {{ $item->product->product_code }}</div>
+                                        // ✅ If MRP is 0, use selling price
+                                        if ($originalMrp == 0) {
+                                            $displayMrp = $sellingPrice;
+                                            $displayDiscount = 0;
+                                        }
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>
+                                            <div style="font-weight: 600;">{{ $item->product->name ?? 'Product Deleted' }}
+                                            </div>
+                                            @if ($item->product && $item->product->product_code)
+                                                <div style="font-size: 0.75rem; color: var(--text-muted);">Code:
+                                                    {{ $item->product->product_code }}</div>
+                                            @endif
+                                        </td>
+                                        <td class="text-right">
+                                            <span class="fw-bold">₹{{ number_format($displayMrp, 2) }}</span>
+                                        </td>
+                                        <td class="text-right">
+                                            <span class="selling-price">₹{{ number_format($sellingPrice, 2) }}</span>
+                                        </td>
+                                        <td class="text-right">
+                                            @if ($displayDiscount > 0)
+                                                <span class="discount-badge">-
+                                                    ₹{{ number_format($displayDiscount, 2) }}</span>
+                                                @if ($originalMrp > 0)
+                                                    <div style="font-size: 0.7rem; color: var(--success);">
+                                                        ({{ round(($displayDiscount / $originalMrp) * 100, 1) }}% off)
+                                                    </div>
+                                                @endif
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">{{ $item->quantity }}</td>
+                                        <td class="text-right fw-bold">₹{{ number_format($item->total, 2) }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Summary with all totals --}}
+                    <div class="summary-container">
+                        <div></div>
+                        <div class="summary-box">
+                            @php
+                                $totalMrp = 0;
+                                $totalDiscount = 0;
+                                foreach ($sale->items as $item) {
+                                    $originalMrp = $item->mrp ?? 0;
+                                    $sellingPrice = $item->price;
+
+                                    // For price increased items: use selling price as MRP for total
+                                    if ($sellingPrice > $originalMrp && $originalMrp > 0) {
+                                        $mrpForTotal = $sellingPrice;
+                                        $discountForTotal = 0;
+                                    } else {
+                                        $mrpForTotal = $originalMrp > 0 ? $originalMrp : $sellingPrice;
+                                        $discountForTotal = max(0, $originalMrp - $sellingPrice);
+                                    }
+
+                                    $totalMrp += $mrpForTotal * $item->quantity;
+                                    $totalDiscount += $discountForTotal * $item->quantity;
+                                }
+                            @endphp
+
+                            <div class="summary-row total-mrp-row">
+                                <span class="summary-label">Total MRP:</span>
+                                <span class="summary-value">₹{{ number_format($totalMrp, 2) }}</span>
+                            </div>
+                            @if ($totalDiscount > 0)
+                                <div class="summary-row total-discount-row">
+                                    <span class="summary-label">Total Discount:</span>
+                                    <span class="summary-value">- ₹{{ number_format($totalDiscount, 2) }}</span>
+                                </div>
                             @endif
-                        </td>
-                        <td class="text-right">
-                            <span class="fw-bold">₹{{ number_format($displayMrp, 2) }}</span>
-                        </td>
-                        <td class="text-right">
-                            <span class="selling-price">₹{{ number_format($sellingPrice, 2) }}</span>
-                        </td>
-                        <td class="text-right">
-                            @if ($displayDiscount > 0)
-                                <span class="discount-badge">- ₹{{ number_format($displayDiscount, 2) }}</span>
-                                @if ($originalMrp > 0)
-                                    <div style="font-size: 0.7rem; color: var(--success);">
-                                        ({{ round(($displayDiscount / $originalMrp) * 100, 1) }}% off)
-                                    </div>
-                                @endif
-                            @else
-                                <span class="text-muted">—</span>
-                            @endif
-                        </td>
-                        <td class="text-center">{{ $item->quantity }}</td>
-                        <td class="text-right fw-bold">₹{{ number_format($item->total, 2) }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    {{-- Summary with all totals --}}
-    <div class="summary-container">
-        <div></div>
-        <div class="summary-box">
-            @php
-                $totalMrp = 0;
-                $totalDiscount = 0;
-                foreach ($sale->items as $item) {
-                    $originalMrp = $item->mrp ?? 0;
-                    $sellingPrice = $item->price;
-
-                    // For price increased items: use selling price as MRP for total
-                    if ($sellingPrice > $originalMrp && $originalMrp > 0) {
-                        $mrpForTotal = $sellingPrice;
-                        $discountForTotal = 0;
-                    } else {
-                        $mrpForTotal = $originalMrp > 0 ? $originalMrp : $sellingPrice;
-                        $discountForTotal = max(0, $originalMrp - $sellingPrice);
-                    }
-
-                    $totalMrp += $mrpForTotal * $item->quantity;
-                    $totalDiscount += $discountForTotal * $item->quantity;
-                }
-            @endphp
-
-            <div class="summary-row total-mrp-row">
-                <span class="summary-label">Total MRP:</span>
-                <span class="summary-value">₹{{ number_format($totalMrp, 2) }}</span>
-            </div>
-            @if($totalDiscount > 0)
-            <div class="summary-row total-discount-row">
-                <span class="summary-label">Total Discount:</span>
-                <span class="summary-value">- ₹{{ number_format($totalDiscount, 2) }}</span>
-            </div>
-            @endif
-            <div class="summary-row">
-                <span class="summary-label">Subtotal (After Discount):</span>
-                <span class="summary-value">₹{{ number_format($sale->sub_total, 2) }}</span>
-            </div>
-            <div class="summary-row">
-                <span class="summary-label">Tax ({{ $sale->tax }}%):</span>
-                <span class="summary-value">+ ₹{{ number_format($sale->tax_amount, 2) }}</span>
-            </div>
-            <div class="grand-total">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Grand Total:</span>
-                    <span class="amount">₹{{ number_format($sale->grand_total, 2) }}</span>
+                            <div class="summary-row">
+                                <span class="summary-label">Subtotal (After Discount):</span>
+                                <span class="summary-value">₹{{ number_format($sale->sub_total, 2) }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Tax ({{ $sale->tax }}%):</span>
+                                <span class="summary-value">+ ₹{{ number_format($sale->tax_amount, 2) }}</span>
+                            </div>
+                            <div class="grand-total">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Grand Total:</span>
+                                    <span class="amount">₹{{ number_format($sale->grand_total, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
                 {{-- ================= PAYMENT HISTORY ================= --}}
                 <div class="payments-section">
                     <div class="section-header">

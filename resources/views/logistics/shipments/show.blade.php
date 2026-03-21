@@ -1,1846 +1,1150 @@
+{{-- resources/views/logistics/shipments/show.blade.php --}}
 @extends('layouts.app')
 
-@section('page-title', 'Shipment #' . $shipment->shipment_number)
+@section('title', 'Shipment Details - ' . $shipment->shipment_number)
 
 @section('content')
-<style>
-    /* ================= PROFESSIONAL SHIPMENT DETAILS STYLES ================= */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        min-height: 100vh;
-    }
-
-    /* ================= MAIN CONTAINER ================= */
-    .shipment-page {
-        min-height: 100vh;
-        background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-        padding: clamp(16px, 3vw, 30px);
-        width: 100%;
-    }
-
-    .container {
-        max-width: 1400px;
-        margin: 0 auto;
-        width: 100%;
-    }
-
-    /* ================= MAIN CARD ================= */
-    .shipment-card {
-        background: #ffffff;
-        border-radius: 30px;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
-        overflow: hidden;
-        width: 100%;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        animation: slideIn 0.5s ease;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* ================= HEADER ================= */
-    .shipment-header {
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: clamp(1.5rem, 4vw, 2rem);
-        color: white;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .shipment-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        animation: rotate 20s linear infinite;
-    }
-
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-        position: relative;
-        z-index: 1;
-    }
-
-    .header-left {
-        flex: 1;
-        min-width: 280px;
-    }
-
-    .header-title {
-        font-size: clamp(1.5rem, 5vw, 2rem);
-        font-weight: 700;
-        margin: 0 0 0.5rem 0;
-        line-height: 1.2;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .header-subtitle {
-        opacity: 0.9;
-        font-size: clamp(0.9rem, 2.5vw, 1rem);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .header-right {
-        display: flex;
-        gap: 0.75rem;
-        align-items: center;
-        flex-wrap: wrap;
-    }
-
-    .status-badge {
-        display: inline-block;
-        padding: 0.5rem 1.25rem;
-        border-radius: 30px;
-        font-weight: 600;
-        font-size: clamp(0.85rem, 2vw, 0.9rem);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        white-space: nowrap;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .status-badge.pending {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: white;
-    }
-
-    .status-badge.picked {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: white;
-    }
-
-    .status-badge.in_transit {
-        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-        color: white;
-    }
-
-    .status-badge.out_for_delivery {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-    }
-
-    .status-badge.delivered {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-    }
-
-    .status-badge.failed {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        color: white;
-    }
-
-    .status-badge.returned {
-        background: linear-gradient(135deg, #6b7280, #4b5563);
-        color: white;
-    }
-
-    .header-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .header-btn {
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        padding: 0.5rem 1.25rem;
-        border-radius: 30px;
-        font-size: clamp(0.8rem, 2vw, 0.85rem);
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        white-space: nowrap;
-        backdrop-filter: blur(5px);
-    }
-
-    .header-btn:hover {
-        background: white;
-        color: #1e293b;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    /* ================= PROGRESS BAR ================= */
-    .progress-section {
-        padding: 1.5rem clamp(1.5rem, 4vw, 2rem);
-        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .progress-steps {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .step {
-        flex: 1;
-        text-align: center;
-        position: relative;
-        min-width: 80px;
-    }
-
-    .step:not(:last-child)::after {
-        content: '';
-        position: absolute;
-        top: 15px;
-        right: -50%;
-        width: 100%;
-        height: 2px;
-        background: #e5e7eb;
-        z-index: 1;
-    }
-
-    .step.completed:not(:last-child)::after {
-        background: linear-gradient(135deg, #10b981, #059669);
-    }
-
-    .step-icon {
-        width: 32px;
-        height: 32px;
-        background: #e5e7eb;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 0.5rem;
-        position: relative;
-        z-index: 2;
-        font-size: 16px;
-        color: #64748b;
-        transition: all 0.3s ease;
-    }
-
-    .step.completed .step-icon {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
-    }
-
-    .step.active .step-icon {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-        animation: pulse 2s infinite;
-    }
-
-    .step-label {
-        font-size: 0.8rem;
-        color: #64748b;
-        font-weight: 600;
-        word-break: break-word;
-    }
-
-    .step.completed .step-label {
-        color: #10b981;
-    }
-
-    .step.active .step-label {
-        color: #667eea;
-        font-weight: 700;
-    }
-
-    .progress-bar {
-        width: 100%;
-        height: 8px;
-        background: #e5e7eb;
-        border-radius: 4px;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        width: 0%;
-        transition: width 0.3s ease;
-    }
-
-    /* ================= INFO GRID ================= */
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        padding: clamp(1.5rem, 4vw, 2rem);
-        background: white;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .info-card {
-        background: #f8fafc;
-        border-radius: 20px;
-        padding: 1.5rem;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-    }
-
-    .info-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
-        border-color: #667eea;
-    }
-
-    .info-title {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-size: 1rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .info-icon {
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.2rem;
-        box-shadow: 0 5px 10px rgba(102, 126, 234, 0.2);
-    }
-
-    .info-content {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        padding: 0.25rem 0;
-        border-bottom: 1px dashed #e5e7eb;
-    }
-
-    .info-row:last-child {
-        border-bottom: none;
-    }
-
-    .info-label {
-        color: #64748b;
-        font-size: 0.85rem;
-        font-weight: 500;
-        word-break: break-word;
-    }
-
-    .info-value {
-        font-weight: 600;
-        color: #1e293b;
-        text-align: right;
-        word-break: break-word;
-    }
-
-    .info-value.highlight {
-        color: #667eea;
-        font-size: 1.1rem;
-    }
-
-    .address-text {
-        font-size: 0.95rem;
-        line-height: 1.6;
-        color: #334155;
-        word-break: break-word;
-    }
-
-    /* ================= CHARGES CARD ================= */
-    .charges-card {
-        background: linear-gradient(135deg, #1e293b, #0f172a);
-        color: white;
-    }
-
-    .charges-card .info-title {
-        color: white;
-        border-bottom-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .charges-card .info-icon {
-        background: rgba(255, 255, 255, 0.2);
-    }
-
-    .charges-card .info-label {
-        color: rgba(255, 255, 255, 0.7);
-    }
-
-    .charges-card .info-value {
-        color: white;
-    }
-
-    .total-charge {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin-top: 0.5rem;
-        padding-top: 0.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    /* ================= TRACKING HISTORY ================= */
-    .tracking-section {
-        padding: clamp(1.5rem, 4vw, 2rem);
-        background: #f8fafc;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .section-title {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .section-title i {
-        color: #667eea;
-    }
-
-    .timeline {
-        position: relative;
-        padding-left: 2rem;
-    }
-
-    .timeline::before {
-        content: '';
-        position: absolute;
-        left: 7px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        opacity: 0.3;
-    }
-
-    .timeline-item {
-        position: relative;
-        padding-bottom: 1.5rem;
-    }
-
-    .timeline-item:last-child {
-        padding-bottom: 0;
-    }
-
-    .timeline-dot {
-        position: absolute;
-        left: -2rem;
-        top: 0;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: #667eea;
-        border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
-        z-index: 2;
-    }
-
-    .timeline-item.completed .timeline-dot {
-        background: #10b981;
-    }
-
-    .timeline-item.current .timeline-dot {
-        background: #667eea;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
-        }
-        70% {
-            box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
-        }
-    }
-
-    .timeline-content {
-        background: white;
-        padding: 1rem 1.5rem;
-        border-radius: 16px;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 0.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .timeline-content:hover {
-        border-color: #667eea;
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
-        transform: translateX(5px);
-    }
-
-    .timeline-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .timeline-status {
-        font-weight: 700;
-        color: #1e293b;
-        text-transform: uppercase;
-        font-size: 0.9rem;
-        background: linear-gradient(135deg, #667eea10, #764ba210);
-        padding: 0.25rem 0.75rem;
-        border-radius: 30px;
-    }
-
-    .timeline-time {
-        color: #64748b;
-        font-size: 0.85rem;
-    }
-
-    .timeline-location {
-        color: #667eea;
-        font-size: 0.9rem;
-        margin-bottom: 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .timeline-remarks {
-        color: #64748b;
-        font-size: 0.85rem;
-        font-style: italic;
-        background: #f1f5f9;
-        padding: 0.5rem;
-        border-radius: 8px;
-    }
-
-    /* ================= ACTION BUTTONS ================= */
-    .actions-section {
-        padding: 1.5rem clamp(1.5rem, 4vw, 2rem);
-        background: white;
-        text-align: center;
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .btn {
-        padding: 0.875rem 2rem;
-        border-radius: 30px;
-        font-weight: 600;
-        font-size: 0.95rem;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        border: none;
-        cursor: pointer;
-        white-space: nowrap;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .btn::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
-        transform: translate(-50%, -50%);
-        transition: width 0.6s, height 0.6s;
-    }
-
-    .btn:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-    }
-
-    .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-success {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-success:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 30px rgba(16, 185, 129, 0.4);
-    }
-
-    .btn-warning {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: white;
-        box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
-    }
-
-    .btn-warning:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 15px 30px rgba(245, 158, 11, 0.4);
-    }
-
-    .btn-secondary {
-        background: #f1f5f9;
-        color: #475569;
-        border: 2px solid #e5e7eb;
-    }
-
-    .btn-secondary:hover {
-        background: #e2e8f0;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-    }
-
-    .btn i {
-        font-size: 1rem;
-        transition: transform 0.3s ease;
-    }
-
-    .btn:hover i {
-        transform: scale(1.2);
-    }
-
-    /* ================= STATUS UPDATE FORM ================= */
-    .status-update-section {
-        padding: 1.5rem clamp(1.5rem, 4vw, 2rem);
-        background: #f8fafc;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .status-form {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        align-items: flex-end;
-    }
-
-    .status-form-group {
-        flex: 1;
-        min-width: 150px;
-    }
-
-    .status-label {
-        display: block;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #64748b;
-        margin-bottom: 0.5rem;
-    }
-
-    .status-select,
-    .status-input,
-    .status-textarea {
-        width: 100%;
-        padding: 0.75rem 1rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
-        font-size: 0.95rem;
-        color: #1e293b;
-        background: white;
-        transition: all 0.3s ease;
-        font-family: inherit;
-    }
-
-    .status-select:focus,
-    .status-input:focus,
-    .status-textarea:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-    }
-
-    .status-textarea {
-        resize: vertical;
-        min-height: 80px;
-    }
-
-    .status-submit {
-        padding: 0.875rem 2rem;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        border: none;
-        border-radius: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        white-space: nowrap;
-    }
-
-    .status-submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-    }
-
-    /* ================= POD SECTION ================= */
-    .pod-section {
-        padding: 1.5rem clamp(1.5rem, 4vw, 2rem);
-        background: white;
-        border-top: 1px solid #e5e7eb;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .pod-card {
-        background: #f8fafc;
-        border-radius: 20px;
-        padding: 1.5rem;
-        border: 1px solid #e5e7eb;
-        transition: all 0.3s ease;
-    }
-
-    .pod-card:hover {
-        border-color: #667eea;
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
-    }
-
-    .pod-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .pod-title i {
-        color: #667eea;
-    }
-
-    .pod-image {
-        width: 100%;
-        max-height: 200px;
-        object-fit: cover;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    }
-
-    .pod-image:hover {
-        transform: scale(1.02);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
-    }
-
-    .pod-notes {
-        background: white;
-        padding: 1rem;
-        border-radius: 12px;
-        font-size: 0.95rem;
-        color: #475569;
-        border: 1px solid #e5e7eb;
-        margin-top: 0.5rem;
-        font-style: italic;
-    }
-
-    .pod-upload-form {
-        margin-top: 1rem;
-    }
-
-    .file-input-group {
-        margin-bottom: 1rem;
-    }
-
-    .file-label {
-        display: block;
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-    }
-
-    .file-input {
-        width: 100%;
-        padding: 0.5rem;
-        border: 2px dashed #e5e7eb;
-        border-radius: 12px;
-        background: white;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .file-input:hover {
-        border-color: #667eea;
-        background: #f8fafc;
-    }
-
-    .file-preview {
-        margin-top: 0.5rem;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .file-preview-item {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.85rem;
-        position: relative;
-    }
-
-    .file-preview-item img {
-        width: 40px;
-        height: 40px;
-        border-radius: 4px;
-        object-fit: cover;
-    }
-
-    .file-preview-remove {
-        color: #ef4444;
-        cursor: pointer;
-        font-size: 1.2rem;
-        padding: 0 0.25rem;
-    }
-
-    .file-preview-remove:hover {
-        color: #dc2626;
-        transform: scale(1.2);
-    }
-
-    .upload-progress {
-        margin: 1rem 0;
-        display: none;
-    }
-
-    .progress-bar-container {
-        width: 100%;
-        height: 8px;
-        background: #e5e7eb;
-        border-radius: 4px;
-        overflow: hidden;
-    }
-
-    .progress-bar-fill {
-        height: 100%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        width: 0%;
-        transition: width 0.3s ease;
-    }
-
-    .progress-text {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 0.25rem;
-        font-size: 0.8rem;
-        color: #64748b;
-    }
-
-    /* ================= RELATED SHIPMENTS ================= */
-    .related-section {
-        padding: 1.5rem clamp(1.5rem, 4vw, 2rem);
-        background: #f8fafc;
-        border-top: 1px solid #e5e7eb;
-    }
-
-    .related-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
-    }
-
-    .related-card {
-        background: white;
-        padding: 1rem;
-        border-radius: 16px;
-        border: 1px solid #e5e7eb;
-        text-decoration: none;
-        color: inherit;
-        transition: all 0.3s ease;
-        display: block;
-    }
-
-    .related-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
-        border-color: #667eea;
-    }
-
-    .related-number {
-        font-weight: 700;
-        color: #667eea;
-        margin-bottom: 0.5rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .related-status {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 30px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .related-status.pending {
-        background: #fef3c7;
-        color: #92400e;
-    }
-
-    .related-status.delivered {
-        background: #d1fae5;
-        color: #065f46;
-    }
-
-    .related-status.in_transit {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-
-    .related-address {
-        font-size: 0.85rem;
-        color: #64748b;
-        word-break: break-word;
-    }
-
-    /* ================= TOAST ================= */
-    .toast {
-        position: fixed;
-        top: 30px;
-        right: 30px;
-        padding: 1rem 1.5rem;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        border-left: 4px solid;
-        display: none;
-        z-index: 10000;
-        max-width: 400px;
-        width: calc(100% - 60px);
-        animation: slideInRight 0.3s ease;
-    }
-
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    .toast.success {
-        border-left-color: #10b981;
-    }
-
-    .toast.error {
-        border-left-color: #ef4444;
-    }
-
-    .toast.warning {
-        border-left-color: #f59e0b;
-    }
-
-    .toast-content {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        color: #1e293b;
-    }
-
-    .toast-icon {
-        font-size: 1.5rem;
-    }
-
-    .toast-message {
-        font-weight: 500;
-    }
-
-    /* ================= LOADING OVERLAY ================= */
-    .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(5px);
-        z-index: 11000;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .spinner {
-        width: 50px;
-        height: 50px;
-        border: 4px solid #e5e7eb;
-        border-top-color: #667eea;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    .loading-text {
-        color: #1e293b;
-        font-weight: 600;
-        font-size: 1.1rem;
-        background: white;
-        padding: 1rem 2rem;
-        border-radius: 30px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    }
-
-    /* ================= RESPONSIVE ================= */
-    @media (max-width: 768px) {
-        .shipment-page {
-            padding: 1rem;
-        }
-
-        .header-content {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .header-title {
-            font-size: 1.5rem;
-        }
-
-        .status-form {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .status-form-group {
-            width: 100%;
-        }
-
-        .status-submit {
-            width: 100%;
-        }
-
-        .info-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .action-buttons {
-            flex-direction: column;
-        }
-
-        .btn {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .progress-steps {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .step {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .step:not(:last-child)::after {
-            display: none;
-        }
-
-        .step-icon {
+    <style>
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .pod-section {
-            grid-template-columns: 1fr;
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
 
-        .toast {
-            left: 15px;
-            right: 15px;
-            width: calc(100% - 30px);
-        }
-    }
-
-    /* ================= PRINT STYLES ================= */
-    @media print {
-        .header-actions,
-        .actions-section,
-        .status-update-section,
-        .pod-upload-form,
-        .btn {
-            display: none !important;
+        .shipment-detail-page {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-        .shipment-card {
-            box-shadow: none;
-            border: 1px solid #000;
+        .header-card {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 24px;
+            padding: 24px 32px;
+            margin-bottom: 24px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-info h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+        }
+
+        .header-info p {
+            opacity: 0.9;
+            margin: 0;
+            font-size: 14px;
         }
 
         .status-badge {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
         }
-    }
-</style>
 
-<div class="shipment-page">
-    {{-- Loading Overlay --}}
-    <div id="loadingOverlay" class="loading-overlay">
-        <div class="spinner"></div>
-        <div class="loading-text">Processing...</div>
-    </div>
+        .status-badge.pending {
+            background: #f59e0b;
+            color: white;
+        }
 
-    {{-- Header --}}
-    <div class="shipment-header">
-        <div class="header-content">
-            <div class="header-left">
-                <h1 class="header-title">
-                    Shipment Details
-                    <span class="status-badge {{ $shipment->status }}">
-                        {{ strtoupper(str_replace('_', ' ', $shipment->status)) }}
-                    </span>
-                </h1>
-                <div class="header-subtitle">
-                    <span><i class="fas fa-hashtag"></i> {{ $shipment->shipment_number }}</span>
-                    @if($shipment->tracking_number)
-                    <span>•</span>
-                    <span><i class="fas fa-barcode"></i> {{ $shipment->tracking_number }}</span>
+        .status-badge.picked {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .status-badge.in_transit {
+            background: #8b5cf6;
+            color: white;
+        }
+
+        .status-badge.out_for_delivery {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-badge.delivered {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-badge.failed {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-icon {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 18px;
+            border-radius: 40px;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-icon:hover {
+            background: white;
+            color: #1e3c72;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.8);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-danger:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e9ecef;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid #e9ecef;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: #667eea;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f3f5;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        .address-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #495057;
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+
+        .agent-info-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 12px;
+            color: white;
+        }
+
+        .agent-info-card .agent-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .agent-info-card .agent-details {
+            font-size: 12px;
+            opacity: 0.9;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .map-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+            margin-bottom: 24px;
+        }
+
+        .map-header {
+            padding: 20px 24px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .map-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .map-coordinates {
+            font-size: 12px;
+            color: #6c757d;
+            font-family: monospace;
+            background: #e9ecef;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .map-container {
+            height: 500px;
+            width: 100%;
+            position: relative;
+            background: #e9ecef;
+        }
+
+        #shipmentMap {
+            height: 100%;
+            width: 100%;
+        }
+
+        .route-info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            font-size: 13px;
+            display: flex;
+            gap: 20px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .timeline-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid #e9ecef;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            opacity: 0.3;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -30px;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            background: #667eea;
+            border-radius: 50%;
+            border: 3px solid white;
+        }
+
+        .timeline-content {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        .timeline-status {
+            font-weight: 700;
+            font-size: 13px;
+            color: #1e293b;
+        }
+
+        .timeline-time {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+
+        .action-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .agent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .agent-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .agent-item:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+
+        .agent-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+        }
+
+        .agent-info p {
+            font-size: 12px;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .agent-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .agent-status.available {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .assign-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-agent-btn {
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toast-notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #10b981;
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .shipment-detail-page {
+                padding: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .map-container {
+                height: 400px;
+            }
+        }
+    </style>
+
+    <div class="shipment-detail-page">
+        {{-- Header --}}
+        <div class="header-card">
+            <div class="header-info">
+                <h1>Shipment #{{ $shipment->shipment_number }}</h1>
+                <p>
+                    <i class="fas fa-barcode"></i> Tracking: {{ $shipment->tracking_number ?? 'Not assigned' }}
+                    @if ($shipment->sale_id)
+                        <span style="margin-left: 16px;"><i class="fas fa-file-invoice"></i> Invoice: <a
+                                href="{{ route('sales.show', $shipment->sale_id) }}"
+                                style="color: white; text-decoration: underline;">{{ $shipment->sale->invoice_no ?? 'N/A' }}</a></span>
                     @endif
-                </div>
+                </p>
             </div>
-            <div class="header-right">
-                <div class="header-actions">
-                    <button class="header-btn" onclick="copyShipmentNo()" title="Copy Shipment Number">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                    <a href="{{ route('logistics.track', $shipment->tracking_number ?? $shipment->shipment_number) }}"
-                       class="header-btn" target="_blank" title="Track Shipment">
-                        <i class="fas fa-map-marked-alt"></i> Track
-                    </a>
-                    @if($shipment->status != 'delivered')
-                    <button class="header-btn" onclick="quickDeliver()" title="Mark as Delivered">
-                        <i class="fas fa-check-circle"></i> Deliver
-                    </button>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Progress Bar --}}
-    <div class="progress-section">
-        @php
-            $statusOrder = ['pending' => 0, 'picked' => 20, 'in_transit' => 40, 'out_for_delivery' => 70, 'delivered' => 100];
-            $progress = $statusOrder[$shipment->status] ?? 0;
-        @endphp
-        <div class="progress-steps">
-            <div class="step {{ in_array($shipment->status, ['picked', 'in_transit', 'out_for_delivery', 'delivered']) ? 'completed' : '' }} {{ $shipment->status == 'pending' ? 'active' : '' }}">
-                <div class="step-icon">📦</div>
-                <div class="step-label">Pending</div>
-            </div>
-            <div class="step {{ in_array($shipment->status, ['in_transit', 'out_for_delivery', 'delivered']) ? 'completed' : '' }} {{ $shipment->status == 'picked' ? 'active' : '' }}">
-                <div class="step-icon">📌</div>
-                <div class="step-label">Picked Up</div>
-            </div>
-            <div class="step {{ in_array($shipment->status, ['out_for_delivery', 'delivered']) ? 'completed' : '' }} {{ $shipment->status == 'in_transit' ? 'active' : '' }}">
-                <div class="step-icon">🚚</div>
-                <div class="step-label">In Transit</div>
-            </div>
-            <div class="step {{ $shipment->status == 'delivered' ? 'completed' : '' }} {{ $shipment->status == 'out_for_delivery' ? 'active' : '' }}">
-                <div class="step-icon">🚀</div>
-                <div class="step-label">Out for Delivery</div>
-            </div>
-            <div class="step {{ $shipment->status == 'delivered' ? 'completed active' : '' }}">
-                <div class="step-icon">✅</div>
-                <div class="step-label">Delivered</div>
-            </div>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: {{ $progress }}%"></div>
-        </div>
-    </div>
-
-    {{-- Info Grid --}}
-    <div class="info-grid">
-        {{-- Receiver Info --}}
-        <div class="info-card">
-            <div class="info-title">
-                <div class="info-icon"><i class="fas fa-user"></i></div>
-                <span>Receiver Details</span>
-            </div>
-            <div class="info-content">
-                <div class="info-row">
-                    <span class="info-label">Name:</span>
-                    <span class="info-value">{{ $shipment->receiver_name }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Phone:</span>
-                    <span class="info-value">{{ $shipment->receiver_phone }}</span>
-                </div>
-                @if($shipment->receiver_alternate_phone)
-                <div class="info-row">
-                    <span class="info-label">Alt. Phone:</span>
-                    <span class="info-value">{{ $shipment->receiver_alternate_phone }}</span>
-                </div>
-                @endif
-            </div>
-        </div>
-
-        {{-- Address Info --}}
-        <div class="info-card">
-            <div class="info-title">
-                <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
-                <span>Delivery Address</span>
-            </div>
-            <div class="address-text">
-                <i class="fas fa-map-pin" style="color: #667eea; margin-right: 0.5rem;"></i>
-                {{ $shipment->full_address }}
-            </div>
-        </div>
-
-        {{-- Package Info --}}
-        <div class="info-card">
-            <div class="info-title">
-                <div class="info-icon"><i class="fas fa-box"></i></div>
-                <span>Package Details</span>
-            </div>
-            <div class="info-content">
-                <div class="info-row">
-                    <span class="info-label">Weight:</span>
-                    <span class="info-value">{{ $shipment->weight ?? 'N/A' }} kg</span>
-                </div>
-                @if($shipment->length && $shipment->width && $shipment->height)
-                <div class="info-row">
-                    <span class="info-label">Dimensions:</span>
-                    <span class="info-value">{{ $shipment->length }} x {{ $shipment->width }} x {{ $shipment->height }} cm</span>
-                </div>
-                @endif
-                <div class="info-row">
-                    <span class="info-label">Quantity:</span>
-                    <span class="info-value">{{ $shipment->quantity }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Package Type:</span>
-                    <span class="info-value">{{ ucfirst($shipment->package_type ?? 'box') }}</span>
-                </div>
-            </div>
-        </div>
-
-        {{-- Courier Info --}}
-        <div class="info-card">
-            <div class="info-title">
-                <div class="info-icon"><i class="fas fa-truck"></i></div>
-                <span>Courier Details</span>
-            </div>
-            <div class="info-content">
-                <div class="info-row">
-                    <span class="info-label">Courier Partner:</span>
-                    <span class="info-value">{{ $shipment->courier_partner ?? 'Not Assigned' }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Tracking Number:</span>
-                    <span class="info-value">{{ $shipment->tracking_number ?? 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">AWB Number:</span>
-                    <span class="info-value">{{ $shipment->awb_number ?? 'N/A' }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Shipping Method:</span>
-                    <span class="info-value">{{ ucfirst($shipment->shipping_method ?? 'standard') }}</span>
-                </div>
-            </div>
-        </div>
-
-        {{-- Dates Info --}}
-        <div class="info-card">
-            <div class="info-title">
-                <div class="info-icon"><i class="fas fa-calendar-alt"></i></div>
-                <span>Delivery Dates</span>
-            </div>
-            <div class="info-content">
-                <div class="info-row">
-                    <span class="info-label">Pickup Date:</span>
-                    <span class="info-value">{{ $shipment->pickup_date ? $shipment->pickup_date->format('d M Y') : 'Not picked' }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Estimated Delivery:</span>
-                    <span class="info-value">{{ $shipment->estimated_delivery_date ? $shipment->estimated_delivery_date->format('d M Y') : 'Not set' }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Actual Delivery:</span>
-                    <span class="info-value">{{ $shipment->actual_delivery_date ? $shipment->actual_delivery_date->format('d M Y') : 'Not delivered' }}</span>
-                </div>
-            </div>
-        </div>
-
-        {{-- Charges Info --}}
-        <div class="info-card charges-card">
-            <div class="info-title">
-                <div class="info-icon"><i class="fas fa-coins"></i></div>
-                <span>Shipping Charges</span>
-            </div>
-            <div class="info-content">
-                <div class="info-row">
-                    <span class="info-label">Shipping Charge:</span>
-                    <span class="info-value">₹{{ number_format($shipment->shipping_charge, 2) }}</span>
-                </div>
-                @if($shipment->cod_charge > 0)
-                <div class="info-row">
-                    <span class="info-label">COD Charge:</span>
-                    <span class="info-value">₹{{ number_format($shipment->cod_charge, 2) }}</span>
-                </div>
-                @endif
-                @if($shipment->insurance_charge > 0)
-                <div class="info-row">
-                    <span class="info-label">Insurance:</span>
-                    <span class="info-value">₹{{ number_format($shipment->insurance_charge, 2) }}</span>
-                </div>
-                @endif
-                <div class="total-charge">
-                    <div class="info-row">
-                        <span class="info-label">Total Charge:</span>
-                        <span class="info-value">₹{{ number_format($shipment->total_charge, 2) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Tracking History --}}
-    <div class="tracking-section">
-        <h3 class="section-title">
-            <i class="fas fa-history"></i>
-            Tracking History
-        </h3>
-
-        <div class="timeline">
-            @forelse($shipment->trackings->sortByDesc('tracked_at') as $index => $track)
-            <div class="timeline-item {{ $index === 0 ? 'current' : 'completed' }}">
-                <div class="timeline-dot"></div>
-                <div class="timeline-content">
-                    <div class="timeline-header">
-                        <span class="timeline-status">{{ strtoupper(str_replace('_', ' ', $track->status)) }}</span>
-                        <span class="timeline-time">{{ $track->tracked_at->format('d M Y, h:i A') }}</span>
-                    </div>
-                    @if($track->location)
-                    <div class="timeline-location">
-                        <i class="fas fa-map-pin"></i>
-                        <span>{{ $track->location }}</span>
-                    </div>
-                    @endif
-                    @if($track->remarks)
-                    <div class="timeline-remarks">
-                        "{{ $track->remarks }}"
-                    </div>
-                    @endif
-                </div>
-            </div>
-            @empty
-            <div style="text-align: center; padding: 2rem; color: #64748b;">
-                <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                <p>No tracking history available</p>
-            </div>
-            @endforelse
-        </div>
-    </div>
-
-    {{-- Action Buttons --}}
-    <div class="actions-section">
-        <div class="action-buttons">
-            <a href="{{ route('logistics.shipments.edit', $shipment->id) }}" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Edit Shipment
-            </a>
-            @if(!$shipment->courier_partner)
-            <a href="{{ route('logistics.shipments.edit', $shipment->id) }}" class="btn btn-warning">
-                <i class="fas fa-truck"></i> Assign Courier
-            </a>
-            @endif
-            @if($shipment->status != 'delivered')
-            <button onclick="showStatusUpdate()" class="btn btn-success">
-                <i class="fas fa-sync-alt"></i> Update Status
-            </button>
-            @endif
-            <a href="{{ route('logistics.shipments.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
-        </div>
-    </div>
-
-    {{-- Status Update Form --}}
-    @if($shipment->status != 'delivered')
-    <div id="statusUpdateSection" class="status-update-section" style="display: none;">
-        <h3 class="section-title" style="margin-bottom: 1rem;">
-            <i class="fas fa-truck"></i> Update Shipment Status
-        </h3>
-        <form id="statusForm" class="status-form">
-            @csrf
-            <div class="status-form-group">
-                <label class="status-label">Status</label>
-                <select name="status" class="status-select" required>
-                    <option value="">Select Status</option>
-                    <option value="picked" {{ $shipment->status == 'picked' ? 'selected' : '' }}>📦 Picked Up</option>
-                    <option value="in_transit" {{ $shipment->status == 'in_transit' ? 'selected' : '' }}>🚚 In Transit</option>
-                    <option value="out_for_delivery" {{ $shipment->status == 'out_for_delivery' ? 'selected' : '' }}>🚀 Out for Delivery</option>
-                    <option value="delivered">✅ Delivered</option>
-                    <option value="failed">❌ Failed</option>
-                    <option value="returned">🔄 Returned</option>
-                </select>
-            </div>
-            <div class="status-form-group">
-                <label class="status-label">Location</label>
-                <input type="text" name="location" class="status-input" placeholder="Current location">
-            </div>
-            <div style="flex: 2; min-width: 250px;">
-                <label class="status-label">Remarks</label>
-                <textarea name="remarks" class="status-textarea" placeholder="Additional notes..."></textarea>
-            </div>
-            <button type="submit" class="status-submit">
-                <i class="fas fa-check"></i> Update Status
-            </button>
-        </form>
-    </div>
-    @endif
-
-    {{-- Proof of Delivery Section --}}
-    @if($shipment->status == 'delivered' || $shipment->pod_signature || $shipment->pod_photo)
-    <div class="pod-section">
-        @if($shipment->pod_signature)
-        <div class="pod-card">
-            <div class="pod-title">
-                <i class="fas fa-signature"></i> Signature
-            </div>
-            <img src="{{ Storage::url($shipment->pod_signature) }}" alt="Signature" class="pod-image" onclick="window.open(this.src)">
-        </div>
-        @endif
-
-        @if($shipment->pod_photo)
-        <div class="pod-card">
-            <div class="pod-title">
-                <i class="fas fa-camera"></i> Delivery Photo
-            </div>
-            <img src="{{ Storage::url($shipment->pod_photo) }}" alt="Delivery Photo" class="pod-image" onclick="window.open(this.src)">
-        </div>
-        @endif
-
-        @if($shipment->delivery_notes)
-        <div class="pod-card">
-            <div class="pod-title">
-                <i class="fas fa-sticky-note"></i> Delivery Notes
-            </div>
-            <div class="pod-notes">
-                {{ $shipment->delivery_notes }}
-            </div>
-        </div>
-        @endif
-
-        {{-- Upload POD Form - Only show if delivered and missing files --}}
-        @if($shipment->status == 'delivered' && (!$shipment->pod_signature || !$shipment->pod_photo))
-        <div class="pod-card">
-            <div class="pod-title">
-                <i class="fas fa-cloud-upload-alt"></i> Upload Proof of Delivery
-            </div>
-
-            {{-- Upload Progress --}}
-            <div class="upload-progress" id="uploadProgress">
-                <div class="progress-bar-container">
-                    <div class="progress-bar-fill" id="progressBar"></div>
-                </div>
-                <div class="progress-text">
-                    <span id="uploadStatus">Uploading...</span>
-                    <span id="uploadPercent">0%</span>
-                </div>
-            </div>
-
-            <form class="pod-upload-form" id="podForm" enctype="multipart/form-data">
-                @csrf
-
-                @if(!$shipment->pod_signature)
-                <div class="file-input-group">
-                    <label class="file-label">
-                        <i class="fas fa-signature"></i> Signature Image
-                    </label>
-                    <input type="file" name="signature" id="signatureInput" class="file-input" accept="image/*" onchange="previewFile(this, 'signaturePreview')">
-                    <div id="signaturePreview" class="file-preview"></div>
-                    <small style="color: #64748b;">Max 5MB (JPG, PNG, GIF)</small>
-                </div>
-                @endif
-
-                @if(!$shipment->pod_photo)
-                <div class="file-input-group">
-                    <label class="file-label">
-                        <i class="fas fa-camera"></i> Delivery Photo
-                    </label>
-                    <input type="file" name="photo" id="photoInput" class="file-input" accept="image/*" onchange="previewFile(this, 'photoPreview')">
-                    <div id="photoPreview" class="file-preview"></div>
-                    <small style="color: #64748b;">Max 10MB (JPG, PNG, GIF)</small>
-                </div>
-                @endif
-
-                <div class="file-input-group">
-                    <label class="file-label">
-                        <i class="fas fa-sticky-note"></i> Delivery Notes
-                    </label>
-                    <textarea name="delivery_notes" class="status-textarea" placeholder="Any notes about the delivery..." rows="3">{{ old('delivery_notes') }}</textarea>
-                </div>
-
-                <button type="submit" class="pod-upload-btn" id="podSubmitBtn">
-                    <i class="fas fa-cloud-upload-alt"></i> Upload POD
-                </button>
-            </form>
-        </div>
-        @endif
-    </div>
-    @endif
-
-    {{-- Related Shipments --}}
-    @if(isset($relatedShipments) && $relatedShipments->count() > 0)
-    <div class="related-section">
-        <h3 class="section-title">
-            <i class="fas fa-link"></i> Related Shipments
-        </h3>
-        <div class="related-grid">
-            @foreach($relatedShipments as $related)
-            <a href="{{ route('logistics.shipments.show', $related->id) }}" class="related-card">
-                <div class="related-number">
-                    <i class="fas fa-box"></i> #{{ $related->shipment_number }}
-                </div>
-                <span class="related-status {{ $related->status }}">
-                    {{ ucfirst(str_replace('_', ' ', $related->status)) }}
+            <div class="action-buttons">
+                <span class="status-badge {{ $shipment->status }}">
+                    {{ strtoupper(str_replace('_', ' ', $shipment->status)) }}
                 </span>
-                <div class="related-address">
-                    <i class="fas fa-map-pin"></i> {{ $related->city }}, {{ $related->state }}
+                <button class="btn-icon" onclick="copyTracking()">
+                    <i class="fas fa-copy"></i> Copy Tracking
+                </button>
+                <button class="btn-icon" id="assignAgentBtn" onclick="showAssignAgentModal()"
+                    style="{{ $shipment->assigned_to ? 'display: none;' : '' }}">
+                    <i class="fas fa-user-plus"></i> Assign Agent
+                </button>
+                <button class="btn-icon btn-danger" id="removeAgentBtn" onclick="removeAgent()"
+                    style="{{ $shipment->assigned_to ? '' : 'display: none;' }}">
+                    <i class="fas fa-user-minus"></i> Remove Agent
+                </button>
+                @if ($shipment->tracking_number)
+                    <a href="{{ route('logistics.live-track', $shipment->tracking_number) }}" class="btn-icon"
+                        target="_blank">
+                        <i class="fas fa-map-marked-alt"></i> Live Track
+                    </a>
+                @endif
+                @if ($shipment->status != 'delivered')
+                    <button class="btn-icon" onclick="quickDeliver()">
+                        <i class="fas fa-check-circle"></i> Mark Delivered
+                    </button>
+                @endif
+                <a href="{{ route('logistics.shipments.edit', $shipment->id) }}" class="btn-icon">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+            </div>
+        </div>
+
+        {{-- Stats --}}
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Declared Value</div>
+                <div class="stat-value">₹{{ number_format($shipment->declared_value, 2) }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Weight</div>
+                <div class="stat-value">{{ $shipment->weight ?? '0' }} <span class="stat-unit">kg</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Quantity</div>
+                <div class="stat-value">{{ $shipment->quantity ?? 1 }}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Charge</div>
+                <div class="stat-value">₹{{ number_format($shipment->total_charge, 2) }}</div>
+            </div>
+        </div>
+
+        {{-- Content Grid --}}
+        <div class="content-grid">
+            <div class="info-card">
+                <div class="card-title"><i class="fas fa-user"></i> Receiver Details</div>
+                <div class="info-row"><span class="info-label">Name</span><span
+                        class="info-value">{{ $shipment->receiver_name }}</span></div>
+                <div class="info-row"><span class="info-label">Phone</span><span
+                        class="info-value">{{ $shipment->receiver_phone }}</span></div>
+            </div>
+
+            <div class="info-card">
+                <div class="card-title"><i class="fas fa-map-marker-alt"></i> Shipping Address</div>
+                <div class="address-text">
+                    <i class="fas fa-location-dot" style="color: #667eea; margin-right: 8px;"></i>
+                    {{ $shipment->shipping_address }}<br>
+                    {{ $shipment->city }}, {{ $shipment->state }}<br>
+                    PIN: {{ $shipment->pincode }}, {{ $shipment->country }}
                 </div>
+            </div>
+
+            <div class="info-card">
+                <div class="card-title"><i class="fas fa-box"></i> Package Details</div>
+                <div class="info-row"><span class="info-label">Package Type</span><span
+                        class="info-value">{{ ucfirst($shipment->package_type ?? 'Box') }}</span></div>
+                <div class="info-row"><span class="info-label">Shipping Method</span><span
+                        class="info-value">{{ ucfirst($shipment->shipping_method ?? 'Standard') }}</span></div>
+                <div class="info-row"><span class="info-label">Payment Mode</span><span
+                        class="info-value">{{ strtoupper($shipment->payment_mode ?? 'Prepaid') }}</span></div>
+            </div>
+
+            <div class="info-card">
+                <div class="card-title"><i class="fas fa-truck"></i> Courier Details</div>
+                <div class="info-row"><span class="info-label">Courier Partner</span><span
+                        class="info-value">{{ $shipment->courier_partner ?? 'Not Assigned' }}</span></div>
+                <div class="info-row">
+                    <span class="info-label">Assigned Agent</span>
+                    <span class="info-value" id="assignedAgentName">
+                        @if ($shipment->assigned_to)
+                            <span
+                                id="currentAgentNameDisplay">{{ $shipment->agent->name ?? 'Agent #' . $shipment->assigned_to }}</span>
+                        @else
+                            Not Assigned
+                        @endif
+                    </span>
+                </div>
+                <div class="info-row"><span class="info-label">Estimated Delivery</span><span
+                        class="info-value">{{ $shipment->estimated_delivery_date?->format('d M Y') ?? 'Not set' }}</span>
+                </div>
+
+                @if ($shipment->assigned_to && $shipment->agent)
+                    <div id="agentDetailsCard" class="agent-info-card">
+                        <div class="agent-name">
+                            <i class="fas fa-motorcycle"></i> {{ $shipment->agent->name }}
+                        </div>
+                        <div class="agent-details">
+                            <span><i class="fas fa-phone"></i> {{ $shipment->agent->mobile ?? 'N/A' }}</span>
+                            <span><i class="fas fa-star"></i> {{ $shipment->agent->rating ?? '4.5' }} ★</span>
+                            <span><i class="fas fa-check-circle"></i> {{ $shipment->agent->total_deliveries ?? 0 }}
+                                deliveries</span>
+                        </div>
+                    </div>
+                @else
+                    <div id="agentDetailsCard" style="display: none;"></div>
+                @endif
+            </div>
+        </div>
+
+        {{-- MAP CARD --}}
+        <div class="map-card">
+            <div class="map-header">
+                <h3><i class="fas fa-map-marked-alt"></i> Shipment Location Map</h3>
+                @if ($shipment->destination_latitude && $shipment->destination_longitude)
+                    <div class="map-coordinates">
+                        📍 {{ number_format($shipment->destination_latitude, 6) }},
+                        {{ number_format($shipment->destination_longitude, 6) }}
+                    </div>
+                @endif
+            </div>
+            <div class="map-container">
+                <div id="shipmentMap"></div>
+            </div>
+        </div>
+
+        {{-- Tracking History --}}
+        <div class="timeline-card">
+            <div class="card-title"><i class="fas fa-history"></i> Tracking History</div>
+            <div class="timeline">
+                @forelse($shipment->trackings->sortByDesc('tracked_at') as $track)
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-status">{{ strtoupper(str_replace('_', ' ', $track->status)) }}</div>
+                            <div class="timeline-time">{{ $track->tracked_at->format('d M Y, h:i A') }}</div>
+                            @if ($track->location)
+                                <div class="timeline-location"><i class="fas fa-map-pin"></i> {{ $track->location }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <div style="text-align: center; padding: 40px; color: #6c757d;">
+                        <i class="fas fa-info-circle" style="font-size: 40px; margin-bottom: 16px;"></i>
+                        <p>No tracking history available</p>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- Footer --}}
+        <div class="action-footer">
+            <a href="{{ route('logistics.shipments.index') }}" class="btn-icon"
+                style="background: #f1f5f9; color: #475569;">
+                <i class="fas fa-arrow-left"></i> Back to Shipments
             </a>
-            @endforeach
+            <div style="display: flex; gap: 12px;">
+                <button class="btn-icon" style="background: #f1f5f9; color: #475569;" onclick="window.print()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
         </div>
     </div>
-    @endif
-</div>
 
-{{-- Toast --}}
-<div id="toast" class="toast"></div>
-
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<script>
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
-    let currentShipmentId = {{ $shipment->id }};
-
-    function showLoading() {
-        document.getElementById('loadingOverlay').style.display = 'flex';
-    }
-
-    function hideLoading() {
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }
-
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('toast');
-        toast.innerHTML = `
-            <div class="toast-content">
-                <span class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span>
-                <span class="toast-message">${message}</span>
+    {{-- Assign Agent Modal --}}
+    <div id="assignAgentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-plus"></i> Assign Delivery Partner</h3>
+                <button class="close-modal" onclick="closeAssignAgentModal()">&times;</button>
             </div>
-        `;
-        toast.className = 'toast ' + type;
-        toast.style.display = 'block';
-        setTimeout(() => {
-            toast.style.display = 'none';
-        }, 3000);
-    }
+            <div class="modal-body">
+                <div id="currentAgentInfo" class="current-agent" style="display: none;"></div>
+                <div style="font-size: 12px; font-weight: 600; color: #6c757d; margin-bottom: 12px;">AVAILABLE DELIVERY
+                    PARTNERS</div>
+                <div id="agentList" class="agent-list">
+                    <div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin"></i> Loading
+                        agents...</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    function copyShipmentNo() {
-        navigator.clipboard.writeText('{{ $shipment->shipment_number }}')
-            .then(() => showToast('✅ Shipment number copied!', 'success'))
-            .catch(() => showToast('❌ Failed to copy', 'error'));
-    }
+    <input type="hidden" id="shipmentId" value="{{ $shipment->id }}">
+    <input type="hidden" id="destLat" value="{{ $shipment->destination_latitude ?? 22.524768 }}">
+    <input type="hidden" id="destLng" value="{{ $shipment->destination_longitude ?? 72.955568 }}">
+    <input type="hidden" id="warehouseLat" value="{{ env('WAREHOUSE_LAT', 22.524768) }}">
+    <input type="hidden" id="warehouseLng" value="{{ env('WAREHOUSE_LNG', 72.955568) }}">
+    <input type="hidden" id="agentLat" value="{{ $shipment->agent->current_latitude ?? 0 }}">
+    <input type="hidden" id="agentLng" value="{{ $shipment->agent->current_longitude ?? 0 }}">
+    <input type="hidden" id="agentId" value="{{ $shipment->assigned_to ?? 0 }}">
+    <input type="hidden" id="agentName" value="{{ $shipment->agent->name ?? '' }}">
+    <input type="hidden" id="agentPhone" value="{{ $shipment->agent->mobile ?? '' }}">
+    <input type="hidden" id="agentRating" value="{{ $shipment->agent->rating ?? '4.5' }}">
+    <input type="hidden" id="agentDeliveries" value="{{ $shipment->agent->total_deliveries ?? 0 }}">
 
-    function showStatusUpdate() {
-        document.getElementById('statusUpdateSection').style.display = 'block';
-        document.getElementById('statusUpdateSection').scrollIntoView({ behavior: 'smooth' });
-    }
+    <div id="toast" class="toast-notification"></div>
 
-    // Status Update
-    document.getElementById('statusForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
+    {{-- Google Maps API --}}
+    <script>
+        // ==================== GLOBAL VARIABLES ====================
+        let map;
+        let directionsService;
+        let directionsRenderer;
+        let agentMarker;
+        let destMarker;
+        let routeInfoWindow;
 
-        if (!confirm('Update shipment status?')) return;
+        const shipmentId = {{ $shipment->id }};
+        const destLat = parseFloat(document.getElementById('destLat').value);
+        const destLng = parseFloat(document.getElementById('destLng').value);
+        const warehouseLat = parseFloat(document.getElementById('warehouseLat').value);
+        const warehouseLng = parseFloat(document.getElementById('warehouseLng').value);
+        let agentLat = parseFloat(document.getElementById('agentLat').value);
+        let agentLng = parseFloat(document.getElementById('agentLng').value);
+        let agentId = parseInt(document.getElementById('agentId').value);
+        let currentAgentName = document.getElementById('agentName').value;
 
-        showLoading();
-
-        const formData = new FormData(this);
-
-        fetch('{{ route("logistics.shipments.status", $shipment->id) }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
-            if (data.success) {
-                showToast('✅ ' + data.message, 'success');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showToast('❌ ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            hideLoading();
-            showToast('❌ Error updating status', 'error');
-            console.error('Error:', error);
+        console.log('Initial values:', {
+            agentId,
+            agentLat,
+            agentLng,
+            destLat,
+            destLng
         });
-    });
 
-    // Quick Deliver
-    function quickDeliver() {
-        if (!confirm('Mark this shipment as delivered?')) return;
+        // ==================== GOOGLE MAPS INITIALIZATION ====================
+        function initMap() {
+            const mapContainer = document.getElementById('shipmentMap');
+            console.log('initMap called');
 
-        showLoading();
-
-        fetch('{{ route("logistics.shipments.status", $shipment->id) }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                status: 'delivered',
-                location: 'Delivered',
-                remarks: 'Marked delivered from shipment page'
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
-            if (data.success) {
-                showToast('✅ Shipment marked as delivered!');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showToast('❌ ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            hideLoading();
-            showToast('❌ Error', 'error');
-            console.error('Error:', error);
-        });
-    }
-
-    // File Preview
-    function previewFile(input, previewId) {
-        const preview = document.getElementById(previewId);
-        preview.innerHTML = '';
-
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-
-            // Check file size
-            const maxSize = input.id === 'signatureInput' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
-            if (file.size > maxSize) {
-                showToast(`File size must be less than ${maxSize / (1024 * 1024)}MB`, 'error');
-                input.value = '';
+            if (isNaN(destLat) || isNaN(destLng) || destLat === 0 || destLng === 0) {
+                mapContainer.innerHTML =
+                    `<div class="map-loading"><i class="fas fa-map-marker-alt"></i><p>No destination coordinates available</p></div>`;
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const fileSize = (file.size / 1024).toFixed(1);
-                preview.innerHTML = `
-                    <div class="file-preview-item">
-                        <img src="${e.target.result}" alt="Preview">
-                        <span>${file.name} (${fileSize} KB)</span>
-                        <span class="file-preview-remove" onclick="removeFile('${input.id}', '${previewId}')">×</span>
+            try {
+                map = new google.maps.Map(document.getElementById('shipmentMap'), {
+                    center: {
+                        lat: destLat,
+                        lng: destLng
+                    },
+                    zoom: 12,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                });
+
+                directionsService = new google.maps.DirectionsService();
+                directionsRenderer = new google.maps.DirectionsRenderer({
+                    map: map,
+                    suppressMarkers: true,
+                    polylineOptions: {
+                        strokeColor: '#667eea',
+                        strokeWeight: 5,
+                        strokeOpacity: 0.8
+                    }
+                });
+
+                // Warehouse marker
+                if (warehouseLat && warehouseLat !== 0 && !isNaN(warehouseLat)) {
+                    new google.maps.Marker({
+                        position: {
+                            lat: warehouseLat,
+                            lng: warehouseLng
+                        },
+                        map: map,
+                        title: 'Warehouse',
+                        icon: {
+                            url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                            scaledSize: new google.maps.Size(40, 40)
+                        }
+                    }).addListener('click', () => new google.maps.InfoWindow({
+                        content: '<b>🏢 Warehouse</b>'
+                    }).open(map));
+                }
+
+                // Destination marker
+                destMarker = new google.maps.Marker({
+                    position: {
+                        lat: destLat,
+                        lng: destLng
+                    },
+                    map: map,
+                    title: 'Destination',
+                    icon: {
+                        url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                        scaledSize: new google.maps.Size(44, 44)
+                    }
+                });
+                destMarker.addListener('click', () => new google.maps.InfoWindow({
+                    content: '<b>📍 Delivery Location</b><br>{{ $shipment->receiver_name }}'
+                }).open(map, destMarker));
+
+                const hasAgent = agentId > 0 && agentLat && agentLng && !isNaN(agentLat) && agentLat !== 0;
+
+                if (hasAgent) {
+                    console.log('✅ Agent assigned, drawing route...');
+
+                    agentMarker = new google.maps.Marker({
+                        position: {
+                            lat: agentLat,
+                            lng: agentLng
+                        },
+                        map: map,
+                        title: 'Delivery Partner',
+                        icon: {
+                            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                            scaledSize: new google.maps.Size(48, 48)
+                        },
+                        animation: google.maps.Animation.DROP
+                    });
+                    agentMarker.addListener('click', () => new google.maps.InfoWindow({
+                        content: `<b>🛵 ${currentAgentName}</b>`
+                    }).open(map, agentMarker));
+
+                    drawRoute(agentLat, agentLng, destLat, destLng);
+
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend({
+                        lat: agentLat,
+                        lng: agentLng
+                    });
+                    bounds.extend({
+                        lat: destLat,
+                        lng: destLng
+                    });
+                    map.fitBounds(bounds);
+                } else {
+                    console.log('ℹ️ No agent assigned, showing destination only');
+                    const bounds = new google.maps.LatLngBounds();
+                    bounds.extend({
+                        lat: destLat,
+                        lng: destLng
+                    });
+                    map.fitBounds(bounds);
+                }
+                console.log('✅ Map initialized');
+            } catch (error) {
+                console.error('Map error:', error);
+                mapContainer.innerHTML =
+                    `<div class="map-loading"><i class="fas fa-exclamation-triangle"></i><p>Error loading map: ${error.message}</p></div>`;
+            }
+        }
+
+        function drawRoute(originLat, originLng, destLat, destLng) {
+            if (!directionsService) return;
+            directionsService.route({
+                origin: {
+                    lat: originLat,
+                    lng: originLng
+                },
+                destination: {
+                    lat: destLat,
+                    lng: destLng
+                },
+                travelMode: google.maps.TravelMode.DRIVING
+            }, (result, status) => {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    const leg = result.routes[0].legs[0];
+                    addRouteInfoPanel(leg.distance.text, leg.duration.text);
+                    console.log(`✅ Route drawn: ${leg.distance.text}, ${leg.duration.text}`);
+                } else {
+                    console.error('Route error:', status);
+                }
+            });
+        }
+
+        function addRouteInfoPanel(distance, duration) {
+            const existingPanel = document.querySelector('.route-info-panel');
+            if (existingPanel) existingPanel.remove();
+            const panel = document.createElement('div');
+            panel.className = 'route-info-panel';
+            panel.innerHTML =
+                `<div><i class="fas fa-road"></i> ${distance}</div><div><i class="fas fa-clock"></i> ${duration}</div><div><i class="fas fa-truck"></i> Delivery in progress</div>`;
+            document.querySelector('.map-container').appendChild(panel);
+        }
+
+        // ==================== AGENT FUNCTIONS ====================
+        function showAssignAgentModal() {
+            document.getElementById('assignAgentModal').style.display = 'flex';
+            loadAvailableAgents();
+        }
+
+        function closeAssignAgentModal() {
+            document.getElementById('assignAgentModal').style.display = 'none';
+        }
+
+        function loadAvailableAgents() {
+            const agentListDiv = document.getElementById('agentList');
+            agentListDiv.innerHTML =
+                `<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin"></i> Loading agents...</div>`;
+
+            fetch('/logistics/api/available-agents')
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
+                .then(agents => {
+                    if (!agents || agents.length === 0) {
+                        agentListDiv.innerHTML =
+                            `<div style="text-align: center; padding: 40px;"><i class="fas fa-user-slash"></i><p>No available agents found</p></div>`;
+                        return;
+                    }
+
+                    // Sort agents by city (optional)
+                    agents.sort((a, b) => (a.city || '').localeCompare(b.city || ''));
+
+                    agentListDiv.innerHTML = agents.map(agent => `
+                <div class="agent-item" onclick="assignAgent(${agent.id}, '${agent.name}', ${agent.current_latitude || 0}, ${agent.current_longitude || 0}, '${agent.phone || ''}', ${agent.rating || 4.5}, ${agent.total_deliveries || 0})">
+                    <div class="agent-info">
+                        <h4>${agent.name}</h4>
+                        <p style="margin-top: 4px;">
+                            <i class="fas fa-phone"></i> ${agent.phone || 'N/A'} &nbsp;|&nbsp;
+                            <i class="fas fa-star" style="color: #f59e0b;"></i> ${agent.rating || '4.5'} &nbsp;|&nbsp;
+                            <i class="fas fa-box"></i> ${agent.total_deliveries || 0} deliveries
+                        </p>
+                        <p style="font-size: 11px; color: #667eea; margin-top: 4px;">
+                            <i class="fas fa-map-marker-alt"></i> <strong>${agent.city || 'City not set'}</strong>
+                            ${agent.current_latitude && agent.current_latitude !== 0 ?
+                                '<span style="color: #10b981; margin-left: 8px;"><i class="fas fa-satellite-dish"></i> Live location</span>' :
+                                '<span style="color: #f59e0b; margin-left: 8px;"><i class="fas fa-clock"></i> Location pending</span>'
+                            }
+                        </p>
                     </div>
-                `;
-            }
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function removeFile(inputId, previewId) {
-        document.getElementById(inputId).value = '';
-        document.getElementById(previewId).innerHTML = '';
-        showToast('File removed', 'info');
-    }
-
-    // POD Upload with AJAX
-    document.getElementById('podForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        // Check if any file is selected
-        const signatureFile = document.getElementById('signatureInput')?.files[0];
-        const photoFile = document.getElementById('photoInput')?.files[0];
-
-        if (!signatureFile && !photoFile) {
-            showToast('Please select at least one file to upload', 'error');
-            return;
+                    <div>
+                        <span class="agent-status ${agent.status === 'available' ? 'available' : 'busy'}">
+                            ${agent.status === 'available' ? 'Available' : 'Busy'}
+                        </span>
+                        <button class="assign-btn" onclick="event.stopPropagation(); assignAgent(${agent.id}, '${agent.name}', ${agent.current_latitude || 0}, ${agent.current_longitude || 0}, '${agent.phone || ''}', ${agent.rating || 4.5}, ${agent.total_deliveries || 0})">
+                            Assign
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    agentListDiv.innerHTML =
+                        `<div style="text-align: center; padding: 40px; color: red;">Error loading agents: ${error.message}</div>`;
+                });
         }
 
-        // Validate file sizes
-        if (signatureFile && signatureFile.size > 5 * 1024 * 1024) {
-            showToast('Signature image must be less than 5MB', 'error');
-            return;
+        function assignAgent(id, name, lat, lng, phone, rating, deliveries) {
+            if (!confirm(`Assign ${name} to this shipment?`)) return;
+
+            fetch(`/logistics/shipments/${shipmentId}/assign-agent`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        agent_id: id
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(`✅ Agent ${name} assigned successfully!`, 'success');
+
+                        agentId = id;
+                        agentLat = data.agent_latitude || (typeof lat === 'number' ? lat : 22.524768);
+                        agentLng = data.agent_longitude || (typeof lng === 'number' ? lng : 72.955568);
+                        currentAgentName = name;
+
+                        document.getElementById('agentId').value = id;
+                        document.getElementById('agentLat').value = agentLat;
+                        document.getElementById('agentLng').value = agentLng;
+                        document.getElementById('agentName').value = name;
+
+                        document.getElementById('assignedAgentName').innerHTML =
+                            `<span id="currentAgentNameDisplay">${name}</span>`;
+                        document.getElementById('assignAgentBtn').style.display = 'none';
+                        document.getElementById('removeAgentBtn').style.display = 'inline-flex';
+
+                        const agentCard = document.getElementById('agentDetailsCard');
+                        agentCard.style.display = 'block';
+                        agentCard.innerHTML = `
+                        <div class="agent-name"><i class="fas fa-motorcycle"></i> ${name}</div>
+                        <div class="agent-details">
+                            <span><i class="fas fa-phone"></i> ${phone || 'N/A'}</span>
+                            <span><i class="fas fa-star"></i> ${rating} ★</span>
+                            <span><i class="fas fa-check-circle"></i> ${deliveries} deliveries</span>
+                        </div>
+                    `;
+
+                        closeAssignAgentModal();
+                        if (map) map = null;
+                        setTimeout(() => initMap(), 500);
+                    } else {
+                        showToast('❌ ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showToast('❌ Error assigning agent', 'error');
+                    console.error('Error:', error);
+                });
         }
 
-        if (photoFile && photoFile.size > 10 * 1024 * 1024) {
-            showToast('Photo must be less than 10MB', 'error');
-            return;
+        function removeAgent() {
+            if (!confirm('Remove assigned agent from this shipment?')) return;
+
+            fetch(`/logistics/shipments/${shipmentId}/remove-agent`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('✅ Agent removed successfully!', 'success');
+                        agentId = 0;
+                        agentLat = 0;
+                        agentLng = 0;
+                        currentAgentName = '';
+                        document.getElementById('agentId').value = 0;
+                        document.getElementById('agentLat').value = 0;
+                        document.getElementById('agentLng').value = 0;
+                        document.getElementById('agentName').value = '';
+                        document.getElementById('assignedAgentName').innerHTML = 'Not Assigned';
+                        document.getElementById('assignAgentBtn').style.display = 'inline-flex';
+                        document.getElementById('removeAgentBtn').style.display = 'none';
+                        document.getElementById('agentDetailsCard').style.display = 'none';
+                        if (map) map = null;
+                        setTimeout(() => initMap(), 500);
+                    } else {
+                        showToast('❌ ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    showToast('❌ Error removing agent', 'error');
+                    console.error('Error:', error);
+                });
         }
 
-        showLoading();
-
-        // Show progress bar
-        document.getElementById('uploadProgress').style.display = 'block';
-        document.getElementById('progressBar').style.width = '0%';
-        document.getElementById('uploadPercent').textContent = '0%';
-        document.getElementById('uploadStatus').textContent = 'Uploading...';
-
-        const formData = new FormData(this);
-
-        // Simulate progress (since fetch doesn't have progress events)
-        let progress = 0;
-        const progressInterval = setInterval(() => {
-            progress += 10;
-            if (progress <= 90) {
-                document.getElementById('progressBar').style.width = progress + '%';
-                document.getElementById('uploadPercent').textContent = progress + '%';
-            }
-        }, 300);
-
-        fetch('{{ route("logistics.shipments.upload-pod", $shipment->id) }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: formData
-        })
-        .then(response => {
-            clearInterval(progressInterval);
-            document.getElementById('progressBar').style.width = '100%';
-            document.getElementById('uploadPercent').textContent = '100%';
-            document.getElementById('uploadStatus').textContent = 'Processing...';
-            return response.json();
-        })
-        .then(data => {
-            hideLoading();
-            setTimeout(() => {
-                document.getElementById('uploadProgress').style.display = 'none';
-            }, 1000);
-
-            if (data.success) {
-                showToast('✅ ' + data.message, 'success');
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showToast('❌ ' + (data.message || 'Error uploading POD'), 'error');
-                document.getElementById('progressBar').style.width = '0%';
-                document.getElementById('uploadPercent').textContent = '0%';
-                document.getElementById('uploadStatus').textContent = 'Upload failed';
-            }
-        })
-        .catch(error => {
-            clearInterval(progressInterval);
-            hideLoading();
-            document.getElementById('uploadProgress').style.display = 'none';
-            showToast('❌ Network error: ' + error.message, 'error');
-            console.error('Error:', error);
-        });
-    });
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', e => {
-        if (e.ctrlKey && e.key === 'p') {
-            e.preventDefault();
-            window.print();
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = `<div><span>${type === 'success' ? '✅' : '❌'}</span> ${message}</div>`;
+            toast.style.borderLeftColor = type === 'success' ? '#10b981' : '#ef4444';
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
         }
-    });
 
-    // Auto-hide status update section after 30 seconds
-    setTimeout(() => {
-        const statusSection = document.getElementById('statusUpdateSection');
-        if (statusSection) {
-            statusSection.style.display = 'none';
+        function copyTracking() {
+            navigator.clipboard.writeText('{{ $shipment->tracking_number ?? $shipment->shipment_number }}');
+            showToast('Tracking number copied!', 'success');
         }
-    }, 30000);
-</script>
+
+        function quickDeliver() {
+            if (!confirm('Mark this shipment as delivered?')) return;
+            fetch(`/logistics/shipments/${shipmentId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        status: 'delivered',
+                        remarks: 'Marked delivered'
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('✅ Shipment marked as delivered!', 'success');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast('❌ ' + data.message, 'error');
+                    }
+                })
+                .catch(() => showToast('❌ Error updating status', 'error'));
+        }
+
+        window.initMap = initMap;
+        window.onclick = function(e) {
+            if (e.target === document.getElementById('assignAgentModal')) closeAssignAgentModal();
+        };
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY') }}&callback=initMap" async
+        defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 @endsection

@@ -11,19 +11,28 @@ use App\Models\Customer;
 use App\Models\CustomerWallet;
 use App\Models\Payment;
 use App\Models\EmiPlan;
+use App\Models\Shipment;
+use App\Models\ShipmentTracking;
+use App\Services\GoogleMapsService;
+use App\Services\ShipmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Yajra\DataTables\Facades\DataTables;
-use NumberFormatter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class SalesController extends Controller
 {
-    /* =========================================================
-       CONSTANTS
-    ========================================================= */
+    protected $googleMaps;
+    protected $shipmentService;
+
+    public function __construct(GoogleMapsService $googleMaps, ShipmentService $shipmentService)
+    {
+        $this->googleMaps = $googleMaps;
+        $this->shipmentService = $shipmentService;
+    }
+
     const PAYMENT_REMARKS = [
         'INVOICE' => 'Direct Invoice Payment',
         'EMI_DOWN' => 'EMI Down Payment',
@@ -34,9 +43,6 @@ class SalesController extends Controller
         'INVOICE_DUE' => 'Marked as Due'
     ];
 
-    /* =========================================================
-       SEND SINGLE INVOICE VIA EMAIL - FIXED
-    ========================================================= */
     public function sendInvoice(Request $request)
     {
         try {
@@ -48,18 +54,14 @@ class SalesController extends Controller
             ]);
 
             $sale = Sale::with(['customer', 'items.product'])->findOrFail($request->sale_id);
-
-            // Generate PDF
             $pdf = Pdf::loadView('sales.invoice-pdf', [
                 'sale' => $sale,
                 'amountInWords' => $this->numberToWords($sale->grand_total)
             ]);
 
-            // Prepare email data
             $subject = $request->email_subject;
             $body = $request->email_body ?? "Dear {$sale->customer->name},\n\nPlease find attached the invoice for your recent purchase.\n\nThank you for your business!";
 
-            // FIXED: Using Mail::raw for plain text email
             Mail::raw($body, function ($message) use ($request, $pdf, $subject, $sale) {
                 $message->to($request->recipient_email)
                         ->subject($subject)
@@ -90,7 +92,6 @@ class SalesController extends Controller
                 'trace' => $e->getTraceAsString(),
                 'request' => $request->all()
             ]);
-
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to send email: ' . $e->getMessage()
@@ -98,9 +99,6 @@ class SalesController extends Controller
         }
     }
 
-    /* =========================================================
-       BULK SEND INVOICES VIA EMAIL - FIXED
-    ========================================================= */
     public function bulkSendInvoice(Request $request)
     {
         try {
@@ -120,36 +118,29 @@ class SalesController extends Controller
                 'failed_invoices' => []
             ];
 
-            // Default template if not provided
             $template = $request->email_body_template ?? "Dear {customer_name},\n\nPlease find attached the invoice #{invoice_no} for your recent purchase.\n\nInvoice Details:\nDate: {invoice_date}\nAmount: ₹{amount}\nDue: ₹{due}\n\nThank you for your business!";
 
             foreach ($invoiceIds as $saleId) {
                 try {
                     $sale = Sale::with(['customer', 'items.product'])->find($saleId);
-                    
                     if (!$sale) {
                         $results['failed']++;
                         $results['failed_invoices'][] = "ID: {$saleId} - Not found";
                         continue;
                     }
 
-                    // Calculate due amount
                     $totalPaid = $sale->payments()
                         ->where('status', 'paid')
                         ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
                         ->sum('amount');
                     $dueAmount = $sale->grand_total - $totalPaid;
 
-                    // Generate PDF
                     $pdf = Pdf::loadView('sales.invoice-pdf', [
                         'sale' => $sale,
                         'amountInWords' => $this->numberToWords($sale->grand_total)
                     ]);
 
-                    // Prepare subject and body
                     $subject = $request->email_subject_prefix . " - Invoice #{$sale->invoice_no}";
-                    
-                    // Replace placeholders in body
                     $body = str_replace(
                         ['{customer_name}', '{invoice_no}', '{invoice_date}', '{amount}', '{due}'],
                         [
@@ -162,7 +153,6 @@ class SalesController extends Controller
                         $template
                     );
 
-                    // FIXED: Using Mail::raw for plain text email
                     Mail::raw($body, function ($message) use ($request, $pdf, $subject, $sale) {
                         $message->to($request->recipient_email)
                                 ->subject($subject)
@@ -172,19 +162,16 @@ class SalesController extends Controller
                     });
 
                     $results['success']++;
-                    
                     Log::info("Bulk email sent for invoice #{$sale->invoice_no}");
 
                 } catch (\Exception $e) {
                     $results['failed']++;
                     $results['failed_invoices'][] = "Invoice #{$sale->invoice_no}: " . $e->getMessage();
-                    
                     Log::error("Bulk email failed for sale ID {$saleId}: " . $e->getMessage());
                 }
             }
 
             $message = "Emails sent: {$results['success']} successful, {$results['failed']} failed";
-            
             return response()->json([
                 'success' => $results['success'] > 0,
                 'message' => $message,
@@ -205,9 +192,6 @@ class SalesController extends Controller
         }
     }
 
-    /* =========================================================
-       SEND DUE INVOICE REMINDER (For Single Invoice)
-    ========================================================= */
     public function sendDueReminder(Request $request)
     {
         try {
@@ -218,20 +202,17 @@ class SalesController extends Controller
 
             $sale = Sale::with('customer')->findOrFail($request->sale_id);
 
-            // Calculate due amount
             $totalPaid = $sale->payments()
                 ->where('status', 'paid')
                 ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
                 ->sum('amount');
             $dueAmount = $sale->grand_total - $totalPaid;
 
-            // Generate PDF
             $pdf = Pdf::loadView('sales.invoice-pdf', [
                 'sale' => $sale,
                 'amountInWords' => $this->numberToWords($sale->grand_total)
             ]);
 
-            // Create reminder subject and body
             $subject = "Payment Reminder: Invoice #{$sale->invoice_no} - Due: ₹" . number_format($dueAmount, 2);
             $body = "Dear {$sale->customer->name},\n\n"
                   . "This is a friendly reminder that you have an outstanding invoice.\n\n"
@@ -242,7 +223,6 @@ class SalesController extends Controller
                   . "Please make the payment at your earliest convenience.\n\n"
                   . "Thank you for your business!";
 
-            // Send email
             Mail::raw($body, function ($message) use ($request, $pdf, $subject, $sale) {
                 $message->to($request->recipient_email)
                         ->subject($subject)
@@ -265,9 +245,6 @@ class SalesController extends Controller
         }
     }
 
-    /* =========================================================
-       BULK SEND DUE REMINDERS (For Multiple Invoices)
-    ========================================================= */
     public function bulkSendDueReminders(Request $request)
     {
         try {
@@ -280,7 +257,7 @@ class SalesController extends Controller
 
             $customer = Customer::find($request->customer_id);
             $invoiceIds = $request->invoice_ids;
-            
+
             $results = [
                 'total' => count($invoiceIds),
                 'success' => 0,
@@ -293,35 +270,30 @@ class SalesController extends Controller
             foreach ($invoiceIds as $saleId) {
                 try {
                     $sale = Sale::with('customer')->find($saleId);
-                    
                     if (!$sale) {
                         $results['failed']++;
                         continue;
                     }
 
-                    // Calculate due
                     $totalPaid = $sale->payments()
                         ->where('status', 'paid')
                         ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
                         ->sum('amount');
                     $dueAmount = $sale->grand_total - $totalPaid;
-                    
+
                     $results['total_due'] += $dueAmount;
-                    
                     $invoiceList[] = [
                         'no' => $sale->invoice_no,
                         'date' => $sale->sale_date->format('d M Y'),
                         'total' => $sale->grand_total,
                         'due' => $dueAmount
                     ];
-                    
-                    // Generate and attach PDF for this invoice
+
                     $pdf = Pdf::loadView('sales.invoice-pdf', [
                         'sale' => $sale,
                         'amountInWords' => $this->numberToWords($sale->grand_total)
                     ]);
 
-                    // Create reminder email
                     $subject = "Payment Reminder: Invoice #{$sale->invoice_no} - Due: ₹" . number_format($dueAmount, 2);
                     $body = "Dear {$customer->name},\n\n"
                           . "This is a friendly reminder that you have an outstanding invoice.\n\n"
@@ -332,7 +304,6 @@ class SalesController extends Controller
                           . "Please make the payment at your earliest convenience.\n\n"
                           . "Thank you for your business!";
 
-                    // Send email
                     Mail::raw($body, function ($message) use ($request, $pdf, $subject, $sale) {
                         $message->to($request->recipient_email)
                                 ->subject($subject)
@@ -350,7 +321,6 @@ class SalesController extends Controller
             }
 
             $message = "Reminders sent: {$results['success']} successful, {$results['failed']} failed";
-            
             return response()->json([
                 'success' => $results['success'] > 0,
                 'message' => $message,
@@ -367,9 +337,6 @@ class SalesController extends Controller
         }
     }
 
-    /**
-     * Convert number to words
-     */
     private function numberToWords($num)
     {
         $ones = [
@@ -380,9 +347,9 @@ class SalesController extends Controller
             19 => 'Nineteen', 20 => 'Twenty', 30 => 'Thirty', 40 => 'Forty', 50 => 'Fifty',
             60 => 'Sixty', 70 => 'Seventy', 80 => 'Eighty', 90 => 'Ninety'
         ];
-        
-        $num = (int)$num; // Convert to integer for words
-        
+
+        $num = (int)$num;
+
         if ($num < 20) return $ones[$num];
         if ($num < 100) return $ones[floor($num/10)*10] . ($num%10 > 0 ? ' ' . $ones[$num%10] : '');
         if ($num < 1000) return $ones[floor($num/100)] . ' Hundred' . ($num%100 > 0 ? ' ' . $this->numberToWords($num%100) : '');
@@ -391,9 +358,6 @@ class SalesController extends Controller
         return $this->numberToWords(floor($num/10000000)) . ' Crore' . ($num%10000000 > 0 ? ' ' . $this->numberToWords($num%10000000) : '');
     }
 
-    /* =========================================================
-       DATATABLE FOR AJAX
-    ========================================================= */
     public function datatable()
     {
         $sales = Sale::with('customer')->select('sales.*');
@@ -424,9 +388,6 @@ class SalesController extends Controller
             ->make(true);
     }
 
-    /* =========================================================
-       STATS FOR DASHBOARD
-    ========================================================= */
     public function stats()
     {
         $totalInvoices = Sale::count();
@@ -447,7 +408,9 @@ class SalesController extends Controller
                     'customer' => $sale->customer->name ?? 'N/A',
                     'amount' => $sale->grand_total,
                     'status' => $sale->payment_status,
-                    'date' => $sale->sale_date->format('d M Y')
+                    'date' => $sale->sale_date->format('d M Y'),
+                    'requires_shipping' => $sale->requires_shipping,
+                    'shipment_count' => $sale->shipments->count()
                 ];
             });
 
@@ -457,13 +420,12 @@ class SalesController extends Controller
             'total_paid' => $totalPaid,
             'total_due' => $totalDue,
             'recent_sales' => $recentSales,
-            'collection_rate' => $totalRevenue > 0 ? round(($totalPaid / $totalRevenue) * 100, 2) : 0
+            'collection_rate' => $totalRevenue > 0 ? round(($totalPaid / $totalRevenue) * 100, 2) : 0,
+            'total_shipments' => Shipment::count(),
+            'pending_shipments' => Shipment::where('status', 'pending')->count()
         ]);
     }
 
-    /* =========================================================
-       AJAX CUSTOMER CREATE
-    ========================================================= */
     public function ajaxStore(Request $request)
     {
         $request->validate([
@@ -494,7 +456,6 @@ class SalesController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('AJAX Customer Create Error: ' . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating customer: ' . $e->getMessage()
@@ -502,19 +463,18 @@ class SalesController extends Controller
         }
     }
 
-    /* =========================================================
-       SALES LIST
-    ========================================================= */
     public function index(Request $request)
     {
-        $query = Sale::with('customer');
+        $query = Sale::with('customer', 'shipments');
 
-        // Filter by status
         if ($request->status && $request->status != 'all') {
             $query->where('payment_status', $request->status);
         }
 
-        // Search by invoice no or customer
+        if ($request->has('requires_shipping') && $request->requires_shipping !== '') {
+            $query->where('requires_shipping', $request->requires_shipping);
+        }
+
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('invoice_no', 'LIKE', "%{$request->search}%")
@@ -525,7 +485,6 @@ class SalesController extends Controller
             });
         }
 
-        // Date range filter
         if ($request->from_date) {
             $query->whereDate('sale_date', '>=', $request->from_date);
         }
@@ -540,31 +499,35 @@ class SalesController extends Controller
             'paid' => Sale::where('payment_status', 'paid')->count(),
             'partial' => Sale::where('payment_status', 'partial')->count(),
             'unpaid' => Sale::where('payment_status', 'unpaid')->count(),
-            'emi' => Sale::where('payment_status', 'emi')->count()
+            'emi' => Sale::where('payment_status', 'emi')->count(),
+            'shipping_required' => Sale::where('requires_shipping', true)->count(),
+            'shipped' => Sale::whereHas('shipments')->count()
         ];
 
         return view('sales.index', compact('sales', 'stats', 'request'));
     }
 
-    /* =========================================================
-       CREATE SALE PAGE
-    ========================================================= */
     public function create()
     {
         $customers = Customer::orderBy('name')->get();
         $products  = Product::where('quantity', '>', 0)->orderBy('name')->get();
-
-        // Generate unique invoice token
         $invoice_token = uniqid() . '_' . time();
 
         return view('sales.create', compact('customers', 'products', 'invoice_token'));
     }
 
-    /* =========================================================
-       STORE SALE
-    ========================================================= */
     public function store(Request $request)
     {
+
+
+     Log::info('🚀 SALES STORE METHOD CALLED', [
+        'requires_shipping' => $request->has('requires_shipping'),
+        'shipping_address' => $request->shipping_address,
+        'city' => $request->city,
+        'state' => $request->state,
+        'pincode' => $request->pincode,
+        'all_input' => $request->all()
+    ]);
         $request->validate([
             'customer_id'        => 'required|exists:customers,id',
             'invoice_token'      => 'required|string|unique:sales,invoice_token',
@@ -572,35 +535,102 @@ class SalesController extends Controller
             'items.quantity'     => 'required|array|min:1',
             'items.price'        => 'required|array|min:1',
             'discount'           => 'nullable|numeric|min:0|max:9999999.99',
-            'tax'                => 'nullable|numeric|min:0|max:100'
+            'tax'                => 'nullable|numeric|min:0|max:100',
+            'requires_shipping'  => 'nullable|boolean',
+            'shipping_address'   => 'required_if:requires_shipping,1|string|max:500',
+            'city'               => 'required_if:requires_shipping,1|string|max:100',
+            'state'              => 'required_if:requires_shipping,1|string|max:100',
+            'pincode'            => 'required_if:requires_shipping,1|string|max:20',
+            'receiver_name'      => 'nullable|string|max:255',
+            'receiver_phone'     => 'nullable|string|max:20',
+            'delivery_instructions' => 'nullable|string|max:500',
+            'destination_latitude'  => 'nullable|numeric|between:-90,90',
+            'destination_longitude' => 'nullable|numeric|between:-180,180',
+            'place_id' => 'nullable|string'
         ]);
 
-        // Check for duplicate submission
         $existingSale = Sale::where('invoice_token', $request->invoice_token)->first();
         if ($existingSale) {
-            return redirect()
-                ->route('sales.show', $existingSale->id)
-                ->with('info', 'Invoice already exists');
+            return redirect()->route('sales.show', $existingSale->id)->with('info', 'Invoice already exists');
         }
 
         try {
             DB::transaction(function () use ($request) {
-                // Calculate totals
                 $subTotal = $this->calculateSubTotal($request->items);
                 $discount = (float) ($request->discount ?? 0);
                 $tax = (float) ($request->tax ?? 0);
                 $taxAmount = $subTotal * $tax / 100;
                 $grandTotal = $subTotal - $discount + $taxAmount;
 
-                // Lock customer for update
                 $customer = Customer::lockForUpdate()->findOrFail($request->customer_id);
-
-                // Generate invoice number
                 $lastId = Sale::max('id') ?? 0;
                 $invoiceNo = 'INV-' . date('Y') . '-' . str_pad(($lastId + 1), 6, '0', STR_PAD_LEFT);
 
-                // Create sale
-                $sale = Sale::create([
+                $shippingData = [];
+
+                if ($request->boolean('requires_shipping')) {
+                    $city = $request->city;
+                    $state = $request->state;
+                    $pincode = $request->pincode;
+
+                    if ($request->destination_latitude && $request->destination_longitude &&
+                        (empty($city) || empty($state))) {
+                        try {
+                            $geocoded = $this->googleMaps->reverseGeocode(
+                                $request->destination_latitude,
+                                $request->destination_longitude
+                            );
+                            if ($geocoded && isset($geocoded['components'])) {
+                                $city = $city ?? ($geocoded['components']['city'] ?? null);
+                                $state = $state ?? ($geocoded['components']['state'] ?? null);
+                                $pincode = $pincode ?? ($geocoded['components']['postal_code'] ?? null);
+                            }
+                        } catch (\Exception $e) {
+                            Log::warning('Reverse geocoding failed: ' . $e->getMessage());
+                        }
+                    }
+
+                    $shippingData = [
+                        'requires_shipping' => true,
+                        'shipping_address' => $request->shipping_address,
+                        'city' => $city,
+                        'state' => $state,
+                        'pincode' => $pincode,
+                        'receiver_name' => $request->receiver_name,
+                        'receiver_phone' => $request->receiver_phone,
+                        'delivery_instructions' => $request->delivery_instructions,
+                        'destination_latitude' => $request->destination_latitude,
+                        'destination_longitude' => $request->destination_longitude,
+                        'place_id' => $request->place_id,
+                        'shipping_status' => 'pending',
+                    ];
+
+                    if ($request->destination_latitude && $request->destination_longitude) {
+                        Log::info("📍 Location selected for sale", [
+                            'lat' => $request->destination_latitude,
+                            'lng' => $request->destination_longitude,
+                            'address' => $request->shipping_address,
+                            'place_id' => $request->place_id
+                        ]);
+                    }
+                } else {
+                    $shippingData = [
+                        'requires_shipping' => false,
+                        'shipping_address' => null,
+                        'city' => null,
+                        'state' => null,
+                        'pincode' => null,
+                        'receiver_name' => null,
+                        'receiver_phone' => null,
+                        'delivery_instructions' => null,
+                        'destination_latitude' => null,
+                        'destination_longitude' => null,
+                        'place_id' => null,
+                        'shipping_status' => null,
+                    ];
+                }
+
+                $sale = Sale::create(array_merge([
                     'customer_id'    => $customer->id,
                     'invoice_no'     => $invoiceNo,
                     'invoice_token'  => $request->invoice_token,
@@ -612,9 +642,8 @@ class SalesController extends Controller
                     'grand_total'    => $grandTotal,
                     'payment_status' => 'unpaid',
                     'paid_amount'    => 0
-                ]);
+                ], $shippingData));
 
-                // Add items and update stock
                 foreach ($request->items['product_id'] as $i => $productId) {
                     $qty = (int) $request->items['quantity'][$i];
                     $price = (float) $request->items['price'][$i];
@@ -631,63 +660,239 @@ class SalesController extends Controller
                         'quantity'   => $qty,
                         'price'      => $price,
                         'total'      => $qty * $price,
+                        'mrp'        => $product->mrp ?? $price
                     ]);
 
                     $product->decrement('quantity', $qty);
                 }
 
-                Log::info("Sale created successfully: ID={$sale->id}, Invoice={$sale->invoice_no}");
+                if ($request->boolean('requires_shipping') && $sale->shipping_address) {
+                    try {
+                        $shipment = $this->createShipmentFromSale($sale, $request);
+                        if ($shipment) {
+                            Log::info("📦 Auto shipment created for sale", [
+                                'sale_id' => $sale->id,
+                                'shipment_id' => $shipment->id,
+                                'shipment_number' => $shipment->shipment_number,
+                                'tracking_number' => $shipment->tracking_number
+                            ]);
+                            $sale->shipping_status = 'shipment_created';
+                            $sale->save();
+                        }
+                    } catch (\Exception $e) {
+                        Log::error("❌ Shipment creation failed but sale was created", [
+                            'sale_id' => $sale->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+
+                Log::info("✅ Sale created successfully", [
+                    'id' => $sale->id,
+                    'invoice' => $sale->invoice_no,
+                    'requires_shipping' => $request->boolean('requires_shipping'),
+                    'has_coordinates' => !is_null($request->destination_latitude),
+                    'shipment_created' => isset($shipment)
+                ]);
             });
 
-            return redirect()
-                ->route('sales.index')
-                ->with('success', 'Sale created successfully');
+            return redirect()->route('sales.index')->with('success', 'Sale created successfully');
+
         } catch (\Exception $e) {
-            Log::error('Sale Store Error: ' . $e->getMessage(), [
+            Log::error('❌ Sale Store Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
+                'request' => $request->except(['_token', '_method'])
             ]);
 
-            return back()
-                ->withInput()
-                ->with('error', 'Error creating sale: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error creating sale: ' . $e->getMessage());
         }
     }
+private function createShipmentFromSale($sale, $request)
+{
+    try {
+        // ✅ DEBUG: Log input data
+        Log::info('🔍 [DEBUG] Starting createShipmentFromSale', [
+            'sale_id' => $sale->id,
+            'sale_invoice' => $sale->invoice_no,
+            'requires_shipping' => $request->boolean('requires_shipping'),
+            'shipping_address' => $request->shipping_address,
+            'city' => $request->city,
+            'state' => $request->state,
+            'pincode' => $request->pincode,
+            'receiver_name' => $request->receiver_name,
+            'receiver_phone' => $request->receiver_phone,
+            'has_coordinates' => !is_null($request->destination_latitude)
+        ]);
 
-    /* =========================================================
-       SHOW SALE
-    ========================================================= */
-    public function show(Sale $sale)
+        $receiverName = $request->receiver_name ?? $sale->customer->name;
+        $receiverPhone = $request->receiver_phone ?? $sale->customer->mobile;
+
+        $shipment = new Shipment();
+
+        // ✅ DEBUG: Check if generateShipmentNumber exists
+        if (!method_exists($shipment, 'generateShipmentNumber')) {
+            Log::error('❌ generateShipmentNumber method not found in Shipment model');
+            throw new \Exception('generateShipmentNumber method not found');
+        }
+
+        if (!method_exists($shipment, 'generateTrackingNumber')) {
+            Log::error('❌ generateTrackingNumber method not found in Shipment model');
+            throw new \Exception('generateTrackingNumber method not found');
+        }
+
+        $shipment->shipment_number = $shipment->generateShipmentNumber();
+        $shipment->tracking_number = $shipment->generateTrackingNumber();
+        $shipment->sale_id = $sale->id;
+        $shipment->customer_id = $sale->customer_id;
+        $shipment->receiver_name = $receiverName;
+        $shipment->receiver_phone = $receiverPhone;
+        $shipment->shipping_address = $request->shipping_address;
+        $shipment->city = $request->city;
+        $shipment->state = $request->state;
+        $shipment->pincode = $request->pincode;
+        $shipment->country = 'India';
+        $shipment->declared_value = $sale->grand_total;
+        $shipment->quantity = $sale->items->sum('quantity');
+        $shipment->weight = $sale->items->sum(function($item) {
+            return ($item->product->weight ?? 0.5) * $item->quantity;
+        });
+        $shipment->shipping_method = 'standard';
+        $shipment->payment_mode = $sale->payment_status === 'paid' ? 'prepaid' : 'cod';
+
+        if ($request->destination_latitude && $request->destination_longitude) {
+            $shipment->destination_latitude = $request->destination_latitude;
+            $shipment->destination_longitude = $request->destination_longitude;
+            $shipment->place_id = $request->place_id;
+        }
+
+        $shipment->delivery_instructions = $request->delivery_instructions;
+        $shipment->estimated_delivery_date = now()->addDays(3);
+        $shipment->status = 'pending';
+        $shipment->created_by = auth()->id() ?? 1;
+
+        // ✅ DEBUG: Log before save
+        Log::info('📦 [DEBUG] Saving shipment with data', [
+            'shipment_number' => $shipment->shipment_number,
+            'tracking_number' => $shipment->tracking_number,
+            'sale_id' => $shipment->sale_id,
+            'customer_id' => $shipment->customer_id,
+            'receiver_name' => $shipment->receiver_name,
+            'city' => $shipment->city,
+            'status' => $shipment->status
+        ]);
+
+        $shipment->save();
+
+        // ✅ DEBUG: Verify save was successful
+        Log::info('✅ [DEBUG] Shipment saved successfully', [
+            'shipment_id' => $shipment->id,
+            'shipment_number' => $shipment->shipment_number,
+            'sale_id' => $shipment->sale_id
+        ]);
+
+        // Add tracking
+        $tracking = $shipment->trackings()->create([
+            'status' => 'pending',
+            'location' => $request->city ?? 'Warehouse',
+            'remarks' => 'Shipment created from invoice #' . $sale->invoice_no,
+            'latitude' => $request->destination_latitude,
+            'longitude' => $request->destination_longitude,
+            'city' => $request->city,
+            'state' => $request->state,
+            'pincode' => $request->pincode,
+            'country' => 'India',
+            'tracked_at' => now(),
+            'event_type' => 'shipment_created',
+            'is_public' => true
+        ]);
+
+        // ✅ DEBUG: Verify tracking was created
+        Log::info('✅ [DEBUG] Tracking created', [
+            'tracking_id' => $tracking->id,
+            'shipment_id' => $shipment->id
+        ]);
+
+        Log::info("📦 Shipment auto-created from sale", [
+            'sale_id' => $sale->id,
+            'shipment_id' => $shipment->id,
+            'shipment_number' => $shipment->shipment_number,
+            'tracking_number' => $shipment->tracking_number
+        ]);
+
+        return $shipment;
+
+    } catch (\Exception $e) {
+        Log::error("❌ Failed to auto-create shipment: " . $e->getMessage(), [
+            'sale_id' => $sale->id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return null;
+    }
+}
+
+    private function calculateSubTotal($items): float
     {
-        $sale->load(['customer', 'items.product', 'payments']);
-
-        // Get EMI details if exists
-        $emiData = $this->getEmiData($sale);
-
-        // Calculate payment summary
-        $paymentSummary = $this->calculatePaymentSummary($sale);
-
-        return view('sales.show', compact('sale', 'emiData', 'paymentSummary'));
+        $subTotal = 0;
+        if (isset($items['product_id']) && is_array($items['product_id'])) {
+            foreach ($items['product_id'] as $i => $productId) {
+                $qty = isset($items['quantity'][$i]) ? (int) $items['quantity'][$i] : 0;
+                $price = isset($items['price'][$i]) ? (float) $items['price'][$i] : 0;
+                $subTotal += ($qty * $price);
+            }
+        }
+        return $subTotal;
     }
 
-    /* =========================================================
-       VIEW SALE (ALIAS FOR SHOW)
-    ========================================================= */
+    public function show(Sale $sale)
+    {
+        $sale->load([
+            'customer',
+            'items.product',
+            'payments',
+            'shipments' => function($q) {
+                $q->with(['trackings' => function($tq) {
+                    $tq->latest()->limit(1);
+                }]);
+            }
+        ]);
+
+        $emiData = $this->getEmiData($sale);
+        $paymentSummary = $this->calculatePaymentSummary($sale);
+
+        $shipmentStatus = null;
+        if ($sale->shipments->count() > 0) {
+            $latestShipment = $sale->shipments->first();
+            $shipmentStatus = [
+                'exists' => true,
+                'count' => $sale->shipments->count(),
+                'latest_id' => $latestShipment->id,
+                'latest_number' => $latestShipment->shipment_number,
+                'latest_status' => $latestShipment->status,
+                'tracking_number' => $latestShipment->tracking_number,
+                'estimated_delivery' => $latestShipment->estimated_delivery_date?->format('d M Y'),
+                'last_tracking' => $latestShipment->trackings->first()
+            ];
+        } else {
+            $shipmentStatus = ['exists' => false];
+        }
+
+        return view('sales.show', compact('sale', 'emiData', 'paymentSummary', 'shipmentStatus'));
+    }
+
     public function view(Sale $sale)
     {
         return $this->show($sale);
     }
 
-    /* =========================================================
-       EDIT SALE
-    ========================================================= */
     public function edit(Sale $sale)
     {
-        // Can't edit paid or EMI invoices
         if (in_array($sale->payment_status, ['paid', 'emi'])) {
-            return redirect()
-                ->route('sales.show', $sale)
-                ->with('error', 'Cannot edit a paid or EMI invoice');
+            return redirect()->route('sales.show', $sale)->with('error', 'Cannot edit a paid or EMI invoice');
+        }
+
+        if ($sale->shipments()->whereIn('status', ['picked', 'in_transit', 'out_for_delivery'])->exists()) {
+            return redirect()->route('sales.show', $sale)->with('error', 'Cannot edit invoice while shipment is in transit');
         }
 
         $sale->load('items.product');
@@ -697,16 +902,14 @@ class SalesController extends Controller
         return view('sales.edit', compact('sale', 'customers', 'products'));
     }
 
-    /* =========================================================
-       UPDATE SALE
-    ========================================================= */
     public function update(Request $request, Sale $sale)
     {
-        // Can't update paid or EMI invoices
         if (in_array($sale->payment_status, ['paid', 'emi'])) {
-            return redirect()
-                ->route('sales.show', $sale)
-                ->with('error', 'Cannot update a paid or EMI invoice');
+            return redirect()->route('sales.show', $sale)->with('error', 'Cannot update a paid or EMI invoice');
+        }
+
+        if ($sale->shipments()->whereIn('status', ['picked', 'in_transit', 'out_for_delivery'])->exists()) {
+            return redirect()->route('sales.show', $sale)->with('error', 'Cannot update invoice while shipment is in transit');
         }
 
         $request->validate([
@@ -719,24 +922,20 @@ class SalesController extends Controller
 
         try {
             DB::transaction(function () use ($request, $sale) {
-                // Calculate new totals
                 $subTotal = $this->calculateSubTotal($request->items);
                 $discount = (float) ($request->discount ?? 0);
                 $tax = (float) ($request->tax ?? 0);
                 $taxAmount = $subTotal * $tax / 100;
                 $grandTotal = $subTotal - $discount + $taxAmount;
 
-                // Restore old stock
                 foreach ($sale->items as $item) {
                     if ($item->product) {
                         $item->product->increment('quantity', $item->quantity);
                     }
                 }
 
-                // Delete old items
                 $sale->items()->delete();
 
-                // Add new items and deduct stock
                 foreach ($request->items['product_id'] as $i => $productId) {
                     $qty = (int) $request->items['quantity'][$i];
                     $price = (float) $request->items['price'][$i];
@@ -753,12 +952,12 @@ class SalesController extends Controller
                         'quantity'   => $qty,
                         'price'      => $price,
                         'total'      => $qty * $price,
+                        'mrp'        => $product->mrp ?? $price
                     ]);
 
                     $product->decrement('quantity', $qty);
                 }
 
-                // Update sale
                 $sale->update([
                     'sub_total'   => $subTotal,
                     'discount'    => $discount,
@@ -767,30 +966,155 @@ class SalesController extends Controller
                     'grand_total' => $grandTotal,
                 ]);
 
-                // Recalculate invoice status
-                $this->recalculateInvoiceStatus($sale->id);
+                if ($sale->requires_shipping) {
+                    foreach ($sale->shipments as $shipment) {
+                        if ($shipment->status === 'pending') {
+                            $shipment->declared_value = $grandTotal;
+                            $shipment->save();
+                        }
+                    }
+                }
 
+                $this->recalculateInvoiceStatus($sale->id);
                 Log::info("Sale updated successfully: ID={$sale->id}");
             });
 
-            return redirect()
-                ->route('sales.show', $sale)
-                ->with('success', 'Invoice updated successfully');
+            return redirect()->route('sales.show', $sale)->with('success', 'Invoice updated successfully');
+
         } catch (\Exception $e) {
             Log::error('Sale Update Error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'sale_id' => $sale->id
             ]);
-
-            return back()
-                ->withInput()
-                ->with('error', 'Error updating invoice: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error updating invoice: ' . $e->getMessage());
         }
     }
 
-    /* =========================================================
-       FIND AFFECTED INVOICES
-    ========================================================= */
+    public function destroy(Sale $sale)
+    {
+        if ($sale->shipments()->whereIn('status', ['picked', 'in_transit', 'out_for_delivery'])->exists()) {
+            return redirect()->route('sales.index')->with('error', 'Cannot delete invoice while shipment is in transit. Cancel shipment first.');
+        }
+
+        try {
+            DB::transaction(function () use ($sale) {
+                foreach ($sale->items as $item) {
+                    if ($item->product) {
+                        $item->product->increment('quantity', $item->quantity);
+                    }
+                }
+
+                if ($sale->shipments()->exists()) {
+                    $sale->shipments()->each(function($shipment) {
+                        if ($shipment->status === 'pending') {
+                            $shipment->trackings()->delete();
+                            $shipment->delete();
+                        }
+                    });
+                }
+
+                $sale->items()->delete();
+                $sale->delete();
+            });
+
+            return redirect()->route('sales.index')->with('success', 'Sale deleted successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Sale delete error: ' . $e->getMessage());
+            return redirect()->route('sales.index')->with('error', 'Error deleting sale: ' . $e->getMessage());
+        }
+    }
+
+    public function print(Sale $sale)
+    {
+        $sale->load(['customer', 'items.product']);
+        $totalPaid = $sale->payments()
+            ->where('status', 'paid')
+            ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
+            ->sum('amount');
+        $remaining = $sale->grand_total - $totalPaid;
+        return view('sales.print', compact('sale', 'totalPaid', 'remaining'));
+    }
+
+    public function invoice(Sale $sale)
+    {
+        $sale->load(['customer', 'items.product']);
+
+        try {
+            $formatter = new \NumberFormatter('en_IN', \NumberFormatter::SPELLOUT);
+            $amountInWords = ucfirst($formatter->format($sale->grand_total)) . ' Rupees Only';
+        } catch (\Exception $e) {
+            $amountInWords = 'Rupees ' . number_format($sale->grand_total, 2) . ' Only';
+        }
+
+        $totalPaid = $sale->payments()
+            ->where('status', 'paid')
+            ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
+            ->sum('amount');
+
+        $pdf = Pdf::loadView('sales.invoice', [
+            'sale' => $sale,
+            'amountInWords' => $amountInWords,
+            'totalPaid' => $totalPaid,
+            'remaining' => $sale->grand_total - $totalPaid
+        ]);
+
+        return $pdf->stream('Invoice-' . $sale->invoice_no . '.pdf');
+    }
+
+    public function deleteImpact($id)
+    {
+        try {
+            $sale = Sale::with(['payments', 'customer', 'shipments'])->findOrFail($id);
+
+            if ($sale->shipments()->whereIn('status', ['picked', 'in_transit', 'out_for_delivery'])->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'can_delete' => false,
+                    'message' => 'Cannot delete invoice while shipment is in transit. Cancel shipment first.',
+                    'shipment_status' => $sale->shipments->first()?->status
+                ]);
+            }
+
+            $totalPaid = $sale->payments->sum('amount');
+            $walletUsed = $sale->payments->where('remarks', 'ADVANCE_USED')->sum('amount');
+            $directPayments = $sale->payments->whereIn('remarks', ['INVOICE', 'EMI_DOWN'])->sum('amount');
+            $advancePayments = $sale->payments->whereIn('remarks', ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD'])->sum('amount');
+
+            $affectedInvoices = $this->findAffectedInvoices($sale);
+            $walletImpact = $advancePayments - $walletUsed;
+            $openImpact = $directPayments + $walletUsed;
+
+            return response()->json([
+                'success' => true,
+                'invoice_no' => $sale->invoice_no,
+                'grand_total' => $sale->grand_total,
+                'total_paid' => $totalPaid,
+                'wallet_used' => $walletUsed,
+                'direct_payments' => $directPayments,
+                'advance_payments' => $advancePayments,
+                'payment_count' => $sale->payments->count(),
+                'affected_count' => count($affectedInvoices),
+                'affected_invoices' => $affectedInvoices,
+                'wallet_impact' => $walletImpact,
+                'open_impact' => $openImpact,
+                'has_shipment' => $sale->shipments->count() > 0,
+                'shipment_status' => $sale->shipments->first()?->status,
+                'warning' => $totalPaid > 0 ? "⚠️ This will affect:\n• Wallet: " . ($walletImpact > 0 ? "+" : "") . "₹{$walletImpact}\n• Open Balance: +₹{$openImpact}" : '✅ No payments to convert',
+                'can_delete' => true
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Delete Impact Error: ' . $e->getMessage(), [
+                'sale_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error analyzing impact: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     private function findAffectedInvoices($sale)
     {
         Log::info("========== 🔍 FIND AFFECTED INVOICES ==========");
@@ -801,12 +1125,10 @@ class SalesController extends Controller
         foreach ($sale->payments as $payment) {
             Log::info("Checking payment ID: {$payment->id}, Remarks: {$payment->remarks}");
 
-            // Case 1: Ye payment wallet USE kar rahi hai (ADVANCE_USED)
             if ($payment->remarks === 'ADVANCE_USED' && $payment->source_wallet_id) {
                 $originalCreditWalletId = $payment->source_wallet_id;
                 Log::info("  → This payment uses credit wallet ID: {$originalCreditWalletId}");
 
-                // Is original wallet ka use aur kis kis invoice ne kiya?
                 $otherUsers = Payment::where('source_wallet_id', $originalCreditWalletId)
                     ->where('sale_id', '!=', $sale->id)
                     ->where('remarks', 'ADVANCE_USED')
@@ -816,8 +1138,6 @@ class SalesController extends Controller
                 Log::info("  → Other invoices using this credit: " . json_encode($otherUsers));
                 $affectedIds = array_merge($affectedIds, $otherUsers);
             }
-
-            // Case 2: Ye payment WALLET ADD kar rahi hai (EXCESS_TO_ADVANCE/ADVANCE_ONLY/WALLET_ADD)
             elseif (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD']) && $payment->wallet_id) {
                 Log::info("  → This payment created wallet ID: {$payment->wallet_id}");
 
@@ -839,9 +1159,6 @@ class SalesController extends Controller
         return $uniqueIds;
     }
 
-    /* =========================================================
-       DELETE INVOICE WITH ALL PAYMENTS - FIXED VERSION
-    ========================================================= */
     public function deleteWithPayments($saleId)
     {
         DB::beginTransaction();
@@ -854,11 +1171,18 @@ class SalesController extends Controller
                 throw new \Exception('Customer not found for this sale');
             }
 
+            if ($sale->shipments()->whereIn('status', ['picked', 'in_transit', 'out_for_delivery'])->exists()) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete invoice while shipment is in transit. Cancel shipment first.'
+                ], 400);
+            }
+
             Log::info("========== 🗑️ DELETE WITH PAYMENTS STARTED ==========");
             Log::info("Deleting invoice #{$sale->invoice_no} (ID: {$saleId})");
             Log::info("Customer: {$customer->name} (ID: {$customer->id})");
 
-            // ========== STEP 1: GET CURRENT BALANCES ==========
             $currentWalletBalance = $this->getCurrentWalletBalance($customer->id);
             $currentOpenBalance = $customer->open_balance;
 
@@ -866,18 +1190,15 @@ class SalesController extends Controller
             Log::info("  • Wallet balance: ₹{$currentWalletBalance}");
             Log::info("  • Open balance: ₹{$currentOpenBalance}");
 
-            // Trackers
             $walletAdjustment = 0;
             $openBalanceAdjustment = 0;
             $affectedInvoiceIds = [];
             $processedWallets = [];
             $totalCashToWallet = 0;
 
-            // ========== STEP 2: FIND AFFECTED INVOICES (jo advance use karte hain) ==========
             Log::info("🔍 STEP 2: Finding affected invoices...");
 
             foreach ($sale->payments as $payment) {
-                // Case: Is invoice ne kisi aur ka advance use kiya hai
                 if ($payment->remarks === 'ADVANCE_USED' && $payment->source_wallet_id) {
                     $otherUsers = Payment::where('source_wallet_id', $payment->source_wallet_id)
                         ->where('sale_id', '!=', $saleId)
@@ -889,7 +1210,6 @@ class SalesController extends Controller
                     Log::info("  • Source wallet ID {$payment->source_wallet_id} used in invoices: " . json_encode($otherUsers));
                 }
 
-                // Case: Is invoice ne excess diya jo doosron ne use kiya
                 if (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD']) && $payment->wallet_id) {
                     $users = Payment::where('source_wallet_id', $payment->wallet_id)
                         ->where('remarks', 'ADVANCE_USED')
@@ -904,7 +1224,6 @@ class SalesController extends Controller
             $affectedInvoiceIds = array_unique($affectedInvoiceIds);
             Log::info("Total affected invoices: " . count($affectedInvoiceIds));
 
-            // ========== STEP 3: COLLECT CASH FROM AFFECTED INVOICES ==========
             Log::info("🔍 STEP 3: Collecting cash from affected invoices...");
 
             foreach ($affectedInvoiceIds as $invId) {
@@ -921,7 +1240,6 @@ class SalesController extends Controller
 
             Log::info("Total cash to add to wallet: ₹{$totalCashToWallet}");
 
-            // ========== STEP 4: PROCESS MAIN INVOICE KE PAYMENTS ==========
             Log::info("🔍 STEP 4: Processing main invoice payments...");
 
             foreach ($sale->payments as $payment) {
@@ -930,17 +1248,13 @@ class SalesController extends Controller
                 Log::info("  • Remarks: {$payment->remarks}");
                 Log::info("  • Amount: ₹{$payment->amount}");
 
-                // CASE 1: CASH/INVOICE PAYMENT
                 if (in_array($payment->remarks, ['INVOICE', 'EMI_DOWN'])) {
                     $openBalanceAdjustment += $payment->amount;
                     Log::info("  → Type: CASH PAYMENT");
                     Log::info("  → Effect: +₹{$payment->amount} to open balance");
                 }
-
-                // CASE 2: WALLET ADD/EXCESS (Credit) - Ye doosron ne use kiya hoga
                 elseif (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD'])) {
                     if ($payment->wallet_id && !in_array($payment->wallet_id, $processedWallets)) {
-                        // Ye credit delete ho raha hai - wallet balance GHATEGA
                         $walletAdjustment -= $payment->amount;
                         $processedWallets[] = $payment->wallet_id;
 
@@ -951,11 +1265,8 @@ class SalesController extends Controller
                         Log::info("  ✅ Deleted wallet credit ID: {$payment->wallet_id}");
                     }
                 }
-
-                // CASE 3: WALLET USED (Debit) - Isne kisi aur ka advance use kiya
                 elseif ($payment->remarks === 'ADVANCE_USED') {
                     if ($payment->wallet_id && !in_array($payment->wallet_id, $processedWallets)) {
-                        // Ye debit delete ho raha hai - wallet balance BADHEGA
                         $walletAdjustment += $payment->amount;
                         $processedWallets[] = $payment->wallet_id;
 
@@ -974,7 +1285,6 @@ class SalesController extends Controller
                 Log::info("  ✅ Deleted payment record");
             }
 
-            // ========== STEP 5: PROCESS AFFECTED INVOICES (UNHE DUE KARO) ==========
             if (!empty($affectedInvoiceIds)) {
                 Log::info("🔍 STEP 5: Processing affected invoices...");
 
@@ -984,14 +1294,11 @@ class SalesController extends Controller
                         Log::info("-----------------------------------");
                         Log::info("Processing affected invoice #{$affectedSale->invoice_no}");
 
-                        // Affected invoice ke saare payments delete karo
                         foreach ($affectedSale->payments as $payment) {
                             Log::info("  Deleting payment ID: {$payment->id} (₹{$payment->amount})");
 
-                            // Agar wallet payment hai to wallet adjustment karo
                             if ($payment->remarks === 'ADVANCE_USED' && $payment->wallet_id) {
                                 if (!in_array($payment->wallet_id, $processedWallets)) {
-                                    // Debit delete - wallet balance BADHEGA
                                     $walletAdjustment += $payment->amount;
                                     $processedWallets[] = $payment->wallet_id;
                                     CustomerWallet::where('id', $payment->wallet_id)->delete();
@@ -999,10 +1306,8 @@ class SalesController extends Controller
                                 }
                             }
 
-                            // EXCESS_TO_ADVANCE payments - ye affected invoice ki apni excess hai
                             if (in_array($payment->remarks, ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD']) && $payment->wallet_id) {
                                 if (!in_array($payment->wallet_id, $processedWallets)) {
-                                    // Credit delete - wallet balance GHATEGA
                                     $walletAdjustment -= $payment->amount;
                                     $processedWallets[] = $payment->wallet_id;
                                     CustomerWallet::where('id', $payment->wallet_id)->delete();
@@ -1010,25 +1315,21 @@ class SalesController extends Controller
                                 }
                             }
 
-                            // Note: Cash payments already counted in STEP 3
                             $payment->delete();
                         }
 
-                        // Affected invoice ko DUE karo
                         $affectedSale->payment_status = 'unpaid';
                         $affectedSale->paid_amount = 0;
                         $affectedSale->save();
 
                         Log::info("  ✅ Invoice #{$affectedSale->invoice_no} marked as DUE");
 
-                        // Open balance adjustment for affected invoice
                         $openBalanceAdjustment += $affectedSale->grand_total;
                         Log::info("  → Added ₹{$affectedSale->grand_total} to open balance");
                     }
                 }
             }
 
-            // ========== STEP 6: ADD CASH TO WALLET ==========
             if ($totalCashToWallet > 0) {
                 Log::info("🔍 STEP 6: Adding ₹{$totalCashToWallet} cash to wallet...");
 
@@ -1043,13 +1344,11 @@ class SalesController extends Controller
                     'reference' => 'Cash recovered from affected invoices'
                 ]);
 
-                // Reset wallet adjustment since we're creating new credit
                 $walletAdjustment = $totalCashToWallet;
 
                 Log::info("  ✅ Created wallet credit ID: {$wallet->id} for ₹{$totalCashToWallet}");
             }
 
-            // ========== STEP 7: RESTORE STOCK ==========
             Log::info("🔍 STEP 7: Restoring stock...");
 
             foreach ($sale->items as $item) {
@@ -1060,24 +1359,26 @@ class SalesController extends Controller
                 $item->delete();
             }
 
-            // ========== STEP 8: DELETE EMI PLAN ==========
             if ($sale->emiPlan) {
                 $sale->emiPlan->delete();
                 Log::info("  ✅ EMI plan deleted");
             }
 
-            // ========== STEP 9: DELETE MAIN SALE ==========
+            if ($sale->shipments()->exists()) {
+                Log::info("🔍 Deleting associated shipments...");
+                foreach ($sale->shipments as $shipment) {
+                    $shipment->trackings()->delete();
+                    $shipment->delete();
+                    Log::info("  ✅ Deleted shipment #{$shipment->shipment_number}");
+                }
+            }
+
             $sale->delete();
             Log::info("  ✅ Main sale deleted");
 
-            // ========== STEP 10: CALCULATE FINAL BALANCES ==========
-            $newWalletBalance = $currentWalletBalance + $walletAdjustment;
-            $newOpenBalance = $currentOpenBalance + $openBalanceAdjustment;
+            $newWalletBalance = max(0, $currentWalletBalance + $walletAdjustment);
+            $newOpenBalance = max(0, $currentOpenBalance + $openBalanceAdjustment);
 
-            $newWalletBalance = max(0, $newWalletBalance);
-            $newOpenBalance = max(0, $newOpenBalance);
-
-            // ========== STEP 11: UPDATE CUSTOMER ==========
             $customer->wallet_balance = $newWalletBalance;
             $customer->open_balance = $newOpenBalance;
             $customer->save();
@@ -1119,21 +1420,6 @@ class SalesController extends Controller
         }
     }
 
-    /* =========================================================
-       HELPER METHODS
-    ========================================================= */
-
-    private function calculateSubTotal($items): float
-    {
-        $subTotal = 0;
-        foreach ($items['product_id'] as $i => $productId) {
-            $qty = (int) $items['quantity'][$i];
-            $price = (float) $items['price'][$i];
-            $subTotal += ($qty * $price);
-        }
-        return $subTotal;
-    }
-
     private function getCurrentWalletBalance($customerId): float
     {
         $lastWallet = CustomerWallet::where('customer_id', $customerId)
@@ -1172,7 +1458,6 @@ class SalesController extends Controller
     private function recalculateAllCustomerInvoices($customerId): void
     {
         $invoices = Sale::where('customer_id', $customerId)->get();
-
         foreach ($invoices as $invoice) {
             $this->recalculateInvoiceStatus($invoice->id);
         }
@@ -1216,105 +1501,5 @@ class SalesController extends Controller
             'payment_count' => $payments->count(),
             'due' => $sale->grand_total - $payments->where('status', 'paid')->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])->sum('amount')
         ];
-    }
-
-    /* =========================================================
-       PRINT INVOICE - HTML Version for Browser Printing
-    ========================================================= */
-    public function print(Sale $sale)
-    {
-        $sale->load(['customer', 'items.product']);
-
-        // Get payment summary
-        $totalPaid = $sale->payments()
-            ->where('status', 'paid')
-            ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
-            ->sum('amount');
-
-        $remaining = $sale->grand_total - $totalPaid;
-
-        return view('sales.print', compact('sale', 'totalPaid', 'remaining'));
-    }
-
-    /* =========================================================
-       INVOICE PDF - Download PDF Version
-    ========================================================= */
-    public function invoice(Sale $sale)
-    {
-        $sale->load(['customer', 'items.product']);
-
-        // Convert amount to words
-        try {
-            $formatter = new \NumberFormatter('en_IN', \NumberFormatter::SPELLOUT);
-            $amountInWords = ucfirst($formatter->format($sale->grand_total)) . ' Rupees Only';
-        } catch (\Exception $e) {
-            $amountInWords = 'Rupees ' . number_format($sale->grand_total, 2) . ' Only';
-        }
-
-        // Get payment summary
-        $totalPaid = $sale->payments()
-            ->where('status', 'paid')
-            ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
-            ->sum('amount');
-
-        $pdf = Pdf::loadView('sales.invoice', [
-            'sale' => $sale,
-            'amountInWords' => $amountInWords,
-            'totalPaid' => $totalPaid,
-            'remaining' => $sale->grand_total - $totalPaid
-        ]);
-
-        return $pdf->stream('Invoice-' . $sale->invoice_no . '.pdf');
-    }
-
-    /* =========================================================
-       DELETE IMPACT ANALYSIS
-    ========================================================= */
-    public function deleteImpact($id)
-    {
-        try {
-            $sale = Sale::with(['payments', 'customer'])->findOrFail($id);
-
-            $totalPaid = $sale->payments->sum('amount');
-            $walletUsed = $sale->payments->where('remarks', 'ADVANCE_USED')->sum('amount');
-            $directPayments = $sale->payments->whereIn('remarks', ['INVOICE', 'EMI_DOWN'])->sum('amount');
-            $advancePayments = $sale->payments->whereIn('remarks', ['EXCESS_TO_ADVANCE', 'ADVANCE_ONLY', 'WALLET_ADD'])->sum('amount');
-
-            // Find potentially affected invoices
-            $affectedInvoices = $this->findAffectedInvoices($sale);
-
-            // Calculate impact on balances
-            $walletImpact = $advancePayments - $walletUsed;
-            $openImpact = $directPayments + $walletUsed;
-
-            return response()->json([
-                'success' => true,
-                'invoice_no' => $sale->invoice_no,
-                'grand_total' => $sale->grand_total,
-                'total_paid' => $totalPaid,
-                'wallet_used' => $walletUsed,
-                'direct_payments' => $directPayments,
-                'advance_payments' => $advancePayments,
-                'payment_count' => $sale->payments->count(),
-                'affected_count' => count($affectedInvoices),
-                'affected_invoices' => $affectedInvoices,
-                'wallet_impact' => $walletImpact,
-                'open_impact' => $openImpact,
-                'warning' => $totalPaid > 0
-                    ? "⚠️ This will affect:\n• Wallet: " . ($walletImpact > 0 ? "+" : "") . "₹{$walletImpact}\n• Open Balance: +₹{$openImpact}"
-                    : '✅ No payments to convert',
-                'can_delete' => true
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Delete Impact Error: ' . $e->getMessage(), [
-                'sale_id' => $id,
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Error analyzing impact: ' . $e->getMessage()
-            ], 500);
-        }
     }
 }

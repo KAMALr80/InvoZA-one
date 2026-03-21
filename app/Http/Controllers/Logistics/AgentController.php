@@ -77,142 +77,120 @@ class AgentController extends Controller
     /**
      * Store a newly created agent
      */
-    public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
+    /**
+ * Store new agent
+ */
+public function store(Request $request)
+{
+    try {
+        // Validate request
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:20|unique:delivery_agents,phone',
-            'email' => 'nullable|email|max:255|unique:delivery_agents,email',
-            'alternate_phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string|max:100',
-            'state' => 'nullable|string|max:100',
-            'pincode' => 'nullable|string|max:10',
-
-            // Vehicle Details
-            'vehicle_type' => 'nullable|string|in:bike,cycle,van,truck',
-            'vehicle_number' => 'nullable|string|max:50',
-            'license_number' => 'nullable|string|max:50',
-
-            // Documents
-            'aadhar_card' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'driving_license' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-
-            // Bank Details
-            'bank_name' => 'nullable|string|max:255',
-            'account_number' => 'nullable|string|max:50',
-            'ifsc_code' => 'nullable|string|max:20',
-            'upi_id' => 'nullable|string|max:100',
-
-            // Employment
+            'email' => 'nullable|email|unique:delivery_agents,email',
+            'vehicle_type' => 'nullable|string',
+            'vehicle_number' => 'nullable|string',
+            'city' => 'nullable|string',
+            'state' => 'nullable|string',
+            'pincode' => 'nullable|string',
+            'current_latitude' => 'nullable|numeric',
+            'current_longitude' => 'nullable|numeric',
             'employment_type' => 'required|in:full_time,part_time,contract',
             'joining_date' => 'required|date',
-            'salary' => 'nullable|numeric|min:0',
-            'commission_type' => 'nullable|in:fixed,percentage',
-            'commission_value' => 'nullable|numeric|min:0',
-
-            // Service Areas
-            'service_areas' => 'nullable|array',
-            'service_areas.*' => 'string|max:50',
+            'salary' => 'nullable|numeric',
+            'is_active' => 'boolean'
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
         DB::beginTransaction();
-        try {
-            // Generate unique agent code
-            $agentCode = $this->generateAgentCode();
 
-            // Create delivery agent
-            $agent = new DeliveryAgent();
-            $agent->agent_code = $agentCode;
-            $agent->name = $request->name;
-            $agent->phone = $request->phone;
-            $agent->email = $request->email;
-            $agent->alternate_phone = $request->alternate_phone;
-            $agent->address = $request->address;
-            $agent->city = $request->city;
-            $agent->state = $request->state;
-            $agent->pincode = $request->pincode;
+        // Generate unique agent code
+        $lastAgent = DeliveryAgent::orderBy('id', 'desc')->first();
+        $lastNumber = $lastAgent ? (int) substr($lastAgent->agent_code, 2) : 0;
+        $agentCode = 'AG' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
 
-            // Vehicle details
-            $agent->vehicle_type = $request->vehicle_type;
-            $agent->vehicle_number = $request->vehicle_number;
-            $agent->license_number = $request->license_number;
-
-            // Bank details
-            $agent->bank_name = $request->bank_name;
-            $agent->account_number = $request->account_number;
-            $agent->ifsc_code = $request->ifsc_code;
-            $agent->upi_id = $request->upi_id;
-
-            // Employment
-            $agent->employment_type = $request->employment_type;
-            $agent->joining_date = Carbon::parse($request->joining_date);
-            $agent->salary = $request->salary;
-            $agent->commission_type = $request->commission_type;
-            $agent->commission_value = $request->commission_value;
-
-            // Service areas
-            if ($request->service_areas) {
-                $agent->service_areas = json_encode($request->service_areas);
-            }
-
-            // Status
-            $agent->status = 'available';
-            $agent->is_active = true;
-
-            // Handle document uploads
-            if ($request->hasFile('aadhar_card')) {
-                $path = $request->file('aadhar_card')->store('agents/aadhar', 'public');
-                $agent->aadhar_card = $path;
-            }
-
-            if ($request->hasFile('driving_license')) {
-                $path = $request->file('driving_license')->store('agents/license', 'public');
-                $agent->driving_license = $path;
-            }
-
-            if ($request->hasFile('photo')) {
-                $path = $request->file('photo')->store('agents/photos', 'public');
-                $agent->photo = $path;
-            }
-
-            $agent->save();
-
-            // Create user account for agent (optional)
-            if ($request->boolean('create_user_account')) {
-                $this->createUserAccount($agent, $request);
-            }
-
-            DB::commit();
-
-            Log::info('New delivery agent created', [
-                'agent_id' => $agent->id,
-                'agent_code' => $agent->agent_code,
-                'name' => $agent->name
-            ]);
-
-            return redirect()->route('logistics.agents.show', $agent->id)
-                ->with('success', 'Delivery agent created successfully!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Agent creation failed: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
-            ]);
-
-            return redirect()->back()
-                ->with('error', 'Error creating agent: ' . $e->getMessage())
-                ->withInput();
+        // Ensure uniqueness
+        while (DeliveryAgent::where('agent_code', $agentCode)->exists()) {
+            $lastNumber++;
+            $agentCode = 'AG' . str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
         }
+
+        // Create user
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'mobile' => $request->phone,
+            'password' => Hash::make('password123'),
+            'role' => 'delivery_agent',
+            'status' => 'active',
+            'current_latitude' => $request->current_latitude,
+            'current_longitude' => $request->current_longitude,
+            'email_verified_at' => now()
+        ]);
+
+        // Create delivery agent
+        $deliveryAgent = DeliveryAgent::create([
+            'user_id' => $user->id,
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'agent_code' => $agentCode,
+            'vehicle_type' => $request->vehicle_type,
+            'vehicle_number' => $request->vehicle_number,
+            'city' => $request->city,
+            'state' => $request->state,
+            'pincode' => $request->pincode,
+            'current_latitude' => $request->current_latitude,
+            'current_longitude' => $request->current_longitude,
+            'employment_type' => $request->employment_type,
+            'joining_date' => $request->joining_date,
+            'salary' => $request->salary,
+            'status' => 'available',
+            'is_active' => $request->is_active ?? true,
+            'is_online' => true
+        ]);
+
+        DB::commit();
+
+        return redirect()->route('logistics.agents.show', $deliveryAgent->id)
+            ->with('success', 'Agent created successfully!');
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return redirect()->back()->withErrors($e->errors())->withInput();
+
+    } catch (\Illuminate\Database\QueryException $e) {
+        DB::rollBack();
+
+        // Handle duplicate entry error
+        if (str_contains($e->getMessage(), 'Duplicate entry')) {
+            if (str_contains($e->getMessage(), 'agent_code')) {
+                return redirect()->back()
+                    ->with('error', 'Agent code already exists. Please try again.')
+                    ->withInput();
+            }
+            if (str_contains($e->getMessage(), 'phone')) {
+                return redirect()->back()
+                    ->with('error', 'Phone number already registered. Please use a different number.')
+                    ->withInput();
+            }
+            if (str_contains($e->getMessage(), 'email')) {
+                return redirect()->back()
+                    ->with('error', 'Email already registered. Please use a different email.')
+                    ->withInput();
+            }
+        }
+
+        return redirect()->back()
+            ->with('error', 'Error creating agent: ' . $e->getMessage())
+            ->withInput();
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return redirect()->back()
+            ->with('error', 'Error creating agent: ' . $e->getMessage())
+            ->withInput();
     }
+}
 
     /**
      * Display agent details
@@ -338,6 +316,26 @@ class AgentController extends Controller
                 ->withInput();
         }
     }
+
+/**
+ * Get agent's current location (for API)
+ */
+public function getLocation($id)
+{
+    $agent = DeliveryAgent::find($id);
+
+    if (!$agent) {
+        return response()->json(['error' => 'Agent not found'], 404);
+    }
+
+    return response()->json([
+        'latitude' => $agent->current_latitude,
+        'longitude' => $agent->current_longitude,
+        'accuracy' => $agent->location_accuracy,
+        'last_update' => $agent->last_location_update,
+        'status' => $agent->status
+    ]);
+}
 
     /**
      * Delete agent

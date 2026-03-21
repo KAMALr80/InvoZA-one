@@ -2,6 +2,14 @@
 <html lang="en">
 
 <head>
+
+  
+    <!-- Add these BEFORE your content -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+        <meta name="google-maps-key" content="{{ config('services.google.maps_api_key') }}">
     <meta charset="UTF-8">
     <title>INVOZA One - @yield('page-title', 'Dashboard')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +22,7 @@
     <link rel="stylesheet" type="text/css"
         href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
 
-    <!-- Font Awesome for icons (for dropdown) -->
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -34,6 +42,7 @@
             --border: #e5e7eb;
             --bg-light: #f9fafb;
             --bg-white: #ffffff;
+            --bg-sidebar: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
@@ -44,6 +53,9 @@
             --radius-xl: 16px;
             --radius-2xl: 20px;
             --font-sans: 'Segoe UI', Tahoma, -apple-system, BlinkMacSystemFont, sans-serif;
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 0px;
+            --header-height: 70px;
         }
 
         * {
@@ -58,30 +70,68 @@
             color: var(--text-main);
             line-height: 1.5;
             overflow-x: hidden;
-            display: flex;
             min-height: 100vh;
         }
 
-        /* ================= SIDEBAR STYLES ================= */
+        /* ================= SIDEBAR OVERLAY (Mobile) ================= */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ================= MAIN SIDEBAR ================= */
         #sidebar {
-            width: 260px;
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
             color: #fff;
             padding: 25px 20px;
             display: flex;
             flex-direction: column;
-            position: fixed;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            height: 100vh;
             border-right: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.3);
             z-index: 1000;
             overflow-y: auto;
-            transition: transform 0.3s ease;
             scrollbar-width: thin;
             scrollbar-color: #4b5563 #1f2937;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Desktop - Sidebar always visible */
+        @media (min-width: 992px) {
+            #sidebar {
+                transform: translateX(0);
+            }
+        }
+
+        /* Mobile/Tablet - Sidebar hidden by default */
+        @media (max-width: 991px) {
+            #sidebar {
+                transform: translateX(-100%);
+                box-shadow: none;
+            }
+
+            #sidebar.active {
+                transform: translateX(0);
+                box-shadow: 4px 0 30px rgba(0, 0, 0, 0.3);
+            }
         }
 
         /* Custom scrollbar for Webkit browsers */
@@ -102,6 +152,37 @@
             background: #6b7280;
         }
 
+        /* ========== SIDEBAR CLOSE BUTTON (Mobile Only) ========== */
+        .sidebar-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md);
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .sidebar-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        @media (max-width: 991px) {
+            .sidebar-close {
+                display: flex;
+            }
+        }
+
         /* Logo Section */
         .sidebar-logo {
             text-align: center;
@@ -109,27 +190,24 @@
             padding-bottom: 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
-            top: 0;
-            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-            z-index: 1;
         }
 
         .logo-icon {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: var(--radius-lg);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 28px;
             margin: 0 auto 15px auto;
             box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
         }
 
         .logo-text {
             margin: 0;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 900;
             letter-spacing: 0.5px;
             background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
@@ -152,6 +230,12 @@
             margin-bottom: 20px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .user-info:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .user-details {
@@ -162,15 +246,16 @@
 
         .user-avatar {
             background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
         }
 
         .user-name {
@@ -221,13 +306,15 @@
 
         .nav-link:hover {
             background-color: rgba(99, 102, 241, 0.1);
-            transform: translateX(4px);
+            transform: translateX(8px);
+            color: white;
         }
 
         .nav-link.active {
             background: rgba(99, 102, 241, 0.15);
             border-color: rgba(99, 102, 241, 0.3);
             font-weight: 700;
+            transform: translateX(5px);
         }
 
         .nav-icon {
@@ -240,11 +327,17 @@
             font-size: 18px;
             background: #475569;
             flex-shrink: 0;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover .nav-icon {
+            background: var(--primary);
+            transform: scale(1.1);
         }
 
         .nav-link.active .nav-icon {
             background: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
         }
 
         .dropdown-icon {
@@ -263,6 +356,18 @@
             margin-top: 4px;
             margin-bottom: 4px;
             display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dropdown-menu.show {
@@ -285,7 +390,7 @@
         .dropdown-item:hover {
             background-color: rgba(99, 102, 241, 0.1);
             color: white;
-            transform: translateX(4px);
+            transform: translateX(8px);
         }
 
         .dropdown-item.active {
@@ -298,6 +403,7 @@
             width: 20px;
             font-size: 14px;
             color: #94a3b8;
+            transition: color 0.3s ease;
         }
 
         .dropdown-item:hover i {
@@ -319,37 +425,59 @@
         .top-navbar {
             position: fixed;
             top: 0;
-            left: 260px;
+            left: 0;
             right: 0;
-            height: 70px;
+            height: var(--header-height);
             background: var(--bg-white);
             box-shadow: var(--shadow-md);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 30px;
-            z-index: 999;
+            z-index: 998;
             transition: left 0.3s ease;
         }
 
+        /* Desktop - Navbar starts after sidebar */
+        @media (min-width: 992px) {
+            .top-navbar {
+                left: var(--sidebar-width);
+            }
+        }
+
+        /* Navbar left section */
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Menu Toggle Button (Mobile/Tablet only) */
         .menu-toggle {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
             display: none;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
-            background: var(--primary);
-            color: white;
-            border-radius: var(--radius-md);
-            border: none;
-            cursor: pointer;
-            font-size: 20px;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
         .menu-toggle:hover {
-            background: var(--primary-dark);
             transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        @media (max-width: 991px) {
+            .menu-toggle {
+                display: flex;
+            }
         }
 
         .page-title {
@@ -410,13 +538,19 @@
         /* ================= MAIN CONTENT ================= */
         .main-content {
             flex: 1;
-            margin-left: 260px;
-            margin-top: 70px;
-            min-height: calc(100vh - 70px);
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
             padding: 30px;
             background: var(--bg-light);
             overflow-y: auto;
             transition: margin-left 0.3s ease;
+        }
+
+        /* Desktop - Content starts after sidebar */
+        @media (min-width: 992px) {
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
         }
 
         /* ================= TOAST NOTIFICATION ================= */
@@ -441,11 +575,26 @@
                 transform: translateX(100%);
                 opacity: 0;
             }
-
             to {
                 transform: translateX(0);
                 opacity: 1;
             }
+        }
+
+        /* ================= ANIMATIONS ================= */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nav-link, .dropdown-item, .user-info {
+            animation: fadeIn 0.5s ease;
         }
 
         /* ================= RESPONSIVE BREAKPOINTS ================= */
@@ -458,7 +607,7 @@
         }
 
         /* Desktop (992px to 1199px) */
-        @media (max-width: 1199px) {
+        @media (min-width: 992px) and (max-width: 1199px) {
             .main-content {
                 padding: 25px;
             }
@@ -467,25 +616,15 @@
         /* Tablet (768px to 991px) */
         @media (max-width: 991px) {
             .top-navbar {
-                left: 0;
                 padding: 0 20px;
             }
 
             .main-content {
-                margin-left: 0;
                 padding: 20px;
             }
 
-            #sidebar {
-                transform: translateX(-100%);
-            }
-
-            #sidebar.active {
-                transform: translateX(0);
-            }
-
-            .menu-toggle {
-                display: flex;
+            .page-title {
+                font-size: 18px;
             }
 
             .user-detail {
@@ -548,7 +687,7 @@
             }
 
             #sidebar {
-                width: 240px;
+                width: 260px;
             }
 
             .dropdown-menu {
@@ -569,6 +708,12 @@
                 width: 32px;
                 height: 32px;
                 font-size: 16px;
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
             }
         }
 
@@ -596,7 +741,7 @@
             }
 
             #sidebar {
-                width: 220px;
+                width: 240px;
                 padding: 20px 15px;
             }
 
@@ -628,10 +773,12 @@
 
         /* Print Styles */
         @media print {
-
             #sidebar,
             .top-navbar,
-            .toast-notification {
+            .toast-notification,
+            .menu-toggle,
+            .sidebar-close,
+            .sidebar-overlay {
                 display: none !important;
             }
 
@@ -692,8 +839,16 @@
 </head>
 
 <body>
-    {{-- ================= SIDEBAR ================= --}}
+    {{-- ================= SIDEBAR OVERLAY (Mobile) ================= --}}
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    {{-- ================= MAIN SIDEBAR ================= --}}
     <div id="sidebar">
+        {{-- Close Button (Mobile only) --}}
+        <button class="sidebar-close" id="sidebarClose">
+            <i class="fas fa-times"></i>
+        </button>
+
         {{-- Logo --}}
         <div class="sidebar-logo">
             <div class="logo-icon">⚡</div>
@@ -907,10 +1062,15 @@
 
     {{-- ================= TOP NAVBAR ================= --}}
     <div class="top-navbar">
-        <button id="menuToggle" class="menu-toggle">☰</button>
+        <div class="navbar-left">
+            {{-- Menu Toggle Button (Mobile/Tablet) --}}
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
 
-        <div class="page-title">
-            @yield('page-title', 'Dashboard')
+            <div class="page-title">
+                @yield('page-title', 'Dashboard')
+            </div>
         </div>
 
         @auth
@@ -967,42 +1127,58 @@
 
     {{-- ================= CUSTOM JAVASCRIPT ================= --}}
     <script>
-        // Mobile menu toggle
-        document.getElementById('menuToggle')?.addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('sidebar').classList.toggle('active');
-        });
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebarClose = document.getElementById('sidebarClose');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
 
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const menuToggle = document.getElementById('menuToggle');
+        // Function to open sidebar
+        function openSidebar() {
+            sidebar.classList.add('active');
+            sidebarOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
 
-            if (window.innerWidth <= 991 &&
-                sidebar && menuToggle &&
-                !sidebar.contains(event.target) &&
-                !menuToggle.contains(event.target) &&
-                sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
+        // Function to close sidebar
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        // Toggle sidebar on menu button click
+        if (menuToggle) {
+            menuToggle.addEventListener('click', openSidebar);
+        }
+
+        // Close sidebar on close button click
+        if (sidebarClose) {
+            sidebarClose.addEventListener('click', closeSidebar);
+        }
+
+        // Close sidebar on overlay click
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', closeSidebar);
+        }
+
+        // Close sidebar on escape key press
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+                closeSidebar();
             }
         });
 
-        // Auto-close sidebar when clicking a link on mobile
-        document.querySelectorAll('#sidebar a').forEach(link => {
-            link.addEventListener('click', function() {
-                if (window.innerWidth <= 991) {
-                    document.getElementById('sidebar')?.classList.remove('active');
-                }
-            });
-        });
-
         // Handle window resize
-        let resizeTimeout;
+        let resizeTimer;
         window.addEventListener('resize', function() {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
                 if (window.innerWidth > 991) {
-                    document.getElementById('sidebar')?.classList.remove('active');
+                    // Desktop view - sidebar always visible
+                    sidebar.classList.remove('active');
+                    sidebarOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
                 }
             }, 250);
         });
@@ -1017,6 +1193,18 @@
             if (icon) {
                 icon.classList.toggle('rotate');
             }
+
+            // Close other dropdowns
+            const allDropdowns = document.querySelectorAll('.dropdown-menu');
+            allDropdowns.forEach(d => {
+                if (d.id !== id && d.classList.contains('show')) {
+                    d.classList.remove('show');
+                    const otherIcon = document.getElementById(d.id.replace('Dropdown', 'Icon'));
+                    if (otherIcon) {
+                        otherIcon.classList.remove('rotate');
+                    }
+                }
+            });
         }
 
         // Auto-open dropdown if any child is active
@@ -1033,11 +1221,17 @@
                     }
                 }
             }
+
+            // Close sidebar when clicking a link on mobile
+            if (window.innerWidth <= 991) {
+                document.querySelectorAll('#sidebar a').forEach(link => {
+                    link.addEventListener('click', closeSidebar);
+                });
+            }
         });
 
         // Basic DataTable Initialization (will be overridden by specific page scripts)
         document.addEventListener('DOMContentLoaded', function() {
-            // If any table has class 'datatable', initialize it
             if ($.fn.DataTable && $('.datatable').length) {
                 $('.datatable').DataTable({
                     pageLength: 10,

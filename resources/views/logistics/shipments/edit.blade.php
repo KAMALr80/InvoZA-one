@@ -1,6 +1,7 @@
+{{-- resources/views/logistics/shipments/edit.blade.php --}}
 @extends('layouts.app')
 
-@section('page-title', 'Edit Shipment #' . $shipment->shipment_number)
+@section('title', 'Edit Shipment #' . $shipment->shipment_number)
 
 @section('content')
     <style>
@@ -17,10 +18,8 @@
             min-height: 100vh;
         }
 
-        /* ================= MAIN CONTAINER ================= */
         .edit-page {
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
             padding: clamp(16px, 3vw, 30px);
             width: 100%;
         }
@@ -31,15 +30,12 @@
             width: 100%;
         }
 
-        /* ================= MAIN CARD ================= */
         .edit-card {
             background: #ffffff;
             border-radius: 30px;
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
             overflow: hidden;
             width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
             animation: slideIn 0.5s ease;
         }
 
@@ -55,7 +51,6 @@
             }
         }
 
-        /* ================= HEADER ================= */
         .edit-header {
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             padding: clamp(1.5rem, 4vw, 2rem);
@@ -118,7 +113,6 @@
             font-size: 0.9rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(4px);
             white-space: nowrap;
@@ -130,6 +124,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .header-actions {
@@ -153,7 +148,6 @@
             align-items: center;
             gap: 0.5rem;
             white-space: nowrap;
-            backdrop-filter: blur(5px);
         }
 
         .header-btn:hover {
@@ -163,7 +157,6 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        /* ================= FORM SECTIONS ================= */
         .form-section {
             padding: clamp(1.5rem, 4vw, 2rem);
             border-bottom: 1px solid #e5e7eb;
@@ -174,22 +167,6 @@
 
         .form-section:hover {
             background: #f8fafc;
-        }
-
-        .form-section::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 2rem;
-            right: 2rem;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #667eea, transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .form-section:hover::after {
-            opacity: 1;
         }
 
         .section-header {
@@ -210,11 +187,6 @@
             color: white;
             font-size: 1.5rem;
             box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .form-section:hover .section-icon {
-            transform: scale(1.1) rotate(5deg);
         }
 
         .section-title {
@@ -230,7 +202,6 @@
             margin: 0.25rem 0 0;
         }
 
-        /* ================= FORM GRID ================= */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -254,25 +225,11 @@
 
         .form-label i {
             color: #667eea;
-            font-size: 1rem;
         }
 
         .required-star {
             color: #ef4444;
             margin-left: 0.25rem;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
         }
 
         .form-control {
@@ -284,7 +241,6 @@
             color: #1e293b;
             background: white;
             transition: all 0.3s ease;
-            font-family: inherit;
         }
 
         .form-control:focus {
@@ -293,13 +249,8 @@
             box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
         }
 
-        .form-control:hover {
-            border-color: #94a3b8;
-        }
-
         .form-control[readonly] {
             background: #f1f5f9;
-            color: #475569;
         }
 
         textarea.form-control {
@@ -312,10 +263,8 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 1rem center;
-            background-size: 1rem;
         }
 
-        /* ================= DIMENSIONS GRID ================= */
         .dimensions-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -338,19 +287,21 @@
             transform: translateY(-50%);
             color: #64748b;
             font-size: 0.85rem;
-            font-weight: 500;
             background: #f1f5f9;
             padding: 0.2rem 0.5rem;
             border-radius: 6px;
         }
 
-        /* ================= INFO CARD ================= */
+        .input-hint {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
         .info-card {
             background: linear-gradient(135deg, #f8fafc, #f1f5f9);
             border-radius: 20px;
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid #e5e7eb;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -365,7 +316,6 @@
             background: white;
             padding: 0.75rem 1.25rem;
             border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             flex: 1;
             min-width: 200px;
         }
@@ -379,28 +329,19 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.2rem;
-        }
-
-        .info-content {
-            display: flex;
-            flex-direction: column;
         }
 
         .info-label {
             font-size: 0.8rem;
             color: #64748b;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
         }
 
         .info-value {
             font-weight: 700;
             color: #1e293b;
-            font-size: 1rem;
         }
 
-        /* ================= AGENT SELECT SECTION - NEW ================= */
         .agent-section {
             background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
             border: 1px solid #bae6fd;
@@ -418,15 +359,9 @@
             padding: 0.5rem 1rem;
             border-radius: 30px;
             font-size: 0.85rem;
-            color: #1e293b;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .agent-stat-badge i {
-            color: #667eea;
         }
 
         .agent-list-preview {
@@ -444,15 +379,12 @@
             gap: 0.75rem;
             padding: 0.75rem 1rem;
             border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .agent-preview-item:hover {
             background: #f8fafc;
-        }
-
-        .agent-preview-item:last-child {
-            border-bottom: none;
         }
 
         .agent-status-dot {
@@ -479,7 +411,6 @@
         .agent-preview-name {
             font-weight: 600;
             color: #1e293b;
-            font-size: 0.95rem;
         }
 
         .agent-preview-city {
@@ -488,13 +419,55 @@
             margin-left: auto;
         }
 
-        /* ================= ACTION BUTTONS ================= */
+        .address-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .address-suggestions.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .suggestion-item:hover {
+            background: #f8fafc;
+            padding-left: 1.5rem;
+        }
+
+        .address-preview {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #e8f0fe;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .address-preview.show {
+            display: block;
+        }
+
         .action-buttons {
             display: flex;
             gap: 1rem;
             justify-content: flex-end;
             flex-wrap: wrap;
-            margin-top: 1rem;
         }
 
         .btn {
@@ -510,27 +483,6 @@
             border: none;
             cursor: pointer;
             white-space: nowrap;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn:hover::before {
-            width: 300px;
-            height: 300px;
         }
 
         .btn-primary {
@@ -553,30 +505,8 @@
         .btn-secondary:hover {
             background: #e2e8f0;
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
         }
 
-        .btn-danger {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: white;
-            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(239, 68, 68, 0.4);
-        }
-
-        .btn i {
-            font-size: 1.1rem;
-            transition: transform 0.3s ease;
-        }
-
-        .btn:hover i {
-            transform: scale(1.2);
-        }
-
-        /* ================= TOAST NOTIFICATION ================= */
         .toast {
             position: fixed;
             top: 30px;
@@ -589,7 +519,6 @@
             display: none;
             z-index: 10000;
             max-width: 400px;
-            width: calc(100% - 60px);
             animation: slideInRight 0.3s ease;
         }
 
@@ -613,26 +542,6 @@
             border-left-color: #ef4444;
         }
 
-        .toast.warning {
-            border-left-color: #f59e0b;
-        }
-
-        .toast-content {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: #1e293b;
-        }
-
-        .toast-icon {
-            font-size: 1.5rem;
-        }
-
-        .toast-message {
-            font-weight: 500;
-        }
-
-        /* ================= LOADING OVERLAY ================= */
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -664,17 +573,6 @@
             }
         }
 
-        .loading-text {
-            color: #1e293b;
-            font-weight: 600;
-            font-size: 1.1rem;
-            background: white;
-            padding: 1rem 2rem;
-            border-radius: 30px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        /* ================= RESPONSIVE ================= */
         @media (max-width: 768px) {
             .edit-page {
                 padding: 1rem;
@@ -683,10 +581,6 @@
             .header-content {
                 flex-direction: column;
                 align-items: flex-start;
-            }
-
-            .header-title {
-                font-size: 1.5rem;
             }
 
             .form-grid {
@@ -717,553 +611,641 @@
             .agent-stats {
                 flex-direction: column;
             }
-
-            .agent-stat-badge {
-                width: 100%;
-            }
         }
     </style>
 
     <div class="edit-page">
-        {{-- Loading Overlay --}}
         <div id="loadingOverlay" class="loading-overlay">
             <div class="spinner"></div>
             <div class="loading-text">Saving changes...</div>
         </div>
 
-        {{-- Header --}}
-        <div class="edit-header">
-            <div class="header-content">
-                <div class="header-left">
-                    <h1 class="header-title">
-                        Edit Shipment #{{ $shipment->shipment_number }}
-                        <span class="status-badge">{{ strtoupper(str_replace('_', ' ', $shipment->status)) }}</span>
-                    </h1>
-                    <div class="header-subtitle">
-                        <span><i class="fas fa-calendar"></i> Created:
-                            {{ $shipment->created_at->format('d M Y, h:i A') }}</span>
-                        <span>•</span>
-                        <span><i class="fas fa-sync-alt"></i> Last updated:
-                            {{ $shipment->updated_at->diffForHumans() }}</span>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <a href="{{ route('logistics.shipments.show', $shipment->id) }}" class="header-btn">
-                        <i class="fas fa-arrow-left"></i> Back to Details
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        {{-- Info Card --}}
-        @if ($shipment->sale_id)
-            <div class="form-section" style="padding-bottom: 0;">
-                <div class="info-card">
-                    <div class="info-item">
-                        <div class="info-icon"><i class="fas fa-file-invoice"></i></div>
-                        <div class="info-content">
-                            <span class="info-label">Linked Invoice</span>
-                            <span class="info-value">#{{ $shipment->sale->invoice_no ?? 'N/A' }}</span>
+        <div class="edit-card">
+            <div class="edit-header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1 class="header-title">
+                            Edit Shipment #{{ $shipment->shipment_number }}
+                            <span class="status-badge">{{ strtoupper(str_replace('_', ' ', $shipment->status)) }}</span>
+                        </h1>
+                        <div class="header-subtitle">
+                            <span><i class="fas fa-calendar"></i> Created:
+                                {{ $shipment->created_at->format('d M Y, h:i A') }}</span>
+                            <span>•</span>
+                            <span><i class="fas fa-sync-alt"></i> Last updated:
+                                {{ $shipment->updated_at->diffForHumans() }}</span>
                         </div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-icon"><i class="fas fa-user"></i></div>
-                        <div class="info-content">
-                            <span class="info-label">Customer</span>
-                            <span class="info-value">{{ $shipment->customer->name ?? 'N/A' }}</span>
+                    <div class="header-actions">
+                        <a href="{{ route('logistics.shipments.show', $shipment->id) }}" class="header-btn">
+                            <i class="fas fa-arrow-left"></i> Back to Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Info Card --}}
+            @if ($shipment->sale_id)
+                <div class="form-section" style="padding-bottom: 0;">
+                    <div class="info-card">
+                        <div class="info-item">
+                            <div class="info-icon"><i class="fas fa-file-invoice"></i></div>
+                            <div>
+                                <div class="info-label">Linked Invoice</div>
+                                <div class="info-value">#{{ $shipment->sale->invoice_no ?? 'N/A' }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon"><i class="fas fa-user"></i></div>
+                            <div>
+                                <div class="info-label">Customer</div>
+                                <div class="info-value">{{ $shipment->customer->name ?? 'N/A' }}</div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-icon"><i class="fas fa-phone"></i></div>
+                            <div>
+                                <div class="info-label">Contact</div>
+                                <div class="info-value">{{ $shipment->customer->mobile ?? 'N/A' }}</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-icon"><i class="fas fa-phone"></i></div>
-                        <div class="info-content">
-                            <span class="info-label">Contact</span>
-                            <span class="info-value">{{ $shipment->customer->mobile ?? 'N/A' }}</span>
+                </div>
+            @endif
+
+            <form method="POST" action="{{ route('logistics.shipments.update', $shipment->id) }}" id="editForm">
+                @csrf
+                @method('PUT')
+
+                {{-- Receiver Information --}}
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-user"></i></div>
+                        <div>
+                            <h3 class="section-title">Receiver Information</h3>
+                            <p class="section-subtitle">Update receiver's contact details</p>
                         </div>
                     </div>
-                </div>
-            </div>
-        @endif
-
-        {{-- Edit Form --}}
-        <form method="POST" action="{{ route('logistics.shipments.update', $shipment->id) }}" id="editForm"
-            enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
-
-            {{-- Receiver Information --}}
-            <div class="form-section">
-                <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-user"></i></div>
-                    <div>
-                        <h3 class="section-title">Receiver Information</h3>
-                        <p class="section-subtitle">Update receiver's contact details</p>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-user"></i>
-                            Receiver Name <span class="required-star">*</span>
-                        </label>
-                        <input type="text" name="receiver_name" class="form-control"
-                            value="{{ old('receiver_name', $shipment->receiver_name) }}" required
-                            placeholder="Enter receiver name">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-phone"></i>
-                            Phone Number <span class="required-star">*</span>
-                        </label>
-                        <input type="tel" name="receiver_phone" class="form-control"
-                            value="{{ old('receiver_phone', $shipment->receiver_phone) }}" required
-                            placeholder="10 digit mobile number">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-phone-alt"></i>
-                            Alternate Phone
-                        </label>
-                        <input type="tel" name="receiver_alternate_phone" class="form-control"
-                            value="{{ old('receiver_alternate_phone', $shipment->receiver_alternate_phone) }}"
-                            placeholder="Alternate contact number">
-                    </div>
-                </div>
-            </div>
-
-            {{-- Shipping Address --}}
-            <div class="form-section">
-                <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-map-marker-alt"></i></div>
-                    <div>
-                        <h3 class="section-title">Shipping Address</h3>
-                        <p class="section-subtitle">Update delivery address</p>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group" style="grid-column: 1/-1;">
-                        <label class="form-label">
-                            <i class="fas fa-map-pin"></i>
-                            Address <span class="required-star">*</span>
-                        </label>
-                        <textarea name="shipping_address" class="form-control" required placeholder="Complete address">{{ old('shipping_address', $shipment->shipping_address) }}</textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Landmark</label>
-                        <input type="text" name="landmark" class="form-control"
-                            value="{{ old('landmark', $shipment->landmark) }}" placeholder="Nearby landmark">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">City <span class="required-star">*</span></label>
-                        <input type="text" name="city" class="form-control"
-                            value="{{ old('city', $shipment->city) }}" required placeholder="City">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">State <span class="required-star">*</span></label>
-                        <input type="text" name="state" class="form-control"
-                            value="{{ old('state', $shipment->state) }}" required placeholder="State">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Pincode <span class="required-star">*</span></label>
-                        <input type="text" name="pincode" class="form-control"
-                            value="{{ old('pincode', $shipment->pincode) }}" required placeholder="Pincode">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Country</label>
-                        <input type="text" name="country" class="form-control"
-                            value="{{ old('country', $shipment->country ?? 'India') }}" placeholder="Country">
-                    </div>
-                </div>
-            </div>
-
-            {{-- Package Details --}}
-            <div class="form-section">
-                <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-box"></i></div>
-                    <div>
-                        <h3 class="section-title">Package Details</h3>
-                        <p class="section-subtitle">Update package dimensions and value</p>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Weight (kg)</label>
-                        <input type="number" step="0.01" name="weight" class="form-control"
-                            value="{{ old('weight', $shipment->weight) }}" placeholder="0.00" id="weight">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Package Type</label>
-                        <select name="package_type" class="form-control">
-                            <option value="">Select Type</option>
-                            <option value="box"
-                                {{ old('package_type', $shipment->package_type) == 'box' ? 'selected' : '' }}>📦 Box
-                            </option>
-                            <option value="envelope"
-                                {{ old('package_type', $shipment->package_type) == 'envelope' ? 'selected' : '' }}>✉️
-                                Envelope</option>
-                            <option value="pallet"
-                                {{ old('package_type', $shipment->package_type) == 'pallet' ? 'selected' : '' }}>📏 Pallet
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Quantity</label>
-                        <input type="number" name="quantity" class="form-control" min="1"
-                            value="{{ old('quantity', $shipment->quantity ?? 1) }}" placeholder="1" id="quantity">
-                    </div>
-                </div>
-
-                <div class="dimensions-grid">
-                    <div class="dimension-item">
-                        <label class="form-label">Length (cm)</label>
-                        <input type="number" step="0.1" name="length" class="form-control"
-                            value="{{ old('length', $shipment->length) }}" placeholder="0" id="length">
-                        <span class="dimension-unit">cm</span>
-                    </div>
-                    <div class="dimension-item">
-                        <label class="form-label">Width (cm)</label>
-                        <input type="number" step="0.1" name="width" class="form-control"
-                            value="{{ old('width', $shipment->width) }}" placeholder="0" id="width">
-                        <span class="dimension-unit">cm</span>
-                    </div>
-                    <div class="dimension-item">
-                        <label class="form-label">Height (cm)</label>
-                        <input type="number" step="0.1" name="height" class="form-control"
-                            value="{{ old('height', $shipment->height) }}" placeholder="0" id="height">
-                        <span class="dimension-unit">cm</span>
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label class="form-label">
-                        <i class="fas fa-rupee-sign"></i>
-                        Declared Value (₹)
-                    </label>
-                    <input type="number" step="0.01" name="declared_value" class="form-control"
-                        value="{{ old('declared_value', $shipment->declared_value) }}" placeholder="0.00"
-                        id="declaredValue">
-                    <div class="input-hint">Value for insurance/customs</div>
-                </div>
-            </div>
-
-            {{-- Courier Information --}}
-            <div class="form-section">
-                <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-truck"></i></div>
-                    <div>
-                        <h3 class="section-title">Courier Information</h3>
-                        <p class="section-subtitle">Update courier and tracking details</p>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Courier Partner</label>
-                        <select name="courier_partner" class="form-control" id="courierPartner">
-                            <option value="">Select Courier</option>
-                            <option value="Delhivery"
-                                {{ old('courier_partner', $shipment->courier_partner) == 'Delhivery' ? 'selected' : '' }}>
-                                🚚 Delhivery</option>
-                            <option value="BlueDart"
-                                {{ old('courier_partner', $shipment->courier_partner) == 'BlueDart' ? 'selected' : '' }}>✈️
-                                BlueDart</option>
-                            <option value="DTDC"
-                                {{ old('courier_partner', $shipment->courier_partner) == 'DTDC' ? 'selected' : '' }}>🚛
-                                DTDC</option>
-                            <option value="FedEx"
-                                {{ old('courier_partner', $shipment->courier_partner) == 'FedEx' ? 'selected' : '' }}>📦
-                                FedEx</option>
-                            <option value="Ekart"
-                                {{ old('courier_partner', $shipment->courier_partner) == 'Ekart' ? 'selected' : '' }}>🛵
-                                Ekart</option>
-                            <option value="XpressBees"
-                                {{ old('courier_partner', $shipment->courier_partner) == 'XpressBees' ? 'selected' : '' }}>
-                                🐝 XpressBees</option>
-                            <option value="Shadowfax"
-                                {{ old('courier_partner', $shipment->courier_partner) == 'Shadowfax' ? 'selected' : '' }}>⚡
-                                Shadowfax</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Tracking Number</label>
-                        <input type="text" name="tracking_number" class="form-control"
-                            value="{{ old('tracking_number', $shipment->tracking_number) }}"
-                            placeholder="Enter tracking number">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">AWB Number</label>
-                        <input type="text" name="awb_number" class="form-control"
-                            value="{{ old('awb_number', $shipment->awb_number) }}" placeholder="Air Waybill Number">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Shipping Method</label>
-                        <select name="shipping_method" class="form-control" id="shippingMethod">
-                            <option value="">Select Method</option>
-                            <option value="standard"
-                                {{ old('shipping_method', $shipment->shipping_method) == 'standard' ? 'selected' : '' }}>🚚
-                                Standard (3-5 days)</option>
-                            <option value="express"
-                                {{ old('shipping_method', $shipment->shipping_method) == 'express' ? 'selected' : '' }}>⚡
-                                Express (1-2 days)</option>
-                            <option value="overnight"
-                                {{ old('shipping_method', $shipment->shipping_method) == 'overnight' ? 'selected' : '' }}>
-                                🌙 Overnight</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ========== NEW: DELIVERY AGENT SECTION ========== --}}
-            <div class="form-section agent-section">
-                <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-user-tie"></i></div>
-                    <div>
-                        <h3 class="section-title">Delivery Agent Assignment</h3>
-                        <p class="section-subtitle">Assign or change delivery agent</p>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <i class="fas fa-user-check"></i>
-                        Assigned Agent
-                    </label>
-                    <select name="agent_id" class="form-control" id="agentSelect">
-                        <option value="">-- Unassigned (No Agent) --</option>
-                        @php
-                            $agents = App\Models\DeliveryAgent::where('is_active', true)->get();
-                        @endphp
-                        @forelse($agents as $agent)
-                            <option value="{{ $agent->id }}"
-                                {{ old('agent_id', $shipment->assigned_to) == $agent->id ? 'selected' : '' }}
-                                data-status="{{ $agent->status }}">
-                                {{ $agent->name }}
-                                @if ($agent->vehicle_type)
-                                    ({{ ucfirst($agent->vehicle_type) }})
-                                @endif
-                                @if ($agent->city)
-                                    - {{ $agent->city }}
-                                @endif
-                                @if ($agent->status == 'available')
-                                    ✅ Available
-                                @elseif($agent->status == 'busy')
-                                    🔴 Busy
-                                @elseif($agent->status == 'offline')
-                                    ⭕ Offline
-                                @endif
-                            </option>
-                        @empty
-                            <option value="" disabled>No agents available</option>
-                        @endforelse
-                    </select>
-                    <div class="input-hint">
-                        <i class="fas fa-info-circle"></i>
-                        Select an agent to assign this shipment
-                    </div>
-
-                    {{-- Agent Stats --}}
-                    @if (isset($agents) && $agents->count() > 0)
-                        <div class="agent-stats">
-                            <span class="agent-stat-badge">
-                                <i class="fas fa-users"></i> Total: {{ $agents->count() }}
-                            </span>
-                            <span class="agent-stat-badge">
-                                <i class="fas fa-check-circle" style="color: #10b981;"></i>
-                                Available: {{ $agents->where('status', 'available')->count() }}
-                            </span>
-                            <span class="agent-stat-badge">
-                                <i class="fas fa-truck" style="color: #f59e0b;"></i>
-                                Busy: {{ $agents->where('status', 'busy')->count() }}
-                            </span>
-                        </div>
-
-                        {{-- Agent List Preview --}}
-                        <div class="agent-list-preview">
-                            @foreach ($agents->take(5) as $agent)
-                                <div class="agent-preview-item" onclick="selectAgent({{ $agent->id }})">
-                                    <span class="agent-status-dot {{ $agent->status }}"></span>
-                                    <span class="agent-preview-name">{{ $agent->name }}</span>
-                                    <span class="agent-preview-city">{{ $agent->city ?? 'N/A' }}</span>
-                                    <span
-                                        style="font-size: 0.8rem; color: #667eea;">{{ $agent->successful_deliveries ?? 0 }}
-                                        deliveries</span>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Delivery Dates --}}
-            <div class="form-section">
-                <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-calendar-alt"></i></div>
-                    <div>
-                        <h3 class="section-title">Delivery Dates</h3>
-                        <p class="section-subtitle">Update pickup and delivery dates</p>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Pickup Date</label>
-                        <input type="date" name="pickup_date" class="form-control"
-                            value="{{ old('pickup_date', $shipment->pickup_date ? $shipment->pickup_date->format('Y-m-d') : '') }}">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Estimated Delivery Date</label>
-                        <input type="date" name="estimated_delivery_date" class="form-control"
-                            value="{{ old('estimated_delivery_date', $shipment->estimated_delivery_date ? $shipment->estimated_delivery_date->format('Y-m-d') : '') }}"
-                            min="{{ now()->format('Y-m-d') }}" id="estimatedDate">
-                        <div class="input-hint">Must be today or later</div>
-                    </div>
-
-                    @if ($shipment->status == 'delivered')
+                    <div class="form-grid">
                         <div class="form-group">
-                            <label class="form-label">Actual Delivery Date</label>
-                            <input type="text" class="form-control" readonly
-                                value="{{ $shipment->actual_delivery_date ? $shipment->actual_delivery_date->format('d M Y h:i A') : '' }}">
+                            <label class="form-label"><i class="fas fa-user"></i> Receiver Name <span
+                                    class="required-star">*</span></label>
+                            <input type="text" name="receiver_name" class="form-control"
+                                value="{{ old('receiver_name', $shipment->receiver_name) }}" required>
                         </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Delivery Status --}}
-            <div class="form-section">
-                <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-chart-line"></i></div>
-                    <div>
-                        <h3 class="section-title">Delivery Status</h3>
-                        <p class="section-subtitle">Update current status</p>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-phone"></i> Phone Number <span
+                                    class="required-star">*</span></label>
+                            <input type="tel" name="receiver_phone" class="form-control"
+                                value="{{ old('receiver_phone', $shipment->receiver_phone) }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><i class="fas fa-phone-alt"></i> Alternate Phone</label>
+                            <input type="tel" name="receiver_alternate_phone" class="form-control"
+                                value="{{ old('receiver_alternate_phone', $shipment->receiver_alternate_phone) }}">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-grid">
+                {{-- Shipping Address with Google Places --}}
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-map-marker-alt"></i></div>
+                        <div>
+                            <h3 class="section-title">Shipping Address</h3>
+                            <p class="section-subtitle">Update delivery address</p>
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label class="form-label">Current Status</label>
-                        <select name="status" class="form-control" id="statusSelect">
-                            <option value="pending" {{ old('status', $shipment->status) == 'pending' ? 'selected' : '' }}>
-                                ⏳ Pending</option>
-                            <option value="picked" {{ old('status', $shipment->status) == 'picked' ? 'selected' : '' }}>📦
-                                Picked Up</option>
-                            <option value="in_transit"
-                                {{ old('status', $shipment->status) == 'in_transit' ? 'selected' : '' }}>🚚 In Transit
-                            </option>
-                            <option value="out_for_delivery"
-                                {{ old('status', $shipment->status) == 'out_for_delivery' ? 'selected' : '' }}>🚀 Out for
-                                Delivery</option>
-                            <option value="delivered"
-                                {{ old('status', $shipment->status) == 'delivered' ? 'selected' : '' }}>✅ Delivered
-                            </option>
-                            <option value="failed" {{ old('status', $shipment->status) == 'failed' ? 'selected' : '' }}>❌
-                                Failed</option>
-                            <option value="returned"
-                                {{ old('status', $shipment->status) == 'returned' ? 'selected' : '' }}>🔄 Returned</option>
+                        <label class="form-label"><i class="fas fa-search"></i> Search Address</label>
+                        <div style="position: relative;">
+                            <input type="text" id="address-input" class="form-control"
+                                placeholder="Search for address..." autocomplete="off"
+                                value="{{ $shipment->shipping_address }}">
+                            <div id="address-suggestions" class="address-suggestions"></div>
+                        </div>
+                        <div class="input-hint"><i class="fas fa-info-circle"></i> Type to search, select from suggestions
+                        </div>
+                    </div>
+
+                    <div id="address-preview" class="address-preview">
+                        <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                        <span id="preview-text"></span>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group" style="grid-column: 1/-1;">
+                            <label class="form-label"><i class="fas fa-map-pin"></i> Full Address <span
+                                    class="required-star">*</span></label>
+                            <textarea name="shipping_address" class="form-control" id="shipping_address" required>{{ old('shipping_address', $shipment->shipping_address) }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Landmark</label>
+                            <input type="text" name="landmark" class="form-control"
+                                value="{{ old('landmark', $shipment->landmark) }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">City <span class="required-star">*</span></label>
+                            <input type="text" name="city" class="form-control" id="city"
+                                value="{{ old('city', $shipment->city) }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">State <span class="required-star">*</span></label>
+                            <input type="text" name="state" class="form-control" id="state"
+                                value="{{ old('state', $shipment->state) }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Pincode <span class="required-star">*</span></label>
+                            <input type="text" name="pincode" class="form-control" id="pincode"
+                                value="{{ old('pincode', $shipment->pincode) }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Country</label>
+                            <input type="text" name="country" class="form-control" id="country"
+                                value="{{ old('country', $shipment->country ?? 'India') }}">
+                        </div>
+                    </div>
+                    <input type="hidden" name="latitude" id="latitude" value="{{ $shipment->destination_latitude }}">
+                    <input type="hidden" name="longitude" id="longitude"
+                        value="{{ $shipment->destination_longitude }}">
+                    <input type="hidden" name="place_id" id="place_id">
+                </div>
+
+                {{-- Package Details --}}
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-box"></i></div>
+                        <div>
+                            <h3 class="section-title">Package Details</h3>
+                            <p class="section-subtitle">Update package dimensions and value</p>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Weight (kg)</label>
+                            <input type="number" step="0.01" name="weight" class="form-control" id="weight"
+                                value="{{ old('weight', $shipment->weight) }}" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Package Type</label>
+                            <select name="package_type" class="form-control">
+                                <option value="">Select Type</option>
+                                <option value="box"
+                                    {{ old('package_type', $shipment->package_type) == 'box' ? 'selected' : '' }}>📦 Box
+                                </option>
+                                <option value="envelope"
+                                    {{ old('package_type', $shipment->package_type) == 'envelope' ? 'selected' : '' }}>✉️
+                                    Envelope</option>
+                                <option value="pallet"
+                                    {{ old('package_type', $shipment->package_type) == 'pallet' ? 'selected' : '' }}>📏
+                                    Pallet</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quantity</label>
+                            <input type="number" name="quantity" class="form-control" min="1" id="quantity"
+                                value="{{ old('quantity', $shipment->quantity ?? 1) }}">
+                        </div>
+                    </div>
+                    <div class="dimensions-grid">
+                        <div class="dimension-item">
+                            <label class="form-label">Length (cm)</label>
+                            <input type="number" step="0.1" name="length" class="form-control"
+                                value="{{ old('length', $shipment->length) }}">
+                            <span class="dimension-unit">cm</span>
+                        </div>
+                        <div class="dimension-item">
+                            <label class="form-label">Width (cm)</label>
+                            <input type="number" step="0.1" name="width" class="form-control"
+                                value="{{ old('width', $shipment->width) }}">
+                            <span class="dimension-unit">cm</span>
+                        </div>
+                        <div class="dimension-item">
+                            <label class="form-label">Height (cm)</label>
+                            <input type="number" step="0.1" name="height" class="form-control"
+                                value="{{ old('height', $shipment->height) }}">
+                            <span class="dimension-unit">cm</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-rupee-sign"></i> Declared Value (₹)</label>
+                        <input type="number" step="0.01" name="declared_value" class="form-control"
+                            id="declaredValue" value="{{ old('declared_value', $shipment->declared_value) }}">
+                    </div>
+                </div>
+
+                {{-- Courier Information --}}
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-truck"></i></div>
+                        <div>
+                            <h3 class="section-title">Courier Information</h3>
+                            <p class="section-subtitle">Update courier and tracking details</p>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Courier Partner</label>
+                            <select name="courier_partner" class="form-control" id="courierPartner">
+                                <option value="">Select Courier</option>
+                                <option value="Delhivery"
+                                    {{ old('courier_partner', $shipment->courier_partner) == 'Delhivery' ? 'selected' : '' }}>
+                                    🚚 Delhivery</option>
+                                <option value="BlueDart"
+                                    {{ old('courier_partner', $shipment->courier_partner) == 'BlueDart' ? 'selected' : '' }}>
+                                    ✈️ BlueDart</option>
+                                <option value="DTDC"
+                                    {{ old('courier_partner', $shipment->courier_partner) == 'DTDC' ? 'selected' : '' }}>🚛
+                                    DTDC</option>
+                                <option value="FedEx"
+                                    {{ old('courier_partner', $shipment->courier_partner) == 'FedEx' ? 'selected' : '' }}>
+                                    📦 FedEx</option>
+                                <option value="Ekart"
+                                    {{ old('courier_partner', $shipment->courier_partner) == 'Ekart' ? 'selected' : '' }}>
+                                    🛵 Ekart</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tracking Number</label>
+                            <input type="text" name="tracking_number" class="form-control"
+                                value="{{ old('tracking_number', $shipment->tracking_number) }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">AWB Number</label>
+                            <input type="text" name="awb_number" class="form-control"
+                                value="{{ old('awb_number', $shipment->awb_number) }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Shipping Method</label>
+                            <select name="shipping_method" class="form-control" id="shippingMethod">
+                                <option value="standard"
+                                    {{ old('shipping_method', $shipment->shipping_method) == 'standard' ? 'selected' : '' }}>
+                                    🚚 Standard (3-5 days)</option>
+                                <option value="express"
+                                    {{ old('shipping_method', $shipment->shipping_method) == 'express' ? 'selected' : '' }}>
+                                    ⚡ Express (1-2 days)</option>
+                                <option value="overnight"
+                                    {{ old('shipping_method', $shipment->shipping_method) == 'overnight' ? 'selected' : '' }}>
+                                    🌙 Overnight</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Delivery Agent Section --}}
+                <div class="form-section agent-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-user-tie"></i></div>
+                        <div>
+                            <h3 class="section-title">Delivery Agent Assignment</h3>
+                            <p class="section-subtitle">Assign or change delivery agent</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-user-check"></i> Assigned Agent</label>
+                        <select name="agent_id" class="form-control" id="agentSelect">
+                            <option value="">-- Unassigned (No Agent) --</option>
+                            @php
+                                $agents = App\Models\User::where('role', 'delivery_agent')
+                                    ->where('status', 'active')
+                                    ->get();
+                            @endphp
+                            @forelse($agents as $agent)
+                                <option value="{{ $agent->id }}"
+                                    {{ old('agent_id', $shipment->assigned_to) == $agent->id ? 'selected' : '' }}
+                                    data-lat="{{ $agent->current_latitude ?? '' }}"
+                                    data-lng="{{ $agent->current_longitude ?? '' }}" data-phone="{{ $agent->mobile }}"
+                                    data-city="{{ $agent->city ?? '' }}"
+                                    data-deliveries="{{ $agent->total_deliveries ?? 0 }}"
+                                    data-rating="{{ $agent->rating ?? 4.5 }}"
+                                    data-status="{{ $agent->status ?? 'available' }}">
+                                    {{ $agent->name }} @if ($agent->city)
+                                        - {{ $agent->city }}
+                                    @endif
+                                    @if (isset($agent->status) && $agent->status == 'available')
+                                        ✅ Available
+                                    @elseif(isset($agent->status) && $agent->status == 'busy')
+                                        🔴 Busy
+                                    @else
+                                        ⭕ Offline
+                                    @endif
+                                </option>
+                            @empty
+                                <option value="" disabled>No agents available</option>
+                            @endforelse
                         </select>
-                    </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Status Note</label>
-                        <textarea name="status_note" class="form-control" placeholder="Additional notes about status">{{ old('status_note', $shipment->status_note) }}</textarea>
-                    </div>
-                </div>
-            </div>
+                        @if (isset($agents) && $agents->count() > 0)
+                            <div class="agent-stats">
+                                <span class="agent-stat-badge"><i class="fas fa-users"></i> Total:
+                                    {{ $agents->count() }}</span>
+                                <span class="agent-stat-badge"><i class="fas fa-check-circle" style="color:#10b981;"></i>
+                                    Available: {{ $agents->where('status', 'available')->count() }}</span>
+                                <span class="agent-stat-badge"><i class="fas fa-truck" style="color:#f59e0b;"></i> Busy:
+                                    {{ $agents->where('status', 'busy')->count() }}</span>
+                            </div>
+                            <div class="agent-list-preview" id="agentListPreview">
+                                @foreach ($agents->take(5) as $agent)
+                                    <div class="agent-preview-item" onclick="selectAgent({{ $agent->id }})">
+                                        <span class="agent-status-dot {{ $agent->status ?? 'offline' }}"></span>
+                                        <span class="agent-preview-name">{{ $agent->name }}</span>
+                                        <span class="agent-preview-city">{{ $agent->city ?? 'N/A' }}</span>
+                                        <span style="font-size:0.8rem; color:#667eea;">{{ $agent->total_deliveries ?? 0 }}
+                                            deliveries</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
 
-            {{-- Charges --}}
-            <div class="form-section">
-                <div class="section-header">
-                    <div class="section-icon"><i class="fas fa-coins"></i></div>
-                    <div>
-                        <h3 class="section-title">Shipping Charges</h3>
-                        <p class="section-subtitle">Update charges (auto-calculated)</p>
-                    </div>
-                </div>
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label class="form-label">Shipping Charge (₹)</label>
-                        <input type="number" name="shipping_charge" class="form-control" step="0.01" min="0"
-                            value="{{ old('shipping_charge', $shipment->shipping_charge) }}" placeholder="0.00"
-                            id="shippingCharge">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">COD Charge (₹)</label>
-                        <input type="number" name="cod_charge" class="form-control" step="0.01" min="0"
-                            value="{{ old('cod_charge', $shipment->cod_charge) }}" placeholder="0.00" id="codCharge">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Insurance Charge (₹)</label>
-                        <input type="number" name="insurance_charge" class="form-control" step="0.01"
-                            min="0" value="{{ old('insurance_charge', $shipment->insurance_charge) }}"
-                            placeholder="0.00" id="insuranceCharge">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Payment Mode</label>
-                        <select name="payment_mode" class="form-control" id="paymentMode">
-                            <option value="">Select Mode</option>
-                            <option value="prepaid"
-                                {{ old('payment_mode', $shipment->payment_mode) == 'prepaid' ? 'selected' : '' }}>💳
-                                Prepaid</option>
-                            <option value="cod"
-                                {{ old('payment_mode', $shipment->payment_mode) == 'cod' ? 'selected' : '' }}>💵 Cash on
-                                Delivery</option>
-                        </select>
+                        <div id="agentInfoCard"
+                            style="display: none; margin-top: 1rem; background: white; border-radius: 12px; padding: 1rem; border: 1px solid #e5e7eb;">
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <div
+                                    style="width: 50px; height: 50px; background: linear-gradient(135deg,#667eea,#764ba2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                                    <i class="fas fa-motorcycle"></i></div>
+                                <div>
+                                    <div><strong id="selectedAgentName">-</strong></div>
+                                    <div style="font-size:0.85rem; color:#64748b;"><span
+                                            id="selectedAgentDistance">-</span> away</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label class="form-label">Total Charge (₹)</label>
-                    <div style="position: relative;">
-                        <span
-                            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-weight: 600;">₹</span>
-                        <input type="number" name="total_charge" class="form-control" step="0.01" min="0"
-                            readonly value="{{ old('total_charge', $shipment->total_charge) }}" id="totalCharge"
-                            style="padding-left: 2.5rem; background: #f1f5f9; font-weight: 700;">
+                {{-- Delivery Dates --}}
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div>
+                            <h3 class="section-title">Delivery Dates</h3>
+                            <p class="section-subtitle">Update pickup and delivery dates</p>
+                        </div>
                     </div>
-                    <div class="input-hint">Auto-calculated from shipping + COD + insurance</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Pickup Date</label>
+                            <input type="date" name="pickup_date" class="form-control"
+                                value="{{ old('pickup_date', $shipment->pickup_date ? $shipment->pickup_date->format('Y-m-d') : '') }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estimated Delivery Date</label>
+                            <input type="date" name="estimated_delivery_date" class="form-control" id="estimatedDate"
+                                value="{{ old('estimated_delivery_date', $shipment->estimated_delivery_date ? $shipment->estimated_delivery_date->format('Y-m-d') : '') }}">
+                        </div>
+                        @if ($shipment->status == 'delivered' && $shipment->actual_delivery_date)
+                            <div class="form-group">
+                                <label class="form-label">Actual Delivery Date</label>
+                                <input type="text" class="form-control" readonly
+                                    value="{{ $shipment->actual_delivery_date->format('d M Y h:i A') }}">
+                            </div>
+                        @endif
+                    </div>
                 </div>
-            </div>
 
-            {{-- Action Buttons --}}
-            <div class="form-section">
-                <div class="action-buttons">
-                    <a href="{{ route('logistics.shipments.show', $shipment->id) }}" class="btn btn-secondary">
-                        <i class="fas fa-times"></i> Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
+                {{-- Delivery Status --}}
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-chart-line"></i></div>
+                        <div>
+                            <h3 class="section-title">Delivery Status</h3>
+                            <p class="section-subtitle">Update current status</p>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Current Status</label>
+                            <select name="status" class="form-control" id="statusSelect">
+                                <option value="pending"
+                                    {{ old('status', $shipment->status) == 'pending' ? 'selected' : '' }}>⏳ Pending
+                                </option>
+                                <option value="picked"
+                                    {{ old('status', $shipment->status) == 'picked' ? 'selected' : '' }}>📦 Picked Up
+                                </option>
+                                <option value="in_transit"
+                                    {{ old('status', $shipment->status) == 'in_transit' ? 'selected' : '' }}>🚚 In Transit
+                                </option>
+                                <option value="out_for_delivery"
+                                    {{ old('status', $shipment->status) == 'out_for_delivery' ? 'selected' : '' }}>🚀 Out
+                                    for Delivery</option>
+                                <option value="delivered"
+                                    {{ old('status', $shipment->status) == 'delivered' ? 'selected' : '' }}>✅ Delivered
+                                </option>
+                                <option value="failed"
+                                    {{ old('status', $shipment->status) == 'failed' ? 'selected' : '' }}>❌ Failed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status Note</label>
+                            <textarea name="status_note" class="form-control" placeholder="Additional notes">{{ old('status_note', $shipment->status_note) }}</textarea>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </form>
+
+                {{-- Charges --}}
+                <div class="form-section">
+                    <div class="section-header">
+                        <div class="section-icon"><i class="fas fa-coins"></i></div>
+                        <div>
+                            <h3 class="section-title">Shipping Charges</h3>
+                            <p class="section-subtitle">Update charges</p>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Shipping Charge (₹)</label>
+                            <input type="number" name="shipping_charge" class="form-control" step="0.01"
+                                id="shippingCharge" value="{{ old('shipping_charge', $shipment->shipping_charge) }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">COD Charge (₹)</label>
+                            <input type="number" name="cod_charge" class="form-control" step="0.01" id="codCharge"
+                                value="{{ old('cod_charge', $shipment->cod_charge) }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Insurance Charge (₹)</label>
+                            <input type="number" name="insurance_charge" class="form-control" step="0.01"
+                                id="insuranceCharge" value="{{ old('insurance_charge', $shipment->insurance_charge) }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Payment Mode</label>
+                            <select name="payment_mode" class="form-control" id="paymentMode">
+                                <option value="prepaid"
+                                    {{ old('payment_mode', $shipment->payment_mode) == 'prepaid' ? 'selected' : '' }}>💳
+                                    Prepaid</option>
+                                <option value="cod"
+                                    {{ old('payment_mode', $shipment->payment_mode) == 'cod' ? 'selected' : '' }}>💵 Cash
+                                    on Delivery</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Charge (₹)</label>
+                        <input type="number" name="total_charge" class="form-control" step="0.01" readonly
+                            id="totalCharge" value="{{ old('total_charge', $shipment->total_charge) }}"
+                            style="background:#f1f5f9; font-weight:700;">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="action-buttons">
+                        <a href="{{ route('logistics.shipments.show', $shipment->id) }}" class="btn btn-secondary"><i
+                                class="fas fa-times"></i> Cancel</a>
+                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i> Save
+                            Changes</button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
-    {{-- Toast --}}
     <div id="toast" class="toast"></div>
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY') }}&libraries=places&callback=initGooglePlaces"
+        async defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
     <script>
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+        let autocompleteService, placesService;
+
+        function initGooglePlaces() {
+            autocompleteService = new google.maps.places.AutocompleteService();
+            placesService = new google.maps.places.PlacesService(document.createElement('div'));
+            setupAddressAutocomplete();
+        }
+
+        function setupAddressAutocomplete() {
+            const addressInput = document.getElementById('address-input');
+            const suggestionsDiv = document.getElementById('address-suggestions');
+            if (!addressInput) return;
+
+            let debounceTimer;
+            addressInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const query = this.value.trim();
+                if (query.length < 3) {
+                    suggestionsDiv.classList.remove('show');
+                    return;
+                }
+                debounceTimer = setTimeout(() => {
+                    autocompleteService.getPlacePredictions({
+                        input: query,
+                        types: ['address'],
+                        componentRestrictions: {
+                            country: 'IN'
+                        }
+                    }, (predictions, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+                            displaySuggestions(predictions);
+                        } else {
+                            suggestionsDiv.classList.remove('show');
+                        }
+                    });
+                }, 300);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!addressInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                    suggestionsDiv.classList.remove('show');
+                }
+            });
+        }
+
+        function displaySuggestions(predictions) {
+            const suggestionsDiv = document.getElementById('address-suggestions');
+            suggestionsDiv.innerHTML = '';
+            predictions.forEach(prediction => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.innerHTML =
+                    `<div class="suggestion-main">${prediction.structured_formatting.main_text}</div>
+                              <div class="suggestion-secondary">${prediction.structured_formatting.secondary_text}</div>`;
+                item.addEventListener('click', () => {
+                    selectPlace(prediction.place_id);
+                    suggestionsDiv.classList.remove('show');
+                    document.getElementById('address-input').value = prediction.description;
+                });
+                suggestionsDiv.appendChild(item);
+            });
+            suggestionsDiv.classList.add('show');
+        }
+
+        function selectPlace(placeId) {
+            placesService.getDetails({
+                placeId: placeId,
+                fields: ['address_components', 'formatted_address', 'geometry']
+            }, (place, status) => {
+                if (status === google.maps.places.PlacesServiceStatus.OK) {
+                    const components = {};
+                    place.address_components.forEach(component => {
+                        components[component.types[0]] = component;
+                    });
+
+                    document.getElementById('shipping_address').value = place.formatted_address;
+                    document.getElementById('latitude').value = place.geometry.location.lat();
+                    document.getElementById('longitude').value = place.geometry.location.lng();
+
+                    if (components.locality) document.getElementById('city').value = components.locality.long_name;
+                    if (components.administrative_area_level_1) document.getElementById('state').value = components
+                        .administrative_area_level_1.long_name;
+                    if (components.postal_code) document.getElementById('pincode').value = components.postal_code
+                        .long_name;
+                    if (components.country) document.getElementById('country').value = components.country.long_name;
+
+                    document.getElementById('preview-text').textContent = place.formatted_address;
+                    document.getElementById('address-preview').classList.add('show');
+                    updateAgentDistance(place.geometry.location.lat(), place.geometry.location.lng());
+                }
+            });
+        }
+
+        function updateAgentDistance(shipmentLat, shipmentLng) {
+            const agentSelect = document.getElementById('agentSelect');
+            const selectedOption = agentSelect.options[agentSelect.selectedIndex];
+            const agentLat = parseFloat(selectedOption?.dataset?.lat);
+            const agentLng = parseFloat(selectedOption?.dataset?.lng);
+            if (agentLat && agentLng && shipmentLat && shipmentLng) {
+                const distance = calculateDistance(shipmentLat, shipmentLng, agentLat, agentLng);
+                document.getElementById('selectedAgentDistance').innerHTML = distance.toFixed(2) + ' km';
+                document.getElementById('agentInfoCard').style.display = 'block';
+                document.getElementById('selectedAgentName').innerHTML = selectedOption.text.split(' - ')[0];
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(
+                dLon / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function selectAgent(agentId) {
+            document.getElementById('agentSelect').value = agentId;
+            const lat = parseFloat(document.getElementById('latitude').value);
+            const lng = parseFloat(document.getElementById('longitude').value);
+            if (lat && lng) updateAgentDistance(lat, lng);
+            showToast('Agent selected', 'success');
+        }
+
+        function calculateTotal() {
+            const shipping = parseFloat(document.getElementById('shippingCharge').value) || 0;
+            const cod = parseFloat(document.getElementById('codCharge').value) || 0;
+            const insurance = parseFloat(document.getElementById('insuranceCharge').value) || 0;
+            document.getElementById('totalCharge').value = (shipping + cod + insurance).toFixed(2);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.innerHTML =
+                `<div class="toast-content"><span>${type === 'success' ? '✅' : '❌'}</span><span>${message}</span></div>`;
+            toast.className = 'toast ' + type;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
 
         function showLoading() {
             document.getElementById('loadingOverlay').style.display = 'flex';
@@ -1273,141 +1255,60 @@
             document.getElementById('loadingOverlay').style.display = 'none';
         }
 
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            toast.innerHTML = `
-            <div class="toast-content">
-                <span class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</span>
-                <span class="toast-message">${message}</span>
-            </div>
-        `;
-            toast.className = 'toast ' + type;
-            toast.style.display = 'block';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
-        }
-
-        // Auto-calculate total charge
-        function calculateTotal() {
-            const shipping = parseFloat(document.getElementById('shippingCharge').value) || 0;
-            const cod = parseFloat(document.getElementById('codCharge').value) || 0;
-            const insurance = parseFloat(document.getElementById('insuranceCharge').value) || 0;
-            const total = shipping + cod + insurance;
-            document.getElementById('totalCharge').value = total.toFixed(2);
-        }
-
-        // Add event listeners
         document.getElementById('shippingCharge').addEventListener('input', calculateTotal);
         document.getElementById('codCharge').addEventListener('input', calculateTotal);
         document.getElementById('insuranceCharge').addEventListener('input', calculateTotal);
-
-        // Auto-calculate estimated delivery based on shipping method
         document.getElementById('shippingMethod').addEventListener('change', function() {
             const date = new Date();
-            const method = this.value;
-
-            if (method === 'standard') date.setDate(date.getDate() + 3);
-            else if (method === 'express') date.setDate(date.getDate() + 1);
-            else if (method === 'overnight') date.setDate(date.getDate() + 1);
-
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-
-            document.getElementById('estimatedDate').value = `${year}-${month}-${day}`;
+            const days = this.value === 'standard' ? 3 : 1;
+            date.setDate(date.getDate() + days);
+            document.getElementById('estimatedDate').value = date.toISOString().split('T')[0];
+        });
+        document.getElementById('agentSelect').addEventListener('change', function() {
+            const lat = parseFloat(document.getElementById('latitude').value);
+            const lng = parseFloat(document.getElementById('longitude').value);
+            if (lat && lng) updateAgentDistance(lat, lng);
         });
 
-        // Select agent from preview
-        function selectAgent(agentId) {
-            document.getElementById('agentSelect').value = agentId;
-            showToast('Agent selected', 'success');
-        }
-
-        // Form submission
         document.getElementById('editForm').addEventListener('submit', function(e) {
             e.preventDefault();
-
-            // Validation
-            const receiverName = document.querySelector('[name="receiver_name"]').value.trim();
-            const receiverPhone = document.querySelector('[name="receiver_phone"]').value.trim();
-            const address = document.querySelector('[name="shipping_address"]').value.trim();
-            const city = document.querySelector('[name="city"]').value.trim();
-            const state = document.querySelector('[name="state"]').value.trim();
-            const pincode = document.querySelector('[name="pincode"]').value.trim();
-
-            if (!receiverName || !receiverPhone || !address || !city || !state || !pincode) {
-                showToast('Please fill all required fields', 'error');
+            const required = ['receiver_name', 'receiver_phone', 'shipping_address', 'city', 'state', 'pincode'];
+            for (let field of required) {
+                if (!document.querySelector(`[name="${field}"]`).value.trim()) {
+                    showToast(`Please fill ${field.replace('_', ' ')}`, 'error');
+                    return;
+                }
+            }
+            if (!/^[0-9]{10}$/.test(document.querySelector('[name="receiver_phone"]').value.trim())) {
+                showToast('Please enter valid 10-digit phone number', 'error');
                 return;
             }
-
-            // Phone validation
-            const phoneRegex = /^[0-9]{10}$/;
-            if (!phoneRegex.test(receiverPhone)) {
-                showToast('Please enter a valid 10-digit phone number', 'error');
-                return;
-            }
-
             if (!confirm('Save changes to this shipment?')) return;
-
             showLoading();
-
-            const formData = new FormData(this);
-
             fetch(this.action, {
                     method: 'POST',
                     headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
                     },
-                    body: formData
+                    body: new FormData(this)
                 })
-                .then(response => response.json())
+                .then(r => r.json())
                 .then(data => {
                     hideLoading();
                     if (data.success) {
                         showToast('✅ ' + data.message, 'success');
-                        setTimeout(() => {
-                            window.location.href =
-                                '{{ route('logistics.shipments.show', $shipment->id) }}';
-                        }, 1500);
-                    } else {
-                        showToast('❌ ' + (data.message || 'Error updating shipment'), 'error');
-                        console.error('Error details:', data.errors);
-                    }
+                        setTimeout(() => window.location.href =
+                            '{{ route('logistics.shipments.show', $shipment->id) }}', 1500);
+                    } else showToast('❌ ' + (data.message || 'Error updating'), 'error');
                 })
-                .catch(error => {
+                .catch(e => {
                     hideLoading();
-                    showToast('❌ Network error: ' + error.message, 'error');
-                    console.error('Network error:', error);
+                    showToast('❌ Network error', 'error');
                 });
         });
 
-        // Warn before leaving if changes made
-        let formChanged = false;
-        document.getElementById('editForm').addEventListener('input', () => formChanged = true);
-
-        window.addEventListener('beforeunload', function(e) {
-            if (formChanged) {
-                e.preventDefault();
-                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-            }
-        });
-
-        // Character count for fields
-        document.querySelectorAll('input[type="text"], textarea, select').forEach(field => {
-            field.addEventListener('input', function() {
-                this.style.borderColor = this.value ? '#10b981' : '#e5e7eb';
-            });
-
-            // Trigger on load
-            if (field.value) {
-                field.style.borderColor = '#10b981';
-            }
-        });
-
-        // Initial calculation
         calculateTotal();
+        window.initGooglePlaces = initGooglePlaces;
     </script>
 @endsection
