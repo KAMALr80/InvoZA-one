@@ -1507,7 +1507,7 @@
                             <label class="filter-label">Customer</label>
                             <select class="filter-input" id="customerFilter">
                                 <option value="">All Customers</option>
-                                @foreach ($customers ?: [] as $customer)
+                                @foreach ($customers ?? [] as $customer)
                                     <option value="{{ $customer->id }}">{{ $customer->name }}</option>
                                 @endforeach
                             </select>
@@ -1584,12 +1584,12 @@
                                 @php $__col = $sales; @endphp
 @if(is_array($__col) || $__col instanceof \Countable ? count($__col) > 0 : !empty($__col))
 @foreach($__col as $sale)
-                                    <tr data-id="{{ $sale->id }}" 
+                                    <tr data-id="{{ $sale->id }}"
                                         data-invoice="{{ $sale->invoice_no }}"
                                         data-customer="{{ $sale->customer->name ?? 'Walk-in Customer' }}"
-                                        data-status="{{ $sale->payment_status }}" 
+                                        data-status="{{ $sale->payment_status }}"
                                         data-amount="{{ $sale->grand_total }}"
-                                        data-date="{{ $sale->sale_date }}" 
+                                        data-date="{{ $sale->sale_date }}"
                                         data-customer-id="{{ $sale->customer_id }}"
                                         data-customer-email="{{ $sale->customer->email ?? '' }}">
                                         <td>
@@ -1937,7 +1937,7 @@
         // ✅ BULK EMAIL FUNCTION (NO MODAL, NO CONFIRMATION)
         function sendBulkEmail() {
             const selectedIds = getSelectedIds();
-            
+
             if (selectedIds.length === 0) {
                 showToast('Please select at least one invoice', 'warning');
                 return;
@@ -2012,9 +2012,9 @@
                     loadingOverlay.classList.remove('show');
                 }
 
-                showToast(`✅ Emails sent: ${sentCount} successful, ${failedCount} failed`, 
+                showToast(`✅ Emails sent: ${sentCount} successful, ${failedCount} failed`,
                          failedCount > 0 ? 'warning' : 'success');
-                
+
                 // Uncheck all checkboxes
                 document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
                 document.getElementById('selectAll').checked = false;
