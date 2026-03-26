@@ -1,5 +1,14 @@
 # D:\smartErp\python-api\app.py
 
+import sys
+import io
+import os
+
+# Force UTF-8 encoding for Windows - MUST BE FIRST
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 from flask import Flask, jsonify
 from flask_cors import CORS
 import pandas as pd
@@ -8,16 +17,9 @@ import mysql.connector
 from datetime import datetime, timedelta
 import warnings
 import logging
-import sys
-import os
 import traceback
 
-# Configure logging FIRST - fix Windows encoding
-if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
-
+# Configure logging FIRST
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -41,14 +43,14 @@ LSTM_AVAILABLE = False
 try:
     from models.chronos_model import ChronosSalesPredictor
     CHRONOS_AVAILABLE = True
-    logger.info("✓ Chronos-2 module loaded")
+    logger.info("[OK] Chronos-2 module loaded")
 except ImportError as e:
     logger.warning(f"Chronos-2 not available: {e}")
 
 try:
     from models.lstm_model import LSTMSalesPredictor
     LSTM_AVAILABLE = True
-    logger.info("✓ LSTM module loaded")
+    logger.info("[OK] LSTM module loaded")
 except ImportError as e:
     logger.warning(f"LSTM not available: {e}")
 
@@ -94,7 +96,7 @@ class SalesPredictor:
                         self.use_chronos = True
                         self.model_loaded = True
                         self.active_model = f"chronos-{size}"
-                        logger.info(f"✓ Chronos-2 ({size}) loaded successfully")
+                        logger.info(f"[OK] Chronos-2 ({size}) loaded successfully")
                         return
                 except Exception as e:
                     logger.warning(f"Chronos-2 ({size}) failed: {e}")
@@ -118,7 +120,7 @@ class SalesPredictor:
                 self.use_lstm = True
                 self.model_loaded = True
                 self.active_model = "lstm"
-                logger.info("✓ LSTM model loaded as fallback")
+                logger.info("[OK] LSTM model loaded as fallback")
             else:
                 logger.warning("No LSTM model found")
         except Exception as e:
@@ -128,10 +130,10 @@ class SalesPredictor:
         """Connect to MySQL database"""
         try:
             connection = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="",
-                database="smarterp1"
+                host=os.environ.get("DB_HOST", "localhost"),
+                user=os.environ.get("DB_USER", "root"),
+                password=os.environ.get("DB_PASSWORD", ""),
+                database=os.environ.get("DB_NAME", "smarterp1")
             )
             return connection
         except Exception as e:
@@ -174,7 +176,7 @@ class SalesPredictor:
             today_data = df[df['date'].dt.date == today]
             if not today_data.empty:
                 today_sale = float(today_data['daily_sales'].values[0])
-                logger.info(f"TODAY'S SALE: ₹{today_sale:.2f}")
+                logger.info(f"TODAY'S SALE: Rs.{today_sale:.2f}")
             else:
                 logger.warning("No data for today in database")
 
@@ -270,8 +272,8 @@ class SalesPredictor:
                 next_date = last_date + timedelta(days=days_to_add)
                 future_dates.append(next_date.strftime('%Y-%m-%d'))
 
-            logger.info(f"Chronos-2 - TODAY: ₹{today_sale:.2f}")
-            logger.info(f"Chronos-2 - TOMORROW: ₹{predictions_list[0]:.2f}")
+            logger.info(f"Chronos-2 - TODAY: Rs.{today_sale:.2f}")
+            logger.info(f"Chronos-2 - TOMORROW: Rs.{predictions_list[0]:.2f}")
             logger.info(f"Chronos-2 confidence: {confidence:.1f}%")
             logger.info(f"Final predictions length: {len(predictions_list)}")
 
@@ -388,7 +390,7 @@ class SalesPredictor:
                     'context_window': '8192 days',
                     'architecture': 'Transformer-based'
                 }
-                logger.info("✅ Chronos-2 prediction successful")
+                logger.info("[OK] Chronos-2 prediction successful")
                 return chronos_result
             else:
                 logger.warning("Chronos-2 returned None, trying LSTM")
@@ -523,7 +525,7 @@ def health_check():
         'port': 5001,
         'model': predictor.active_model,
         'model_loaded': predictor.model_loaded,
-        'message': f'Today: ₹{today_sale:.2f}'
+        'message': f'Today: Rs.{today_sale:.2f}'
     })
 
 @app.route('/', methods=['GET'])
@@ -542,15 +544,21 @@ def home():
     })
 
 if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 10000))
+
     logger.info("=" * 60)
-    logger.info("🚀 CHRONOS-2 SALES FORECAST API v5.0")
+    logger.info("[START] CHRONOS-2 SALES FORECAST API v5.0")
     logger.info("=" * 60)
-    logger.info(f"Server: http://localhost:5001")
+    logger.info(f"Server: http://0.0.0.0:{port}")
     logger.info(f"Model: {predictor.active_model}")
     logger.info(f"Today: {datetime.now().strftime('%Y-%m-%d')}")
     logger.info("Endpoints:")
-    logger.info("   ├─ Health:  http://localhost:5001/api/health")
-    logger.info("   └─ Forecast: http://localhost:5001/api/sales-forecast")
+    logger.info("   |-- Health:  http://localhost:5001/api/health")
+    logger.info("   |-- Forecast: http://localhost:5001/api/sales-forecast")
     logger.info("=" * 60)
 
-    app.run(debug=False, port=5001, host='0.0.0.0')
+    app.run(
+        host='0.0.0.0',
+        port=port,
+        debug=False
+    )
