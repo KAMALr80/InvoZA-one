@@ -19,7 +19,14 @@ import warnings
 import logging
 import traceback
 
-# Configure logging FIRST
+# Create logs directory if it doesn't exist
+if not os.path.exists("logs"):
+    os.makedirs("logs")
+    print("[OK] Created logs directory")
+else:
+    print("[OK] Logs directory already exists")
+
+# Configure logging AFTER creating logs directory
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -522,7 +529,7 @@ def health_check():
         'today': datetime.now().strftime('%Y-%m-%d'),
         'today_sale': today_sale,
         'database': 'smarterp1',
-        'port': 5001,
+       'port': os.environ.get("PORT")
         'model': predictor.active_model,
         'model_loaded': predictor.model_loaded,
         'message': f'Today: Rs.{today_sale:.2f}'
