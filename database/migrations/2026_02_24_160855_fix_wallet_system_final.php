@@ -24,40 +24,29 @@ return new class extends Migration
             }
         });
 
-        // ========== 2. ADD MISSING INDEXES ==========
+        // ========== 2. SKIP INDEXES - Already exist ==========
+        // Indexes pehle se exist karte hain, isliye indexes add nahi kar rahe
+
+        // ========== 3. FIX METHOD COLUMN ==========
         Schema::table('payments', function (Blueprint $table) {
-            // Add indexes - Laravel automatically handles duplicates
-            if (Schema::hasColumn('payments', 'source_wallet_id')) {
-                $table->index('source_wallet_id');
-            }
-
-            if (Schema::hasColumn('payments', 'customer_id') && Schema::hasColumn('payments', 'remarks')) {
-                $table->index(['customer_id', 'remarks']);
-            }
-
-            if (Schema::hasColumn('payments', 'created_at') && Schema::hasColumn('payments', 'status')) {
-                $table->index(['created_at', 'status']);
+            if (Schema::hasColumn('payments', 'method')) {
+                $table->string('method', 50)->default('cash')->change();
             }
         });
 
+        // ========== 4. CUSTOMER WALLETS INDEXES ==========
+        // Sirf customer_wallets table mein indexes check karo
         Schema::table('customer_wallets', function (Blueprint $table) {
-            // Add indexes - Laravel automatically handles duplicates
-            if (Schema::hasColumn('customer_wallets', 'type')) {
+            // Check if indexes exist before adding
+            $indexes = \DB::select('SHOW INDEX FROM customer_wallets');
+            $indexNames = array_column($indexes, 'Key_name');
+
+            if (!in_array('customer_wallets_type_index', $indexNames)) {
                 $table->index('type');
             }
 
-            if (Schema::hasColumn('customer_wallets', 'created_at')) {
+            if (!in_array('customer_wallets_created_at_index', $indexNames)) {
                 $table->index('created_at');
-            }
-        });
-
-        // ========== 3. FIX METHOD COLUMN - Convert to string instead of ENUM ==========
-        Schema::table('payments', function (Blueprint $table) {
-            if (Schema::hasColumn('payments', 'method')) {
-                // Convert enum to string for better compatibility
-                $table->string('method', 50)->default('cash')->change();
-            } else {
-                $table->string('method', 50)->default('cash');
             }
         });
     }
@@ -65,23 +54,33 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('payments', function (Blueprint $table) {
-            // Drop indexes if they exist
-            $table->dropIndex(['source_wallet_id']);
-            $table->dropIndex(['customer_id', 'remarks']);
-            $table->dropIndex(['created_at', 'status']);
+            // Drop columns only, not indexes
+            if (Schema::hasColumn('payments', 'source_wallet_id')) {
+                $table->dropForeign(['source_wallet_id']);
+                $table->dropColumn('source_wallet_id');
+            }
+
+            if (Schema::hasColumn('payments', 'remarks')) {
+                $table->dropColumn('remarks');
+            }
         });
 
-        Schema::table('customer_wallets', function (Blueprint $table) {
-            // Drop indexes if they exist
-            $table->dropIndex(['type']);
-            $table->dropIndex(['created_at']);
-        });
-
-        // Revert method column back to string (or keep as string)
+        // Revert method column
         Schema::table('payments', function (Blueprint $table) {
             if (Schema::hasColumn('payments', 'method')) {
                 $table->string('method', 50)->default('cash')->change();
             }
+        });
+
+        // Drop customer_wallets indexes
+        Schema::table('customer_wallets', function (Blueprint $table) {
+            try {
+                $table->dropIndex('customer_wallets_type_index');
+            } catch (\Exception $e) {}
+
+            try {
+                $table->dropIndex('customer_wallets_created_at_index');
+            } catch (\Exception $e) {}
         });
     }
 };

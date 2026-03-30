@@ -205,18 +205,18 @@ return new class extends Migration
             }
         }
 
-        // ========== 7. ADD INDEXES ==========
-        // Laravel automatically handles duplicate indexes, so we can just add them
+        // ========== 7. ADD INDEXES - SKIP IF ALREADY EXIST ==========
+        // Indexes pehle se exist karte hain, isliye skip kar rahe hain
+        // Agar indexes nahi hain to manually add kar lena MySQL mein
 
-        Schema::table('leaves', function (Blueprint $table) {
-            // Add indexes (Laravel will skip if they already exist)
-            $table->index(['employee_id', 'status']);
-            $table->index(['from_date', 'to_date']);
-            $table->index('status');
-            $table->index('leave_type');
-            $table->index('applied_on');
-            $table->index(['employee_id', 'from_date']);
-        });
+        // NOTE: Indexes already exist from previous migrations
+        // If you need to add them manually, run this in MySQL:
+        // ALTER TABLE leaves ADD INDEX leaves_employee_id_status_index (employee_id, status);
+        // ALTER TABLE leaves ADD INDEX leaves_from_date_to_date_index (from_date, to_date);
+        // ALTER TABLE leaves ADD INDEX leaves_status_index (status);
+        // ALTER TABLE leaves ADD INDEX leaves_leave_type_index (leave_type);
+        // ALTER TABLE leaves ADD INDEX leaves_applied_on_index (applied_on);
+        // ALTER TABLE leaves ADD INDEX leaves_employee_id_from_date_index (employee_id, from_date);
     }
 
     /**
@@ -225,14 +225,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('leaves', function (Blueprint $table) {
-            // Drop indexes
-            $table->dropIndex(['employee_id', 'status']);
-            $table->dropIndex(['from_date', 'to_date']);
-            $table->dropIndex(['status']);
-            $table->dropIndex(['leave_type']);
-            $table->dropIndex(['applied_on']);
-            $table->dropIndex(['employee_id', 'from_date']);
-
             // Drop foreign keys
             $foreignKeys = ['approved_by', 'rejected_by', 'cancelled_by'];
             foreach ($foreignKeys as $key) {

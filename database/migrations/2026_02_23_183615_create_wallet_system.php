@@ -41,7 +41,7 @@ return new class extends Migration
                       ->comment('Customer who owns this wallet transaction');
 
                 // Transaction type
-                $table->string('type') // Changed from enum to string for MySQL compatibility
+                $table->string('type')
                       ->comment('credit = money added, debit = money used');
 
                 // Amount and running balance
@@ -66,7 +66,7 @@ return new class extends Migration
             });
         }
 
-        // ========== 3. PAYMENTS TABLE - Add Wallet Fields ==========
+        // ========== 3. PAYMENTS TABLE - Add Wallet Fields (NO INDEXES) ==========
         Schema::table('payments', function (Blueprint $table) {
             // Add customer_id if not exists (for advance payments without sale)
             if (!Schema::hasColumn('payments', 'customer_id')) {
@@ -106,22 +106,9 @@ return new class extends Migration
                       ->comment('For ADVANCE_USED: which credit wallet was used (FIFO tracking)');
             }
 
-            // Add indexes (Laravel automatically handles duplicate indexes)
-            if (Schema::hasColumn('payments', 'customer_id')) {
-                $table->index('customer_id');
-            }
-
-            if (Schema::hasColumn('payments', 'wallet_id')) {
-                $table->index('wallet_id');
-            }
-
-            if (Schema::hasColumn('payments', 'source_wallet_id')) {
-                $table->index('source_wallet_id');
-            }
-
-            if (Schema::hasColumn('payments', 'remarks')) {
-                $table->index('remarks');
-            }
+            // ========== IMPORTANT: NO INDEXES HERE ==========
+            // Indexes already exist from previous migrations or will be created later
+            // Adding them here causes duplicate key errors
         });
 
         // ========== 4. Update method column to string (avoid ENUM issues) ==========
@@ -139,7 +126,7 @@ return new class extends Migration
         Schema::table('sales', function (Blueprint $table) {
             // Add payment_status if not exists
             if (!Schema::hasColumn('sales', 'payment_status')) {
-                $table->string('payment_status', 20) // Changed from enum to string
+                $table->string('payment_status', 20)
                       ->default('unpaid')
                       ->after('grand_total')
                       ->comment('Current payment status');
@@ -177,7 +164,7 @@ return new class extends Migration
                 $table->integer('months');
                 $table->decimal('emi_amount', 10, 2);
 
-                $table->string('status', 20) // Changed from enum to string
+                $table->string('status', 20)
                       ->default('running');
 
                 $table->timestamps();
