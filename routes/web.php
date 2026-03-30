@@ -24,7 +24,7 @@ use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\Sales\SalesController;
 use App\Http\Controllers\Purchases\PurchaseController;
 use App\Http\Controllers\Customers\CustomerController;
-use App\Http\Controllers\Reports\ReportController;
+use App\Http\Controllers\ReportController;
 
 // Payments & Wallet
 use App\Http\Controllers\Payments\PaymentController;
@@ -813,3 +813,112 @@ Route::prefix('agent')->name('agent.')->middleware(['auth', 'role:delivery_agent
     // ========== OTHER ROUTES ==========
     // ... (your other routes)
 });
+
+
+Route::middleware('auth')->prefix('reports')->name('reports.')->group(function () {
+
+    // Sales Reports
+    Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+    Route::get('/sales/excel', [ReportController::class, 'exportSalesCSV'])->name('sales.excel');
+    Route::get('/sales/pdf', [ReportController::class, 'exportSalesPDF'])->name('sales.pdf');
+
+    // Customers Reports
+    Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
+    Route::get('/customers/excel', [ReportController::class, 'exportCustomersCSV'])->name('customers.excel');
+    Route::get('/customers/pdf', [ReportController::class, 'exportCustomersPDF'])->name('customers.pdf');
+
+    // Inventory Reports
+    Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
+    Route::get('/inventory/excel', [ReportController::class, 'exportInventoryCSV'])->name('inventory.excel');
+    Route::get('/inventory/pdf', [ReportController::class, 'exportInventoryPDF'])->name('inventory.pdf');
+
+    // Logistics Reports
+    Route::get('/logistics', [ReportController::class, 'logistics'])->name('logistics');
+    Route::get('/logistics/excel', [ReportController::class, 'exportLogisticsCSV'])->name('logistics.excel');
+    Route::get('/logistics/pdf', [ReportController::class, 'exportLogisticsPDF'])->name('logistics.pdf');
+
+    // Employee Reports
+    Route::get('/employees', [ReportController::class, 'employees'])->name('employees');
+    Route::get('/employees/excel', [ReportController::class, 'exportEmployeesCSV'])->name('employees.excel');
+    Route::get('/employees/pdf', [ReportController::class, 'exportEmployeesPDF'])->name('employees.pdf');
+
+    // Purchase Reports
+    Route::get('/purchases', [ReportController::class, 'purchases'])->name('purchases');
+    Route::get('/purchases/excel', [ReportController::class, 'exportPurchasesCSV'])->name('purchases.excel');
+    Route::get('/purchases/pdf', [ReportController::class, 'exportPurchasesPDF'])->name('purchases.pdf');
+
+    // Attendance Reports
+    Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
+    Route::get('/attendance/excel', [ReportController::class, 'exportAttendanceCSV'])->name('attendance.excel');
+    Route::get('/attendance/pdf', [ReportController::class, 'exportAttendancePDF'])->name('attendance.pdf');
+
+    // Financial Summary
+    Route::middleware('admin')->group(function () {
+        Route::get('/financial', [ReportController::class, 'financial'])->name('financial');
+        Route::get('/financial/excel', [ReportController::class, 'exportFinancialCSV'])->name('financial.excel');
+        Route::get('/financial/pdf', [ReportController::class, 'exportFinancialPDF'])->name('financial.pdf');
+    });
+});
+
+
+// Customer Reports Routes
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::get('/customers', [ReportController::class, 'customerReport'])->name('customers');
+    Route::get('/customers/export/csv', [ReportController::class, 'exportCustomerReportCSV'])->name('customers.excel');
+    Route::get('/customers/export/pdf', [ReportController::class, 'exportCustomerReportPDF'])->name('customers.pdf');
+    Route::get('/customer-sales', [ReportController::class, 'customerSalesReport'])->name('customer.sales');
+    Route::get('/customer-sales/export/csv', [ReportController::class, 'exportCustomerSalesReportCSV'])->name('customer.sales.excel');
+});
+
+
+
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+    Route::get('/sales/export/csv', [ReportController::class, 'exportSalesCSV'])->name('sales.excel');
+    // ... other routes
+});
+
+
+
+Route::prefix('reports')->name('reports.')->group(function () {
+    // Sales Report
+    Route::get('/sales', [ReportController::class, 'salesReport'])->name('sales');
+    Route::get('/sales/export/csv', [ReportController::class, 'exportSalesReportCSV'])->name('sales.excel');
+    Route::get('/sales/export/pdf', [ReportController::class, 'exportSalesReportPDF'])->name('sales.pdf');
+
+    // Customer Report
+    Route::get('/customers', [ReportController::class, 'customerReport'])->name('customers');
+    Route::get('/customers/export/csv', [ReportController::class, 'exportCustomerReportCSV'])->name('customers.excel');
+    Route::get('/customers/export/pdf', [ReportController::class, 'exportCustomerReportPDF'])->name('customers.pdf');
+
+    // Customer Sales Report
+    Route::get('/customer-sales', [ReportController::class, 'customerSalesReport'])->name('customer.sales');
+    Route::get('/customer-sales/export/csv', [ReportController::class, 'exportCustomerSalesReportCSV'])->name('customer.sales.excel');
+    Route::get('/customer-sales/export/pdf', [ReportController::class, 'exportCustomerSalesReportPDF'])->name('customer.sales.pdf');
+
+    // Other reports
+    Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
+    Route::get('/inventory/export/csv', [ReportController::class, 'exportInventoryCSV'])->name('inventory.excel');
+    Route::get('/inventory/export/pdf', [ReportController::class, 'exportInventoryPDF'])->name('inventory.pdf');
+
+    Route::get('/logistics', [ReportController::class, 'logistics'])->name('logistics');
+    Route::get('/logistics/export/csv', [ReportController::class, 'exportLogisticsCSV'])->name('logistics.excel');
+    Route::get('/logistics/export/pdf', [ReportController::class, 'exportLogisticsPDF'])->name('logistics.pdf');
+
+    Route::get('/employees', [ReportController::class, 'employees'])->name('employees');
+    Route::get('/employees/export/csv', [ReportController::class, 'exportEmployeesCSV'])->name('employees.excel');
+    Route::get('/employees/export/pdf', [ReportController::class, 'exportEmployeesPDF'])->name('employees.pdf');
+
+    Route::get('/purchases', [ReportController::class, 'purchases'])->name('purchases');
+    Route::get('/purchases/export/csv', [ReportController::class, 'exportPurchasesCSV'])->name('purchases.excel');
+    Route::get('/purchases/export/pdf', [ReportController::class, 'exportPurchasesPDF'])->name('purchases.pdf');
+
+    Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
+    Route::get('/attendance/export/csv', [ReportController::class, 'exportAttendanceCSV'])->name('attendance.excel');
+    Route::get('/attendance/export/pdf', [ReportController::class, 'exportAttendancePDF'])->name('attendance.pdf');
+
+    Route::get('/financial', [ReportController::class, 'financial'])->name('financial');
+    Route::get('/financial/export/csv', [ReportController::class, 'exportFinancialCSV'])->name('financial.excel');
+    Route::get('/financial/export/pdf', [ReportController::class, 'exportFinancialPDF'])->name('financial.pdf');
+});
+

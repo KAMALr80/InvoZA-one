@@ -999,6 +999,74 @@
                 </a>
             @endif
 
+            {{-- ========== REPORTS DROPDOWN (ADMIN & HR) ========== --}}
+            @if (in_array(auth()->user()->role, ['admin', 'hr', 'staff']))
+                <div class="nav-item">
+                    <button class="nav-link" onclick="toggleDropdown('reportsDropdown')" id="reportsBtn">
+                        <span class="nav-icon">📋</span>
+                        <span>Reports</span>
+                        <span class="dropdown-icon" id="reportsIcon">▼</span>
+                    </button>
+                    <ul class="dropdown-menu" id="reportsDropdown">
+                        {{-- Sales Reports --}}
+                        <a href="{{ route('reports.sales') }}"
+                            class="dropdown-item {{ request()->routeIs('reports.sales') ? 'active' : '' }}">
+                            <i class="fas fa-chart-line"></i> Sales Reports
+                        </a>
+
+                        {{-- Customers Reports --}}
+                        <a href="{{ route('reports.customers') }}"
+                            class="dropdown-item {{ request()->routeIs('reports.customers') ? 'active' : '' }}">
+                            <i class="fas fa-users"></i> Customers Reports
+                        </a>
+
+                        {{-- Inventory/Products Reports --}}
+                        <a href="{{ route('reports.inventory') }}"
+                            class="dropdown-item {{ request()->routeIs('reports.inventory') ? 'active' : '' }}">
+                            <i class="fas fa-box"></i> Inventory Reports
+                        </a>
+
+                        {{-- Logistics Reports --}}
+                        @if (in_array(auth()->user()->role, ['admin', 'logistics']))
+                            <a href="{{ route('reports.logistics') }}"
+                                class="dropdown-item {{ request()->routeIs('reports.logistics') ? 'active' : '' }}">
+                                <i class="fas fa-truck"></i> Logistics Reports
+                            </a>
+                        @endif
+
+                        {{-- Employee Reports (HR Only) --}}
+                        @if (in_array(auth()->user()->role, ['admin', 'hr']))
+                            <a href="{{ route('reports.employees') }}"
+                                class="dropdown-item {{ request()->routeIs('reports.employees') ? 'active' : '' }}">
+                                <i class="fas fa-user-clock"></i> Employee Reports
+                            </a>
+                        @endif
+
+                        {{-- Purchase Reports --}}
+                        <a href="{{ route('reports.purchases') }}"
+                            class="dropdown-item {{ request()->routeIs('reports.purchases') ? 'active' : '' }}">
+                            <i class="fas fa-shopping-cart"></i> Purchase Reports
+                        </a>
+
+                        {{-- Attendance Reports (HR Only) --}}
+                        @if (in_array(auth()->user()->role, ['admin', 'hr']))
+                            <a href="{{ route('reports.attendance') }}"
+                                class="dropdown-item {{ request()->routeIs('reports.attendance') ? 'active' : '' }}">
+                                <i class="fas fa-calendar-check"></i> Attendance Reports
+                            </a>
+                        @endif
+
+                        {{-- Financial Summary --}}
+                        @if (in_array(auth()->user()->role, ['admin']))
+                            <a href="{{ route('reports.financial') }}"
+                                class="dropdown-item {{ request()->routeIs('reports.financial') ? 'active' : '' }}">
+                                <i class="fas fa-money-bill-wave"></i> Financial Summary
+                            </a>
+                        @endif
+                    </ul>
+                </div>
+            @endif
+
             {{-- ========== AGENT APPROVAL DROPDOWN (ADMIN ONLY) ========== --}}
             @if (auth()->check() && auth()->user()->role === 'admin')
                 <div class="nav-item">
@@ -1320,6 +1388,8 @@
             const approvalIcon = document.getElementById('approvalIcon');
             const deliveryDropdown = document.getElementById('deliveryDropdown');
             const deliveryIcon = document.getElementById('deliveryIcon');
+            const reportsDropdown = document.getElementById('reportsDropdown');
+            const reportsIcon = document.getElementById('reportsIcon');
 
             if (logisticsDropdown) {
                 const activeItems = logisticsDropdown.querySelectorAll('.active');
@@ -1347,6 +1417,16 @@
                     deliveryDropdown.classList.add('show');
                     if (deliveryIcon) {
                         deliveryIcon.classList.add('rotate');
+                    }
+                }
+            }
+
+            if (reportsDropdown) {
+                const activeReportItems = reportsDropdown.querySelectorAll('.active');
+                if (activeReportItems.length > 0) {
+                    reportsDropdown.classList.add('show');
+                    if (reportsIcon) {
+                        reportsIcon.classList.add('rotate');
                     }
                 }
             }

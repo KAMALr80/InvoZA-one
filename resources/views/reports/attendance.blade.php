@@ -142,39 +142,38 @@
         {{-- TABLE --}}
         <table class="report-table">
             <thead>
-                <tr>
-                    <th>Employee</th>
-                    <th>Date</th>
-                    <th>Check In</th>
-                    <th>Check Out</th>
-                    <th>Status</th>
-                    <th style="padding:10px;">Working Hours</th>
+                <th>Employee</th>
+                <th>Date</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Status</th>
+                <th>Working Hours</th>
                 </tr>
             </thead>
             <tbody>
-                @php $__col = $attendance; @endphp
-@if(is_array($__col) || $__col instanceof \Countable ? count($__col) > 0 : !empty($__col))
-@foreach($__col as $a)
+                @if (isset($attendances) && count($attendances) > 0)
+                    @foreach ($attendances as $attendance)
+                        <tr>
+                            <td>{{ $attendance->employee->name ?? 'N/A' }}</td>
+                            <td>{{ isset($attendance->attendance_date) ? \Carbon\Carbon::parse($attendance->attendance_date)->format('d M Y') : 'N/A' }}
+                            </td>
+                            <td>{{ $attendance->check_in ?? '-' }}</td>
+                            <td>{{ $attendance->check_out ?? '-' }}</td>
+                            <td>
+                                @if ($attendance->status === 'present')
+                                    <span class="status-present">Present</span>
+                                @elseif ($attendance->status === 'absent')
+                                    <span class="status-absent">Absent</span>
+                                @else
+                                    <span class="status-leave">Leave</span>
+                                @endif
+                            </td>
+                            <td>{{ $attendance->working_hours ?? '-' }}</td>
+                        </tr>
+                    @endforeach
+                @else
                     <tr>
-                        <td>{{ $a->employee->name }}</td>
-                        <td>{{ \Carbon\Carbon::parse($a->attendance_date)->format('d M Y') }}</td>
-                        <td>{{ $a->check_in ?? '-' }}</td>
-                        <td>{{ $a->check_out ?? '-' }}</td>
-                        <td>
-                            @if ($a->status === 'Present')
-                                <span class="status-present">Present</span>
-                            @elseif ($a->status === 'Absent')
-                                <span class="status-absent">Absent</span>
-                            @else
-                                <span class="status-leave">Leave</span>
-                            @endif
-                        </td>
-                                                <td style="padding:10px;">{{ $row->working_hours ?? '-' }}</td>
-                    </tr>
-                @endforeach
-@else
-                    <tr>
-                        <td colspan="5">No attendance data found</td>
+                        <td colspan="6" style="text-align: center; padding: 40px;">No attendance data found</td>
                     </tr>
                 @endif
             </tbody>

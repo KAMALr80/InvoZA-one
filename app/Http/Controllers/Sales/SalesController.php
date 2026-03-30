@@ -21,6 +21,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 class SalesController extends Controller
 {
@@ -516,197 +517,199 @@ class SalesController extends Controller
         return view('sales.create', compact('customers', 'products', 'invoice_token'));
     }
 
-    public function store(Request $request)
-    {
+  public function store(Request $request)
+{
+    Log::info('🚀 SALES STORE METHOD CALLED', $request->all());
 
-
-     Log::info('🚀 SALES STORE METHOD CALLED', [
-        'requires_shipping' => $request->has('requires_shipping'),
-        'shipping_address' => $request->shipping_address,
-        'city' => $request->city,
-        'state' => $request->state,
-        'pincode' => $request->pincode,
-        'all_input' => $request->all()
+    // Validate the request
+    $validator = Validator::make($request->all(), [
+        'customer_id'        => 'required|exists:customers,id',
+        'invoice_token'      => 'required|string|unique:sales,invoice_token',
+        'items.product_id'   => 'required|array|min:1',
+        'items.quantity'     => 'required|array|min:1',
+        'items.price'        => 'required|array|min:1',
+        'discount'           => 'nullable|numeric|min:0',
+        'tax'                => 'nullable|numeric|min:0|max:100',
+        'requires_shipping'  => 'nullable|boolean',
+        'shipping_address'   => 'nullable|string|max:500',
+        'city'               => 'nullable|string|max:100',
+        'state'              => 'nullable|string|max:100',
+        'pincode'            => 'nullable|string|max:20',
+        'receiver_name'      => 'nullable|string|max:255',
+        'receiver_phone'     => 'nullable|string|max:20',
+        'delivery_instructions' => 'nullable|string|max:500',
+        'destination_latitude'  => 'nullable|numeric|between:-90,90',
+        'destination_longitude' => 'nullable|numeric|between:-180,180',
+        'place_id' => 'nullable|string'
     ]);
-        $request->validate([
-            'customer_id'        => 'required|exists:customers,id',
-            'invoice_token'      => 'required|string|unique:sales,invoice_token',
-            'items.product_id'   => 'required|array|min:1',
-            'items.quantity'     => 'required|array|min:1',
-            'items.price'        => 'required|array|min:1',
-            'discount'           => 'nullable|numeric|min:0|max:9999999.99',
-            'tax'                => 'nullable|numeric|min:0|max:100',
-            'requires_shipping'  => 'nullable|boolean',
-            'shipping_address'   => 'required_if:requires_shipping,1|string|max:500',
-            'city'               => 'required_if:requires_shipping,1|string|max:100',
-            'state'              => 'required_if:requires_shipping,1|string|max:100',
-            'pincode'            => 'required_if:requires_shipping,1|string|max:20',
-            'receiver_name'      => 'nullable|string|max:255',
-            'receiver_phone'     => 'nullable|string|max:20',
-            'delivery_instructions' => 'nullable|string|max:500',
-            'destination_latitude'  => 'nullable|numeric|between:-90,90',
-            'destination_longitude' => 'nullable|numeric|between:-180,180',
-            'place_id' => 'nullable|string'
-        ]);
 
-        $existingSale = Sale::where('invoice_token', $request->invoice_token)->first();
-        if ($existingSale) {
-            return redirect()->route('sales.show', $existingSale->id)->with('info', 'Invoice already exists');
-        }
+    if ($validator->fails()) {
+        Log::error('❌ VALIDATION FAILED', $validator->errors()->toArray());
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput()
+            ->with('error', 'Please fix the validation errors');
+    }
 
-        try {
-            DB::transaction(function () use ($request) {
-                $subTotal = $this->calculateSubTotal($request->items);
-                $discount = (float) ($request->discount ?? 0);
-                $tax = (float) ($request->tax ?? 0);
-                $taxAmount = $subTotal * $tax / 100;
-                $grandTotal = $subTotal - $discount + $taxAmount;
+    // Check for existing sale
+    $existingSale = Sale::where('invoice_token', $request->invoice_token)->first();
+    if ($existingSale) {
+        return redirect()->route('sales.index', $existingSale->id)
+            ->with('info', 'Invoice already exists');
+    }
 
-                $customer = Customer::lockForUpdate()->findOrFail($request->customer_id);
-                $lastId = Sale::max('id') ?? 0;
-                $invoiceNo = 'INV-' . date('Y') . '-' . str_pad(($lastId + 1), 6, '0', STR_PAD_LEFT);
+    try {
+        $sale = null;
 
-                $shippingData = [];
+        DB::transaction(function () use ($request, &$sale) {
+            // Calculate totals
+            $subTotal = $this->calculateSubTotal($request->items);
+            $discount = (float) ($request->discount ?? 0);
+            $tax = (float) ($request->tax ?? 0);
+            $taxAmount = ($subTotal - $discount) * $tax / 100;
+            $grandTotal = ($subTotal - $discount) + $taxAmount;
 
-                if ($request->boolean('requires_shipping')) {
-                    $city = $request->city;
-                    $state = $request->state;
-                    $pincode = $request->pincode;
+            // Get customer
+            $customer = Customer::lockForUpdate()->findOrFail($request->customer_id);
 
-                    if ($request->destination_latitude && $request->destination_longitude &&
-                        (empty($city) || empty($state))) {
-                        try {
-                            $geocoded = $this->googleMaps->reverseGeocode(
-                                $request->destination_latitude,
-                                $request->destination_longitude
-                            );
-                            if ($geocoded && isset($geocoded['components'])) {
-                                $city = $city ?? ($geocoded['components']['city'] ?? null);
-                                $state = $state ?? ($geocoded['components']['state'] ?? null);
-                                $pincode = $pincode ?? ($geocoded['components']['postal_code'] ?? null);
-                            }
-                        } catch (\Exception $e) {
-                            Log::warning('Reverse geocoding failed: ' . $e->getMessage());
-                        }
-                    }
+            // Generate invoice number
+            $lastId = Sale::max('id') ?? 0;
+            $invoiceNo = 'INV-' . date('Y') . '-' . str_pad(($lastId + 1), 6, '0', STR_PAD_LEFT);
 
-                    $shippingData = [
-                        'requires_shipping' => true,
-                        'shipping_address' => $request->shipping_address,
-                        'city' => $city,
-                        'state' => $state,
-                        'pincode' => $pincode,
-                        'receiver_name' => $request->receiver_name,
-                        'receiver_phone' => $request->receiver_phone,
-                        'delivery_instructions' => $request->delivery_instructions,
-                        'destination_latitude' => $request->destination_latitude,
-                        'destination_longitude' => $request->destination_longitude,
-                        'place_id' => $request->place_id,
-                        'shipping_status' => 'pending',
-                    ];
+            // Prepare shipping data
+            $shippingData = [];
 
-                    if ($request->destination_latitude && $request->destination_longitude) {
-                        Log::info("📍 Location selected for sale", [
-                            'lat' => $request->destination_latitude,
-                            'lng' => $request->destination_longitude,
-                            'address' => $request->shipping_address,
-                            'place_id' => $request->place_id
-                        ]);
-                    }
-                } else {
-                    $shippingData = [
-                        'requires_shipping' => false,
-                        'shipping_address' => null,
-                        'city' => null,
-                        'state' => null,
-                        'pincode' => null,
-                        'receiver_name' => null,
-                        'receiver_phone' => null,
-                        'delivery_instructions' => null,
-                        'destination_latitude' => null,
-                        'destination_longitude' => null,
-                        'place_id' => null,
-                        'shipping_status' => null,
-                    ];
-                }
+            if ($request->boolean('requires_shipping')) {
+                $city = $request->city;
+                $state = $request->state;
+                $pincode = $request->pincode;
 
-                $sale = Sale::create(array_merge([
-                    'customer_id'    => $customer->id,
-                    'invoice_no'     => $invoiceNo,
-                    'invoice_token'  => $request->invoice_token,
-                    'sale_date'      => now(),
-                    'sub_total'      => $subTotal,
-                    'discount'       => $discount,
-                    'tax'            => $tax,
-                    'tax_amount'     => $taxAmount,
-                    'grand_total'    => $grandTotal,
-                    'payment_status' => 'unpaid',
-                    'paid_amount'    => 0
-                ], $shippingData));
-
-                foreach ($request->items['product_id'] as $i => $productId) {
-                    $qty = (int) $request->items['quantity'][$i];
-                    $price = (float) $request->items['price'][$i];
-
-                    $product = Product::lockForUpdate()->findOrFail($productId);
-
-                    if ($product->quantity < $qty) {
-                        throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->quantity}");
-                    }
-
-                    SaleItem::create([
-                        'sale_id'    => $sale->id,
-                        'product_id' => $productId,
-                        'quantity'   => $qty,
-                        'price'      => $price,
-                        'total'      => $qty * $price,
-                        'mrp'        => $product->mrp ?? $price
-                    ]);
-
-                    $product->decrement('quantity', $qty);
-                }
-
-                if ($request->boolean('requires_shipping') && $sale->shipping_address) {
+                // Reverse geocode if coordinates provided but city/state missing
+                if ($request->destination_latitude && $request->destination_longitude &&
+                    (empty($city) || empty($state))) {
                     try {
-                        $shipment = $this->createShipmentFromSale($sale, $request);
-                        if ($shipment) {
-                            Log::info("📦 Auto shipment created for sale", [
-                                'sale_id' => $sale->id,
-                                'shipment_id' => $shipment->id,
-                                'shipment_number' => $shipment->shipment_number,
-                                'tracking_number' => $shipment->tracking_number
-                            ]);
-                            $sale->shipping_status = 'shipment_created';
-                            $sale->save();
+                        $geocoded = $this->googleMaps->reverseGeocode(
+                            $request->destination_latitude,
+                            $request->destination_longitude
+                        );
+                        if ($geocoded && isset($geocoded['components'])) {
+                            $city = $city ?? ($geocoded['components']['city'] ?? null);
+                            $state = $state ?? ($geocoded['components']['state'] ?? null);
+                            $pincode = $pincode ?? ($geocoded['components']['postal_code'] ?? null);
                         }
                     } catch (\Exception $e) {
-                        Log::error("❌ Shipment creation failed but sale was created", [
-                            'sale_id' => $sale->id,
-                            'error' => $e->getMessage()
-                        ]);
+                        Log::warning('Reverse geocoding failed: ' . $e->getMessage());
                     }
                 }
 
-                Log::info("✅ Sale created successfully", [
-                    'id' => $sale->id,
-                    'invoice' => $sale->invoice_no,
-                    'requires_shipping' => $request->boolean('requires_shipping'),
-                    'has_coordinates' => !is_null($request->destination_latitude),
-                    'shipment_created' => isset($shipment)
+                $shippingData = [
+                    'requires_shipping' => true,
+                    'shipping_address' => $request->shipping_address,
+                    'city' => $city,
+                    'state' => $state,
+                    'pincode' => $pincode,
+                    'receiver_name' => $request->receiver_name,
+                    'receiver_phone' => $request->receiver_phone,
+                    'delivery_instructions' => $request->delivery_instructions,
+                    'destination_latitude' => $request->destination_latitude,
+                    'destination_longitude' => $request->destination_longitude,
+                    'place_id' => $request->place_id,
+                    'shipping_status' => $request->shipping_address ? 'pending' : null,
+                ];
+            } else {
+                $shippingData = [
+                    'requires_shipping' => false,
+                    'shipping_address' => null,
+                    'city' => null,
+                    'state' => null,
+                    'pincode' => null,
+                    'receiver_name' => null,
+                    'receiver_phone' => null,
+                    'delivery_instructions' => null,
+                    'destination_latitude' => null,
+                    'destination_longitude' => null,
+                    'place_id' => null,
+                    'shipping_status' => null,
+                ];
+            }
+
+            // Create sale
+            $sale = Sale::create(array_merge([
+                'customer_id'    => $customer->id,
+                'invoice_no'     => $invoiceNo,
+                'invoice_token'  => $request->invoice_token,
+                'sale_date'      => now(),
+                'sub_total'      => $subTotal,
+                'discount'       => $discount,
+                'tax'            => $tax,
+                'tax_amount'     => $taxAmount,
+                'grand_total'    => $grandTotal,
+                'payment_status' => 'unpaid',
+                'paid_amount'    => 0
+            ], $shippingData));
+
+            // Create sale items
+            foreach ($request->items['product_id'] as $i => $productId) {
+                $qty = (int) $request->items['quantity'][$i];
+                $price = (float) $request->items['price'][$i];
+
+                $product = Product::lockForUpdate()->findOrFail($productId);
+
+                if ($product->quantity < $qty) {
+                    throw new \Exception("Insufficient stock for {$product->name}. Available: {$product->quantity}");
+                }
+
+                SaleItem::create([
+                    'sale_id'    => $sale->id,
+                    'product_id' => $productId,
+                    'quantity'   => $qty,
+                    'price'      => $price,
+                    'total'      => $qty * $price,
+                    'mrp'        => $product->mrp ?? $price
                 ]);
-            });
 
-            return redirect()->route('sales.index')->with('success', 'Sale created successfully');
+                $product->decrement('quantity', $qty);
+            }
 
-        } catch (\Exception $e) {
-            Log::error('❌ Sale Store Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-                'request' => $request->except(['_token', '_method'])
+            // Create shipment if shipping required and address provided
+            if ($request->boolean('requires_shipping') && !empty($request->shipping_address)) {
+                try {
+                    $shipment = $this->createShipmentFromSale($sale, $request);
+                    if ($shipment) {
+                        Log::info("📦 Auto shipment created for sale", [
+                            'sale_id' => $sale->id,
+                            'shipment_id' => $shipment->id
+                        ]);
+                        $sale->shipping_status = 'shipment_created';
+                        $sale->save();
+                    }
+                } catch (\Exception $e) {
+                    Log::error("❌ Shipment creation failed: " . $e->getMessage());
+                }
+            }
+
+            Log::info("✅ Sale created successfully", [
+                'id' => $sale->id,
+                'invoice' => $sale->invoice_no
             ]);
+        });
 
-            return back()->withInput()->with('error', 'Error creating sale: ' . $e->getMessage());
-        }
+        // Success - redirect to invoice view
+        Log::info('Redirecting to sales.show with ID: ' . $sale->id);
+
+        return redirect()->route('sales.index', $sale->id)
+            ->with('success', 'Sale created successfully. Invoice #' . $sale->invoice_no);
+
+    } catch (\Exception $e) {
+        Log::error('❌ Sale Store Error: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'Error creating sale: ' . $e->getMessage());
     }
+}
 private function createShipmentFromSale($sale, $request)
 {
     try {
