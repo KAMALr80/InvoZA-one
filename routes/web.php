@@ -922,3 +922,18 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/financial/export/pdf', [ReportController::class, 'exportFinancialPDF'])->name('financial.pdf');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/staff/dashboard', [App\Http\Controllers\DashboardController::class, 'staffDashboard'])->name('staff.dashboard');
+});
+
+
+
+// Agent Dashboard Route
+Route::prefix('agent')->name('agent.')->middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Agent\DashboardController::class, 'index'])->name('dashboard');
+});
+
+// HR Dashboard Route
+Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'hrDashboard'])->name('dashboard');
+});

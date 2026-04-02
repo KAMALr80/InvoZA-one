@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('page-title', 'Inventory Report')
+@section('page-title', 'Employee Report')
 
 @section('content')
     <style>
-        /* ================= PROFESSIONAL INVENTORY REPORT STYLES ================= */
+        /* ================= PROFESSIONAL EMPLOYEE REPORT STYLES ================= */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -131,7 +131,7 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
@@ -176,55 +176,6 @@
 
         .stat-value.negative {
             color: var(--danger);
-        }
-
-        .stat-value.warning {
-            color: var(--warning);
-        }
-
-        .stock-status-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stock-card {
-            background: var(--bg-white);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem;
-            border: 1px solid var(--border);
-            text-align: center;
-        }
-
-        .stock-card.low {
-            border-left: 4px solid var(--danger);
-        }
-
-        .stock-card.normal {
-            border-left: 4px solid var(--warning);
-        }
-
-        .stock-card.high {
-            border-left: 4px solid var(--success);
-        }
-
-        .stock-count {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .stock-count.low {
-            color: var(--danger);
-        }
-
-        .stock-count.normal {
-            color: var(--warning);
-        }
-
-        .stock-count.high {
-            color: var(--success);
         }
 
         .filter-section {
@@ -276,6 +227,24 @@
         .filter-actions {
             display: flex;
             gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-inactive {
+            background: #fee2e2;
+            color: #991b1b;
         }
 
         .table-container {
@@ -345,31 +314,10 @@
             color: var(--text-muted);
         }
 
-        .badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 2rem;
-            font-size: 0.75rem;
+        .employee-code {
+            font-family: monospace;
             font-weight: 600;
-        }
-
-        .badge-low {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .badge-normal {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge-high {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .amount {
-            font-weight: 600;
+            color: var(--primary);
         }
 
         .text-right {
@@ -429,6 +377,64 @@
             font-size: 3rem;
             margin-bottom: 1rem;
             opacity: 0.5;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-card {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chart-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-container {
+            height: 250px;
+            position: relative;
+        }
+
+        .department-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .department-card {
+            background: var(--bg-light);
+            border-radius: var(--radius-md);
+            padding: 0.75rem;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .department-name {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.85rem;
+            word-break: break-word;
+        }
+
+        .department-count {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
         }
 
         .toast-notification {
@@ -541,7 +547,7 @@
                 grid-template-columns: repeat(2, 1fr);
             }
 
-            .stock-status-grid {
+            .charts-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -554,6 +560,10 @@
             .table-header {
                 flex-direction: column;
                 align-items: flex-start;
+            }
+
+            .department-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
@@ -570,165 +580,135 @@
 
     <div class="report-wrapper">
         <div class="report-container">
-            <!-- Loading Overlay -->
             <div id="loadingOverlay" class="loading-overlay">
                 <div class="spinner"></div>
                 <div class="loading-text">Generating PDF...</div>
             </div>
 
-            <!-- Header -->
             <div class="report-header">
                 <div class="header-title">
-                    <h1>📦 Inventory Report</h1>
-                    <p>Complete inventory analytics and stock summary</p>
+                    <h1>👥 Employee Report</h1>
+                    <p>Complete employee analytics and workforce summary</p>
                 </div>
-
+                <div class="header-actions">
+                    <button onclick="exportReport('csv')" class="btn btn-success">
+                        📥 Export CSV
+                    </button>
+                    <button onclick="exportReport('pdf')" class="btn btn-primary">
+                        📄 Export PDF
+                    </button>
+                    <button onclick="window.print()" class="btn btn-secondary">
+                        🖨️ Print
+                    </button>
+                </div>
             </div>
 
-            <!-- Statistics Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">Total Products</div>
-                    <div class="stat-value">{{ number_format($stats['total_products']) }}</div>
-                    <div class="stat-sub">Total in inventory</div>
+                    <div class="stat-label">Total Employees</div>
+                    <div class="stat-value">{{ number_format($stats['total_employees']) }}</div>
+                    <div class="stat-sub">{{ $stats['active_employees'] }} active</div>
                 </div>
-
                 <div class="stat-card">
-                    <div class="stat-label">Total Quantity</div>
-                    <div class="stat-value">{{ number_format($stats['total_quantity']) }}</div>
-                    <div class="stat-sub">Units in stock</div>
+                    <div class="stat-label">Active Rate</div>
+                    <div class="stat-value positive">{{ $stats['active_rate'] }}%</div>
+                    <div class="stat-sub">Active workforce</div>
                 </div>
-
                 <div class="stat-card">
-                    <div class="stat-label">Total Value</div>
-                    <div class="stat-value positive">₹{{ number_format($stats['total_value'], 2) }}</div>
-                    <div class="stat-sub">Inventory worth</div>
+                    <div class="stat-label">Departments</div>
+                    <div class="stat-value">{{ number_format($stats['department_count']) }}</div>
+                    <div class="stat-sub">Unique departments</div>
                 </div>
-
                 <div class="stat-card">
-                    <div class="stat-label">Avg Price</div>
-                    <div class="stat-value">₹{{ number_format($stats['avg_price'], 2) }}</div>
-                    <div class="stat-sub">Per product</div>
+                    <div class="stat-label">New Hires</div>
+                    <div class="stat-value warning">{{ number_format($stats['new_hires']) }}</div>
+                    <div class="stat-sub">This period</div>
                 </div>
-
                 <div class="stat-card">
-                    <div class="stat-label">Stock Health</div>
-                    <div
-                        class="stat-value {{ $stats['stock_health'] > 70 ? 'positive' : ($stats['stock_health'] > 40 ? 'warning' : 'negative') }}">
-                        {{ $stats['stock_health'] }}%
-                    </div>
-                    <div class="stat-sub">High stock ratio</div>
+                    <div class="stat-label">Inactive</div>
+                    <div class="stat-value negative">{{ number_format($stats['inactive_employees']) }}</div>
+                    <div class="stat-sub">Inactive employees</div>
                 </div>
             </div>
 
-            <!-- Stock Status Cards -->
-            <div class="stock-status-grid">
-                <div class="stock-card low">
-                    <div class="stock-count low">{{ $stats['low_stock_count'] }}</div>
-                    <div class="stat-label">Low Stock</div>
-                    <div class="stat-sub">≤ 10 units</div>
-                </div>
-                <div class="stock-card normal">
-                    <div class="stock-count normal">{{ $stats['normal_stock_count'] }}</div>
-                    <div class="stat-label">Normal Stock</div>
-                    <div class="stat-sub">11-30 units</div>
-                </div>
-                <div class="stock-card high">
-                    <div class="stock-count high">{{ $stats['high_stock_count'] }}</div>
-                    <div class="stat-label">High Stock</div>
-                    <div class="stat-sub">> 30 units</div>
-                </div>
-            </div>
-
-            <!-- Filter Section -->
             <div class="filter-section">
-                <form method="GET" action="{{ route('reports.inventory') }}" class="filter-form" id="filterForm">
+                <form method="GET" action="{{ route('reports.employees') }}" class="filter-form" id="filterForm">
                     <div class="filter-group">
-                        <label>Category</label>
-                        <select name="category">
-                            <option value="all" {{ $filters['category'] == 'all' ? 'selected' : '' }}>All Categories
+                        <label>From Date</label>
+                        <input type="date" name="start_date" value="{{ $startDate }}">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>To Date</label>
+                        <input type="date" name="end_date" value="{{ $endDate }}">
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Department</label>
+                        <select name="department">
+                            <option value="all" {{ $filters['department'] == 'all' ? 'selected' : '' }}>All Departments
                             </option>
-                            @foreach ($categories as $cat)
-                                <option value="{{ $cat }}" {{ $filters['category'] == $cat ? 'selected' : '' }}>
-                                    {{ $cat }}
+                            @foreach ($departments as $dept)
+                                <option value="{{ $dept }}"
+                                    {{ $filters['department'] == $dept ? 'selected' : '' }}>
+                                    {{ $dept }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="filter-group">
-                        <label>Stock Status</label>
-                        <select name="stock_status">
-                            <option value="all" {{ $filters['stock_status'] == 'all' ? 'selected' : '' }}>All Stock
+                        <label>Status</label>
+                        <select name="status">
+                            <option value="all" {{ $filters['status'] == 'all' ? 'selected' : '' }}>All Status</option>
+                            <option value="active" {{ $filters['status'] == 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="inactive" {{ $filters['status'] == 'inactive' ? 'selected' : '' }}>Inactive
                             </option>
-                            <option value="low" {{ $filters['stock_status'] == 'low' ? 'selected' : '' }}>Low Stock
-                                (≤10)</option>
-                            <option value="normal" {{ $filters['stock_status'] == 'normal' ? 'selected' : '' }}>Normal
-                                Stock (11-30)</option>
-                            <option value="high" {{ $filters['stock_status'] == 'high' ? 'selected' : '' }}>High Stock
-                                (>30)</option>
                         </select>
                     </div>
 
                     <div class="filter-group">
                         <label>Search</label>
                         <input type="text" name="search" value="{{ $filters['search'] }}"
-                            placeholder="Name, Code, Category...">
-                    </div>
-
-                    <div class="filter-group">
-                        <label>Sort By</label>
-                        <select name="sort_by">
-                            <option value="name" {{ $filters['sort_by'] == 'name' ? 'selected' : '' }}>Name</option>
-                            <option value="product_code" {{ $filters['sort_by'] == 'product_code' ? 'selected' : '' }}>Code
-                            </option>
-                            <option value="quantity" {{ $filters['sort_by'] == 'quantity' ? 'selected' : '' }}>Quantity
-                            </option>
-                            <option value="price" {{ $filters['sort_by'] == 'price' ? 'selected' : '' }}>Price</option>
-                            <option value="category" {{ $filters['sort_by'] == 'category' ? 'selected' : '' }}>Category
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label>Order</label>
-                        <select name="sort_order">
-                            <option value="asc" {{ $filters['sort_order'] == 'asc' ? 'selected' : '' }}>Ascending
-                            </option>
-                            <option value="desc" {{ $filters['sort_order'] == 'desc' ? 'selected' : '' }}>Descending
-                            </option>
-                        </select>
+                            placeholder="Name, Code, Email...">
                     </div>
 
                     <div class="filter-actions">
                         <button type="submit" class="btn btn-primary">Apply Filter</button>
-                        <a href="{{ route('reports.inventory') }}" class="btn btn-secondary">Reset</a>
+                        <a href="{{ route('reports.employees') }}" class="btn btn-secondary">Reset</a>
                     </div>
                 </form>
             </div>
 
-            <!-- Inventory Table -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span>📈</span> New Hires Trend
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="hiringTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">
+                        <span>🥧</span> Role Distribution
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="roleChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
             <div class="table-container">
                 <div class="table-header">
                     <h2>
                         <span>📋</span>
-                        Product Inventory
+                        Employee List
                         <span style="font-weight: normal; color: var(--text-muted);">
-                            ({{ $products->total() }} records)
+                            ({{ $employees->total() }} records)
                         </span>
                     </h2>
-
-                    <div class="header-actions">
-                        <button onclick="exportReport('csv')" class="btn btn-success">
-                            📥 Export CSV
-                        </button>
-                        <button onclick="exportReport('pdf')" class="btn btn-primary">
-                            📄 Export PDF
-                        </button>
-                        <button onclick="window.print()" class="btn btn-secondary">
-                            🖨️ Print
-                        </button>
-                    </div>
                     <div>
                         <input type="text" id="tableSearch" placeholder="Search in table..."
                             style="padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.875rem; width: 200px;">
@@ -736,161 +716,217 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="data-table" id="inventoryTable">
+                    <table class="data-table" id="employeeTable">
                         <thead>
-                           
+                            32
                             <th class="serial-cell">#</th>
-                            <th>Product Code</th>
-                            <th>Product Name</th>
-                            <th>Category</th>
-                            <th class="text-right">Quantity</th>
-                            <th class="text-right">Price (₹)</th>
-                            <th class="text-right">Stock Value (₹)</th>
+                            <th>Employee Code</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Department</th>
+                            <th>Role</th>
+                            <th>Joining Date</th>
                             <th>Status</th>
                             <th class="text-center">Actions</th>
                         </thead>
                         <tbody>
-                            @forelse($products as $index => $product)
+                            @forelse($employees as $index => $employee)
                                 @php
-                                    $serial = ($products->currentPage() - 1) * $products->perPage() + $index + 1;
-                                    $stockValue = $product->price * $product->quantity;
-                                    $statusClass =
-                                        $product->quantity <= 10
-                                            ? 'badge-low'
-                                            : ($product->quantity <= 30
-                                                ? 'badge-normal'
-                                                : 'badge-high');
-                                    $statusText =
-                                        $product->quantity <= 10
-                                            ? 'Low Stock'
-                                            : ($product->quantity <= 30
-                                                ? 'Normal'
-                                                : 'High Stock');
+                                    $serial = ($employees->currentPage() - 1) * $employees->perPage() + $index + 1;
+                                    $statusClass = $employee->status == 1 ? 'badge-active' : 'badge-inactive';
+                                    $statusText = $employee->status == 1 ? 'Active' : 'Inactive';
+                                    $role = $employee->user ? ucfirst($employee->user->role) : 'Staff';
                                 @endphp
-                                <tr>
-                                    <td class="serial-cell">{{ $serial }}</td>
-                                    <td><strong>{{ $product->product_code }}</strong></td>
-                                    <td>
-                                        <div class="product-name">{{ $product->name }}</div>
-                                        @if ($product->description)
-                                            <div class="product-meta"
-                                                style="font-size: 0.7rem; color: var(--text-muted);">
-                                                {{ Str::limit($product->description, 40) }}
-                                            </div>
+
+                                <td class="serial-cell">{{ $serial }}
+                                <td><span class="employee-code">{{ $employee->employee_code }}</span>
+                                <td><strong>{{ $employee->name }}</strong>
+                                    {{ $employee->email }}
+                                    {{ $employee->phone ?? 'N/A' }}
+                                <td>{{ $employee->department ?? 'Not Assigned' }}
+                                <td>{{ $role }}
+                                <td>{{ $employee->joining_date ? \Carbon\Carbon::parse($employee->joining_date)->format('d M Y') : 'N/A' }}
+                                <td><span class="badge {{ $statusClass }}">{{ $statusText }}</span>
+                                <td class="text-center">
+                                    <div class="action-buttons"
+                                        style="display: flex; gap: 0.25rem; justify-content: center;">
+                                        <a href="{{ route('employees.show', $employee->id) }}" class="btn-sm"
+                                            style="padding: 0.25rem 0.5rem; background: #e0f2fe; border-radius: 4px; text-decoration: none; color: #0369a1;"
+                                            title="View">
+                                            👁️
+                                        </a>
+                                        @if (in_array(auth()->user()->role, ['admin', 'hr']))
+                                            <a href="{{ route('employees.edit', $employee->id) }}" class="btn-sm"
+                                                style="padding: 0.25rem 0.5rem; background: #fef3c7; border-radius: 4px; text-decoration: none; color: #92400e;"
+                                                title="Edit">
+                                                ✏️
+                                            </a>
                                         @endif
-                                    </td>
-                                    <td>
-                                        <span
-                                            style="background: #e0e7ff; padding: 4px 8px; border-radius: 12px; font-size: 0.7rem;">
-                                            {{ $product->category ?? 'Uncategorized' }}
-                                        </span>
-                                    </td>
-                                    <td class="text-right {{ $product->quantity <= 10 ? 'amount-negative' : '' }}">
-                                        {{ number_format($product->quantity) }}
-                                    </td>
-                                    <td class="text-right">₹{{ number_format($product->price, 2) }}</td>
-                                    <td class="text-right amount amount-positive">₹{{ number_format($stockValue, 2) }}
-                                    </td>
-                                    <td>
-                                        <span class="badge {{ $statusClass }}">
-                                            {{ $statusText }}
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="action-buttons"
-                                            style="display: flex; gap: 0.25rem; justify-content: center;">
-                                            <a href="{{ route('inventory.show', $product->id) }}" class="btn-sm"
-                                                style="padding: 0.25rem 0.5rem; background: #e0f2fe; border-radius: 4px; text-decoration: none; color: #0369a1;"
-                                                title="View">
-                                                👁️
-                                            </a>
-                                            @if (auth()->user()->role === 'admin')
-                                                <a href="{{ route('inventory.edit', $product->id) }}" class="btn-sm"
-                                                    style="padding: 0.25rem 0.5rem; background: #fef3c7; border-radius: 4px; text-decoration: none; color: #92400e;"
-                                                    title="Edit">
-                                                    ✏️
-                                                </a>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9">
-                                        <div class="empty-state">
-                                            <div class="empty-icon">📦</div>
-                                            <div class="empty-title">No products found</div>
-                                            <div class="empty-text">Try adjusting your filters or add new products</div>
-                                            <a href="{{ route('inventory.create') }}" class="btn btn-primary"
-                                                style="margin-top: 1rem;">
-                                                + Add Product
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
+                                    </div>
+
+                                @empty
+
+                                <td colspan="10">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">👥</div>
+                                        <div class="empty-title">No employees found</div>
+                                        <div class="empty-text">Try adjusting your filters</div>
+                                    </div>
                             @endforelse
                         </tbody>
-                        @if ($products->count() > 0)
+                        @if ($employees->count() > 0)
                             <tfoot>
                                 <tr style="background: var(--bg-light); font-weight: 600;">
-                                    <td colspan="4" class="text-right"><strong>Total:</strong></td>
-                                    <td class="text-right"><strong>{{ number_format($stats['total_quantity']) }}</strong>
-                                    </td>
-                                    <td class="text-right"><strong>-</strong></td>
-                                    <td class="text-right amount-positive">
-                                        <strong>₹{{ number_format($stats['total_value'], 2) }}</strong>
-                                    </td>
-                                    <td colspan="2"></td>
-                                </tr>
+                                    <td colspan="9" class="text-right"><strong>Total:</strong>
+                                    <td class="text-center"><strong>{{ $employees->total() }}</strong>
+
                             </tfoot>
                         @endif
                     </table>
                 </div>
 
-                @if ($products->hasPages())
+                @if ($employees->hasPages())
                     <div class="pagination-wrapper">
-                        {{ $products->links() }}
+                        {{ $employees->links() }}
                     </div>
                 @endif
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Get current filter parameters
+        // Chart data from PHP
+        const monthlyTrendData = @json($monthlyTrend);
+        const roleBreakdown = @json($stats['role_breakdown']);
+        const departmentStats = @json($departmentStats);
+
+        let hiringChart, roleChart;
+
+        function initCharts() {
+            // Hiring Trend Chart
+            const hiringCtx = document.getElementById('hiringTrendChart')?.getContext('2d');
+            if (hiringCtx && monthlyTrendData.length) {
+                hiringChart = new Chart(hiringCtx, {
+                    type: 'line',
+                    data: {
+                        labels: monthlyTrendData.map(d => d.date),
+                        datasets: [{
+                            label: 'New Hires',
+                            data: monthlyTrendData.map(d => d.total),
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#2563eb',
+                            pointBorderColor: 'white',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `${ctx.raw} new hires`
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Role Distribution Chart
+            const roleCtx = document.getElementById('roleChart')?.getContext('2d');
+            if (roleCtx && roleBreakdown) {
+                const roleLabels = Object.keys(roleBreakdown).map(r => r.toUpperCase());
+                const roleData = Object.values(roleBreakdown);
+                const roleColors = {
+                    admin: '#ef4444',
+                    hr: '#f59e0b',
+                    staff: '#10b981'
+                };
+
+                roleChart = new Chart(roleCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: roleLabels,
+                        datasets: [{
+                            data: roleData,
+                            backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    boxWidth: 12,
+                                    font: {
+                                        size: 10
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => `${ctx.label}: ${ctx.raw} employees`
+                                }
+                            }
+                        },
+                        cutout: '60%'
+                    }
+                });
+            }
+        }
+
         function getFilterParams() {
             const params = new URLSearchParams();
-            const category = document.querySelector('select[name="category"]')?.value || 'all';
-            const stockStatus = document.querySelector('select[name="stock_status"]')?.value || 'all';
+            const startDate = document.querySelector('input[name="start_date"]')?.value || '';
+            const endDate = document.querySelector('input[name="end_date"]')?.value || '';
+            const department = document.querySelector('select[name="department"]')?.value || 'all';
+            const status = document.querySelector('select[name="status"]')?.value || 'all';
             const search = document.querySelector('input[name="search"]')?.value || '';
-            const sortBy = document.querySelector('select[name="sort_by"]')?.value || 'name';
-            const sortOrder = document.querySelector('select[name="sort_order"]')?.value || 'asc';
 
-            if (category !== 'all') params.append('category', category);
-            if (stockStatus !== 'all') params.append('stock_status', stockStatus);
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+            if (department !== 'all') params.append('department', department);
+            if (status !== 'all') params.append('status', status);
             if (search) params.append('search', search);
-            if (sortBy !== 'name') params.append('sort_by', sortBy);
-            if (sortOrder !== 'asc') params.append('sort_order', sortOrder);
 
             return params.toString();
         }
 
-        // Export Report Function
         function exportReport(type) {
             const params = getFilterParams();
             let url = '';
 
             if (type === 'csv') {
-                url = '{{ route('reports.inventory.excel') }}?' + params;
+                url = '{{ route('reports.employees.excel') }}?' + params;
                 window.location.href = url;
                 showToast('CSV export started!', 'success');
             } else if (type === 'pdf') {
                 const loadingOverlay = document.getElementById('loadingOverlay');
                 loadingOverlay.classList.add('active');
-
-                url = '{{ route('reports.inventory.pdf') }}?' + params;
+                url = '{{ route('reports.employees.pdf') }}?' + params;
                 window.open(url, '_blank');
-
                 setTimeout(() => {
                     loadingOverlay.classList.remove('active');
                     showToast('PDF generated successfully!', 'success');
@@ -898,39 +934,33 @@
             }
         }
 
-        // Table search functionality
         document.getElementById('tableSearch')?.addEventListener('keyup', function() {
             const searchTerm = this.value.toLowerCase();
-            const table = document.getElementById('inventoryTable');
+            const table = document.getElementById('employeeTable');
             const rows = table.getElementsByTagName('tbody')[0]?.getElementsByTagName('tr');
-
             if (!rows) return;
-
             for (let row of rows) {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(searchTerm) ? '' : 'none';
             }
         });
 
-        // Toast notification
         function showToast(message, type = 'success') {
             const existingToast = document.querySelector('.toast-notification');
             if (existingToast) existingToast.remove();
-
             const toast = document.createElement('div');
             toast.className = `toast-notification ${type}`;
             const icon = type === 'success' ? '✅' : (type === 'error' ? '❌' : '⚠️');
             toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
             document.body.appendChild(toast);
-
             setTimeout(() => toast.remove(), 3000);
         }
 
-        // Check for session messages
+        document.addEventListener('DOMContentLoaded', initCharts);
+
         @if (session('success'))
             showToast("{{ session('success') }}", 'success');
         @endif
-
         @if (session('error'))
             showToast("{{ session('error') }}", 'error');
         @endif

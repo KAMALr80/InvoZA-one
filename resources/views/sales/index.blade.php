@@ -172,6 +172,44 @@
             border-color: #cbd5e1;
         }
 
+        .btn-bulk-download {
+            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+            color: white;
+            padding: clamp(12px, 2.5vw, 14px) clamp(20px, 4vw, 28px);
+            border-radius: var(--radius-lg);
+            border: none;
+            font-weight: 600;
+            font-size: clamp(13px, 2.5vw, 14px);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25);
+            text-decoration: none;
+            white-space: nowrap;
+            animation: pulse 1.5s infinite;
+        }
+
+        .btn-bulk-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+            }
+        }
+
         /* ================= STATS CARDS ================= */
         .stats-grid {
             display: grid;
@@ -649,6 +687,7 @@
                 opacity: 0;
                 transform: translateY(-5px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -691,8 +730,8 @@
             color: var(--purple);
         }
 
-        .action-menu-item.print:hover {
-            color: var(--text-main);
+        .action-menu-item.download:hover {
+            color: var(--success);
         }
 
         .action-menu-item.email:hover {
@@ -913,6 +952,7 @@
         .bulk-actions {
             display: none;
             align-items: center;
+            justify-content: space-between;
             gap: 12px;
             padding: 16px 20px;
             background: #f1f5f9;
@@ -932,6 +972,61 @@
             color: #475569;
             font-weight: 500;
             flex-wrap: wrap;
+        }
+
+        .bulk-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bulk-btn {
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            border: none;
+            font-weight: 600;
+            font-size: clamp(12px, 2.2vw, 13px);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .bulk-btn.bulk-download {
+            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+            color: white;
+        }
+
+        .bulk-btn.bulk-download:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            transform: translateY(-1px);
+        }
+
+        .bulk-btn.bulk-print {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+        }
+
+        .bulk-btn.bulk-export {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .bulk-btn.bulk-email {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: white;
+        }
+
+        .bulk-btn.bulk-delete {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .bulk-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
         .checkbox-wrapper {
@@ -1098,7 +1193,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .progress-bar {
@@ -1123,23 +1220,46 @@
             margin-top: 10px;
         }
 
-        /* ================= RESPONSIVE BREAKPOINTS ================= */
+        /* ================= TOAST NOTIFICATION ================= */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
+        }
 
-        /* Large Desktop (1200px and above) */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ================= RESPONSIVE BREAKPOINTS ================= */
         @media (min-width: 1200px) {
             .stats-grid {
                 grid-template-columns: repeat(4, 1fr);
             }
         }
 
-        /* Desktop (992px to 1199px) */
         @media (max-width: 1199px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        /* Tablet (768px to 991px) */
         @media (max-width: 991px) {
             .dashboard-header {
                 flex-direction: column;
@@ -1155,7 +1275,6 @@
             }
         }
 
-        /* Mobile Landscape (576px to 767px) */
         @media (max-width: 767px) {
             .sales-page {
                 padding: 15px;
@@ -1176,23 +1295,20 @@
                 min-width: 90px;
             }
 
-            .action-menu {
-                position: fixed;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                min-width: 220px;
-                max-width: 90%;
-                z-index: 10000;
-                margin-top: 0;
-            }
-
             .datatable {
                 min-width: 1000px;
             }
+
+            .bulk-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .bulk-buttons {
+                justify-content: center;
+            }
         }
 
-        /* Mobile Portrait (up to 575px) */
         @media (max-width: 575px) {
             .sales-page {
                 padding: 12px;
@@ -1200,18 +1316,6 @@
 
             .sales-dashboard {
                 padding: 16px;
-            }
-
-            .header-content h1 {
-                font-size: 24px;
-            }
-
-            .header-content p {
-                font-size: 13px;
-            }
-
-            .stat-text h3 {
-                font-size: 24px;
             }
 
             .filter-header {
@@ -1229,93 +1333,19 @@
                 justify-content: center;
             }
 
-            .bulk-actions {
+            .bulk-buttons {
                 flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .bulk-select-all {
                 width: 100%;
             }
 
-            .pagination {
+            .bulk-btn {
+                width: 100%;
                 justify-content: center;
             }
-
-            .pagination-btn {
-                padding: 8px 12px;
-                min-width: 36px;
-            }
-
-            .empty-icon {
-                width: 60px;
-                height: 60px;
-                font-size: 28px;
-            }
-
-            .empty-title {
-                font-size: 18px;
-            }
-
-            .empty-description {
-                font-size: 13px;
-            }
         }
 
-        /* Extra Small Devices (up to 360px) */
-        @media (max-width: 360px) {
-            .sales-page {
-                padding: 8px;
-            }
-
-            .sales-dashboard {
-                padding: 12px;
-            }
-
-            .header-content h1 {
-                font-size: 22px;
-            }
-
-            .stat-text h3 {
-                font-size: 22px;
-            }
-
-            .datatable {
-                min-width: 900px;
-            }
-
-            .datatable th,
-            .datatable td {
-                padding: 12px 10px;
-                font-size: 11px;
-            }
-
-            .customer-avatar {
-                width: 32px;
-                height: 32px;
-                font-size: 13px;
-            }
-
-            .status-badge {
-                padding: 4px 8px;
-                font-size: 9px;
-            }
-
-            .pagination-btn {
-                padding: 6px 10px;
-                min-width: 32px;
-                font-size: 11px;
-            }
-
-            .action-btn {
-                padding: 6px 10px;
-                font-size: 11px;
-                min-width: 80px;
-            }
-        }
-
-        /* Print Styles */
         @media print {
+
             .action-buttons,
             .btn-primary,
             .btn-secondary,
@@ -1334,14 +1364,6 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-
-            .datatable {
-                border: 1px solid #000;
-            }
-
-            .datatable th {
-                background: #f0f0f0 !important;
-            }
         }
     </style>
 
@@ -1359,6 +1381,9 @@
                         <div class="progress-text" id="progressText">Please wait...</div>
                     </div>
                 </div>
+
+                <!-- Toast Notification -->
+                <div id="toastNotification" class="toast-notification"></div>
 
                 {{-- HEADER --}}
                 <div class="dashboard-header">
@@ -1408,7 +1433,8 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-content">
-                            <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
+                            <div class="stat-icon"
+                                style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white;">
                                 📊
                             </div>
                             <div class="stat-text">
@@ -1419,7 +1445,8 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-content">
-                            <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
+                            <div class="stat-icon"
+                                style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
                                 ₹
                             </div>
                             <div class="stat-text">
@@ -1430,7 +1457,8 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-content">
-                            <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white;">
+                            <div class="stat-icon"
+                                style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white;">
                                 👥
                             </div>
                             <div class="stat-text">
@@ -1441,7 +1469,8 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-content">
-                            <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
+                            <div class="stat-icon"
+                                style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white;">
                                 📈
                             </div>
                             <div class="stat-text">
@@ -1468,7 +1497,8 @@
                 {{-- SEARCH BAR --}}
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search by invoice number, customer name, amount...">
+                    <input type="text" id="searchInput" class="search-input"
+                        placeholder="Search by invoice number, customer name, amount...">
                     <button class="search-clear" id="searchClear" title="Clear search">×</button>
                 </div>
 
@@ -1537,18 +1567,27 @@
                         <input type="checkbox" id="selectAllBulk" class="table-checkbox">
                         <span id="selectedCount">0 items selected</span>
                     </div>
-                    <div class="action-buttons" style="gap: 8px;">
-                        <button class="action-btn" id="bulkPrint" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;" title="Print Selected">
+                    <div class="bulk-buttons">
+                        <button class="bulk-btn bulk-download" id="bulkDownloadZip"
+                            title="Download selected invoices as ZIP">
+                            <span>📦</span>
+                            Bulk Invoice Download
+                        </button>
+                        <button class="bulk-btn bulk-print" id="bulkPrint" title="Print Selected">
                             <span>🖨️</span>
+                            Print
                         </button>
-                        <button class="action-btn" id="bulkExportBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;" title="Export Selected">
+                        <button class="bulk-btn bulk-export" id="bulkExportBtn" title="Export Selected">
                             <span>📤</span>
+                            Export
                         </button>
-                        <button class="action-btn" id="bulkEmailBtn" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white;" title="Email Selected Invoices">
+                        <button class="bulk-btn bulk-email" id="bulkEmailBtn" title="Email Selected Invoices">
                             <span>📧</span>
+                            Email
                         </button>
-                        <button class="action-btn" id="bulkDelete" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;" title="Delete Selected">
+                        <button class="bulk-btn bulk-delete" id="bulkDelete" title="Delete Selected">
                             <span>🗑️</span>
+                            Delete
                         </button>
                     </div>
                 </div>
@@ -1558,159 +1597,162 @@
                     <div class="table-responsive">
                         <table class="datatable" id="salesTable">
                             <thead>
-                                <tr>
-                                    <th width="40">
-                                        <input type="checkbox" id="selectAll" class="table-checkbox">
-                                    </th>
-                                    <th width="140">Actions</th>
-                                    <th class="sortable" data-sort="invoice_no">
-                                        Invoice # <span class="sort-icon">↓</span>
-                                    </th>
-                                    <th class="sortable" data-sort="sale_date">
-                                        Date <span class="sort-icon">↓</span>
-                                    </th>
-                                    <th class="sortable" data-sort="customer_name">
-                                        Customer <span class="sort-icon">↓</span>
-                                    </th>
-                                    <th class="sortable" data-sort="status">
-                                        Status <span class="sort-icon">↓</span>
-                                    </th>
-                                    <th class="sortable" data-sort="amount">
-                                        Amount <span class="sort-icon">↓</span>
-                                    </th>
+                                六十
+                                <th width="40">
+                                    <input type="checkbox" id="selectAll" class="table-checkbox">
+                                </th>
+                                <th width="140">Actions</th>
+                                <th class="sortable" data-sort="invoice_no">
+                                    Invoice # <span class="sort-icon">↓</span>
+                                </th>
+                                <th class="sortable" data-sort="sale_date">
+                                    Date <span class="sort-icon">↓</span>
+                                </th>
+                                <th class="sortable" data-sort="customer_name">
+                                    Customer <span class="sort-icon">↓</span>
+                                </th>
+                                <th class="sortable" data-sort="status">
+                                    Status <span class="sort-icon">↓</span>
+                                </th>
+                                <th class="sortable" data-sort="amount">
+                                    Amount <span class="sort-icon">↓</span>
+                                </th>
                                 </tr>
                             </thead>
                             <tbody id="salesTableBody">
-                                @php $__col = $sales; @endphp
-@if(is_array($__col) || $__col instanceof \Countable ? count($__col) > 0 : !empty($__col))
-@foreach($__col as $sale)
-                                    <tr data-id="{{ $sale->id }}"
-                                        data-invoice="{{ $sale->invoice_no }}"
-                                        data-customer="{{ $sale->customer->name ?? 'Walk-in Customer' }}"
-                                        data-status="{{ $sale->payment_status }}"
-                                        data-amount="{{ $sale->grand_total }}"
-                                        data-date="{{ $sale->sale_date }}"
-                                        data-customer-id="{{ $sale->customer_id }}"
-                                        data-customer-email="{{ $sale->customer->email ?? '' }}">
-                                        <td>
-                                            <input type="checkbox" class="row-checkbox table-checkbox">
-                                        </td>
-                                        <td class="action-cell">
-                                            <div class="action-container">
-                                                <!-- Hover-based menu -->
-                                                <button type="button" class="action-btn" onmouseenter="showActionMenu('{{ $sale->id }}', this)">
-                                                    <span>⚡</span>
-                                                    Actions
-                                                    <span style="font-size: 12px;">▼</span>
-                                                </button>
-
-                                                <div class="action-menu" id="actionMenu{{ $sale->id }}"
-                                                     onmouseleave="hideActionMenu('{{ $sale->id }}')">
-                                                    <a href="{{ route('sales.show', $sale->id) }}" class="action-menu-item view">
-                                                        <span>👁️</span>
-                                                        View Details
-                                                    </a>
-                                                    <a href="{{ route('sales.edit', $sale->id) }}" class="action-menu-item edit">
-                                                        <span>✏️</span>
-                                                        Edit Sale
-                                                    </a>
-
-                                                    {{-- ✨ DIRECT EMAIL OPTION (NO MODAL) --}}
-                                                    @if($sale->customer && $sale->customer->email)
-                                                        <a href="#" onclick="sendSingleEmail('{{ $sale->id }}', '{{ $sale->customer->email }}', '{{ $sale->invoice_no }}'); return false;" class="action-menu-item email">
-                                                            <span>📧</span>
-                                                            Email Invoice
+                                @if (count($sales) > 0)
+                                    @foreach ($sales as $sale)
+                                        <tr data-id="{{ $sale->id }}" data-invoice="{{ $sale->invoice_no }}"
+                                            data-customer="{{ $sale->customer->name ?? 'Walk-in Customer' }}"
+                                            data-status="{{ $sale->payment_status }}"
+                                            data-amount="{{ $sale->grand_total }}" data-date="{{ $sale->sale_date }}"
+                                            data-customer-id="{{ $sale->customer_id }}"
+                                            data-customer-email="{{ $sale->customer->email ?? '' }}">
+                                            <td>
+                                                <input type="checkbox" class="row-checkbox table-checkbox">
+                                            </td>
+                                            <td class="action-cell">
+                                                <div class="action-container">
+                                                    <button type="button" class="action-btn">
+                                                        <span>⚡</span>
+                                                        Actions
+                                                        <span style="font-size: 12px;">▼</span>
+                                                    </button>
+                                                    <div class="action-menu">
+                                                        <a href="{{ route('sales.show', $sale->id) }}"
+                                                            class="action-menu-item view">
+                                                            <span>👁️</span>
+                                                            View Details
                                                         </a>
-                                                    @else
-                                                        <span class="action-menu-item email" style="opacity:0.5; cursor:not-allowed;" title="No customer email available">
-                                                            <span>📧</span>
-                                                            Email Invoice
-                                                        </span>
-                                                    @endif
-
-                                                    <a href="{{ route('sales.invoice', $sale->id) }}" target="_blank" class="action-menu-item print">
-                                                        <span>🖨️</span>
-                                                        Print Invoice
-                                                    </a>
-                                                    @if (Route::has('sales.destroy'))
-                                                        <form action="{{ route('sales.destroy', $sale->id) }}" method="POST" class="delete-form">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="action-menu-item delete" onclick="return confirm('Are you sure you want to delete this sale?')">
-                                                                <span>🗑️</span>
-                                                                Delete Sale
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="invoice-cell">
-                                                <div class="invoice-icon">
-                                                    {{ substr($sale->invoice_no, -3) }}
-                                                </div>
-                                                <div>
-                                                    <div>{{ $sale->invoice_no }}</div>
-                                                    <div style="font-size: 11px; color: #94a3b8;">
-                                                        {{ $sale->invoice_type ?? 'Sale' }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="date-cell">
-                                                <span class="date-icon">📅</span>
-                                                {{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="customer-cell">
-                                                <div class="customer-avatar">
-                                                    {{ substr($sale->customer->name ?? 'W', 0, 1) }}
-                                                </div>
-                                                <div class="customer-info">
-                                                    <div class="customer-name" title="{{ $sale->customer->name ?? 'Walk-in Customer' }}">
-                                                        {{ $sale->customer->name ?? 'Walk-in Customer' }}
-                                                    </div>
-                                                    <div class="customer-mobile">
-                                                        {{ $sale->customer->mobile ?? 'No contact' }}
-                                                        @if($sale->customer && $sale->customer->email)
-                                                            <span style="margin-left:8px; color:#0ea5e9;" title="Email available">📧</span>
+                                                        <a href="{{ route('sales.edit', $sale->id) }}"
+                                                            class="action-menu-item edit">
+                                                            <span>✏️</span>
+                                                            Edit Sale
+                                                        </a>
+                                                        <a href="{{ route('sales.invoice', $sale->id) }}"
+                                                            class="action-menu-item download" download>
+                                                            <span>📥</span>
+                                                            Download Invoice
+                                                        </a>
+                                                        @if ($sale->customer && $sale->customer->email)
+                                                            <a href="#"
+                                                                onclick="sendSingleEmail('{{ $sale->id }}', '{{ $sale->customer->email }}', '{{ $sale->invoice_no }}'); return false;"
+                                                                class="action-menu-item email">
+                                                                <span>📧</span>
+                                                                Email Invoice
+                                                            </a>
+                                                        @else
+                                                            <span class="action-menu-item email"
+                                                                style="opacity:0.5; cursor:not-allowed;"
+                                                                title="No customer email available">
+                                                                <span>📧</span>
+                                                                Email Invoice
+                                                            </span>
+                                                        @endif
+                                                        @if (Route::has('sales.destroy'))
+                                                            <form action="{{ route('sales.destroy', $sale->id) }}"
+                                                                method="POST" class="delete-form">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" class="action-menu-item delete"
+                                                                    onclick="return confirm('Are you sure you want to delete this sale?')">
+                                                                    <span>🗑️</span>
+                                                                    Delete Sale
+                                                                </button>
+                                                            </form>
                                                         @endif
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @php
-                                                $statusClass = 'status-paid';
-                                                $statusIcon = '✓';
-                                                if ($sale->payment_status == 'pending') {
-                                                    $statusClass = 'status-pending';
-                                                    $statusIcon = '⏱️';
-                                                } elseif ($sale->payment_status == 'overdue') {
-                                                    $statusClass = 'status-overdue';
-                                                    $statusIcon = '⚠️';
-                                                } elseif ($sale->payment_status == 'draft') {
-                                                    $statusClass = 'status-draft';
-                                                    $statusIcon = '📝';
-                                                }
-                                            @endphp
-                                            <span class="status-badge {{ $statusClass }}">
-                                                <span>{{ $statusIcon }}</span>
-                                                {{ ucfirst($sale->payment_status ?? 'paid') }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="amount-cell {{ $sale->grand_total >= 0 ? 'amount-positive' : 'amount-negative' }}">
-                                                <span class="currency-symbol">₹</span>
-                                                {{ number_format($sale->grand_total, 2) }}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-@else
+                                            </td>
+                                            <td>
+                                                <div class="invoice-cell">
+                                                    <div class="invoice-icon">
+                                                        {{ substr($sale->invoice_no, -3) }}
+                                                    </div>
+                                                    <div>
+                                                        <div>{{ $sale->invoice_no }}</div>
+                                                        <div style="font-size: 11px; color: #94a3b8;">
+                                                            {{ $sale->invoice_type ?? 'Sale' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="date-cell">
+                                                    <span class="date-icon">📅</span>
+                                                    {{ \Carbon\Carbon::parse($sale->sale_date)->format('d M Y') }}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="customer-cell">
+                                                    <div class="customer-avatar">
+                                                        {{ substr($sale->customer->name ?? 'W', 0, 1) }}
+                                                    </div>
+                                                    <div class="customer-info">
+                                                        <div class="customer-name"
+                                                            title="{{ $sale->customer->name ?? 'Walk-in Customer' }}">
+                                                            {{ $sale->customer->name ?? 'Walk-in Customer' }}
+                                                        </div>
+                                                        <div class="customer-mobile">
+                                                            {{ $sale->customer->mobile ?? 'No contact' }}
+                                                            @if ($sale->customer && $sale->customer->email)
+                                                                <span style="margin-left:8px; color:#0ea5e9;"
+                                                                    title="Email available">📧</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $statusClass = 'status-paid';
+                                                    $statusIcon = '✓';
+                                                    if ($sale->payment_status == 'pending') {
+                                                        $statusClass = 'status-pending';
+                                                        $statusIcon = '⏱️';
+                                                    } elseif ($sale->payment_status == 'overdue') {
+                                                        $statusClass = 'status-overdue';
+                                                        $statusIcon = '⚠️';
+                                                    } elseif ($sale->payment_status == 'draft') {
+                                                        $statusClass = 'status-draft';
+                                                        $statusIcon = '📝';
+                                                    }
+                                                @endphp
+                                                <span class="status-badge {{ $statusClass }}">
+                                                    <span>{{ $statusIcon }}</span>
+                                                    {{ ucfirst($sale->payment_status ?? 'paid') }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div
+                                                    class="amount-cell {{ $sale->grand_total >= 0 ? 'amount-positive' : 'amount-negative' }}">
+                                                    <span class="currency-symbol">₹</span>
+                                                    {{ number_format($sale->grand_total, 2) }}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @else
                                     <tr>
                                         <td colspan="7" class="empty-state">
                                             <div class="empty-content">
@@ -1719,10 +1761,12 @@
                                                 </div>
                                                 <div class="empty-title">No Sales Records Found</div>
                                                 <div class="empty-description">
-                                                    Start by creating your first sales invoice. All your sales transactions will
+                                                    Start by creating your first sales invoice. All your sales transactions
+                                                    will
                                                     appear here for tracking and analysis.
                                                 </div>
-                                                <a href="{{ route('sales.create') }}" class="btn-primary" style="display: inline-flex; margin-top: 15px;">
+                                                <a href="{{ route('sales.create') }}" class="btn-primary"
+                                                    style="display: inline-flex; margin-top: 15px;">
                                                     <span>+</span>
                                                     Create Your First Sale
                                                 </a>
@@ -1744,7 +1788,6 @@
                             <span id="totalCount">{{ $sales->total() }}</span> entries
                         </div>
                         <div class="pagination">
-                            {{-- Previous Page Link --}}
                             @if ($sales->onFirstPage())
                                 <button class="pagination-btn" disabled>
                                     <span>←</span>
@@ -1757,7 +1800,6 @@
                                 </a>
                             @endif
 
-                            {{-- Page Numbers --}}
                             @php
                                 $current = $sales->currentPage();
                                 $last = $sales->lastPage();
@@ -1766,7 +1808,8 @@
                             @endphp
 
                             @if ($start > 1)
-                                <a href="{{ $sales->url(1) }}" class="pagination-btn {{ 1 == $current ? 'active' : '' }}">
+                                <a href="{{ $sales->url(1) }}"
+                                    class="pagination-btn {{ 1 == $current ? 'active' : '' }}">
                                     1
                                 </a>
                                 @if ($start > 2)
@@ -1775,7 +1818,8 @@
                             @endif
 
                             @for ($i = $start; $i <= $end; $i++)
-                                <a href="{{ $sales->url($i) }}" class="pagination-btn {{ $i == $current ? 'active' : '' }}">
+                                <a href="{{ $sales->url($i) }}"
+                                    class="pagination-btn {{ $i == $current ? 'active' : '' }}">
                                     {{ $i }}
                                 </a>
                             @endfor
@@ -1784,12 +1828,12 @@
                                 @if ($end < $last - 1)
                                     <span class="pagination-ellipsis">...</span>
                                 @endif
-                                <a href="{{ $sales->url($last) }}" class="pagination-btn {{ $last == $current ? 'active' : '' }}">
+                                <a href="{{ $sales->url($last) }}"
+                                    class="pagination-btn {{ $last == $current ? 'active' : '' }}">
                                     {{ $last }}
                                 </a>
                             @endif
 
-                            {{-- Next Page Link --}}
                             @if ($sales->hasMorePages())
                                 <a href="{{ $sales->nextPageUrl() }}" class="pagination-btn">
                                     Next
@@ -1808,142 +1852,177 @@
         </div>
     </div>
 
-    <!-- Include jsPDF library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <script>
-        // ✅ ACTION MENU FUNCTIONS
-        let activeMenuId = null;
-        let hideTimeout = null;
-
-        function showActionMenu(saleId, button) {
-            // Clear any pending hide
-            if (hideTimeout) {
-                clearTimeout(hideTimeout);
-                hideTimeout = null;
-            }
-
-            // Hide previously shown menu
-            if (activeMenuId && activeMenuId !== saleId) {
-                const oldMenu = document.getElementById('actionMenu' + activeMenuId);
-                if (oldMenu) {
-                    oldMenu.classList.remove('show');
-                }
-
-                const oldButton = document.querySelector(`[onmouseenter*="${activeMenuId}"]`);
-                if (oldButton) {
-                    oldButton.classList.remove('active');
-                }
-            }
-
-            // Show current menu
-            const menu = document.getElementById('actionMenu' + saleId);
-            if (menu) {
-                menu.classList.add('show');
-                button.classList.add('active');
-                activeMenuId = saleId;
-            }
+        // ✅ TOAST FUNCTION
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toastNotification');
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            toast.style.background = colors[type] || colors.info;
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
         }
 
-        function hideActionMenu(saleId) {
-            // Don't hide immediately - give a small delay to allow moving between items
-            hideTimeout = setTimeout(() => {
-                const menu = document.getElementById('actionMenu' + saleId);
-                const button = document.querySelector(`[onmouseenter*="${saleId}"]`);
-
-                // Check if mouse is still on menu or button
-                if (menu && !menu.matches(':hover') && button && !button.matches(':hover')) {
-                    menu.classList.remove('show');
-                    if (button) {
-                        button.classList.remove('active');
-                    }
-                    if (activeMenuId === saleId) {
-                        activeMenuId = null;
-                    }
-                }
-                hideTimeout = null;
-            }, 200);
-        }
-
-        // Close all menus when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!event.target.closest('.action-container')) {
-                if (activeMenuId) {
-                    const menu = document.getElementById('actionMenu' + activeMenuId);
-                    const button = document.querySelector(`[onmouseenter*="${activeMenuId}"]`);
-                    if (menu) {
-                        menu.classList.remove('show');
-                    }
-                    if (button) {
-                        button.classList.remove('active');
-                    }
-                    activeMenuId = null;
-                }
-            }
-        });
-
-        // ✅ DIRECT SINGLE EMAIL FUNCTION (NO MODAL, NO CONFIRMATION)
+        // ✅ DIRECT SINGLE EMAIL FUNCTION
         function sendSingleEmail(saleId, customerEmail, invoiceNo) {
             if (!customerEmail) {
-                alert('Cannot send email: Customer email not available');
+                showToast('Cannot send email: Customer email not available', 'error');
                 return;
             }
 
-            // Show loading (optional - can remove if you want even faster)
             const loadingOverlay = document.getElementById('loadingOverlay');
             if (loadingOverlay) {
                 loadingOverlay.classList.add('show');
                 document.getElementById('progressText').textContent = 'Sending email...';
             }
 
-            // Send email via AJAX
-            fetch('{{ route("sales.send-invoice") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({
-                    sale_id: saleId,
-                    recipient_email: customerEmail,
-                    email_subject: `Invoice #${invoiceNo} from {{ config('app.name') }}`,
-                    email_body: `Dear Customer,\n\nPlease find attached the invoice #${invoiceNo} for your recent purchase.\n\nThank you for your business!`
+            fetch('{{ route('sales.send-invoice') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                            '{{ csrf_token() }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        sale_id: saleId,
+                        recipient_email: customerEmail,
+                        email_subject: `Invoice #${invoiceNo} from {{ config('app.name') }}`,
+                        email_body: `Dear Customer,\n\nPlease find attached the invoice #${invoiceNo} for your recent purchase.\n\nThank you for your business!`
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (loadingOverlay) {
-                    loadingOverlay.classList.remove('show');
-                }
-
-                if (data.success) {
-                    // Show success toast instead of alert
-                    showToast(`✅ Email sent to ${customerEmail}`, 'success');
-                } else {
-                    showToast(`❌ Error: ${data.message}`, 'error');
-                }
-            })
-            .catch(error => {
-                if (loadingOverlay) {
-                    loadingOverlay.classList.remove('show');
-                }
-                showToast('❌ Error sending email', 'error');
-                console.error('Error:', error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (loadingOverlay) {
+                        loadingOverlay.classList.remove('show');
+                    }
+                    if (data.success) {
+                        showToast(`✅ Email sent to ${customerEmail}`, 'success');
+                    } else {
+                        showToast(`❌ Error: ${data.message}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    if (loadingOverlay) {
+                        loadingOverlay.classList.remove('show');
+                    }
+                    showToast('❌ Error sending email', 'error');
+                    console.error('Error:', error);
+                });
         }
 
-        // ✅ BULK EMAIL FUNCTION (NO MODAL, NO CONFIRMATION)
-        function sendBulkEmail() {
+        // ✅ BULK DOWNLOAD AS ZIP FUNCTION
+        async function bulkDownloadAsZip() {
             const selectedIds = getSelectedIds();
 
+            if (selectedIds.length === 0) {
+                showToast('Please select at least one invoice to download', 'warning');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('show');
+                progressFill.style.width = '0%';
+                progressText.textContent = `Preparing to download ${selectedIds.length} invoices...`;
+            }
+
+            try {
+                const zip = new JSZip();
+                let completed = 0;
+                let failed = 0;
+
+                for (const saleId of selectedIds) {
+                    const row = document.querySelector(`tr[data-id="${saleId}"]`);
+                    const invoiceNo = row?.dataset.invoice || saleId;
+
+                    try {
+                        // Fetch PDF for each invoice
+                        const response = await fetch(`/sales/${saleId}/invoice`, {
+                            method: 'GET',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            zip.file(`Invoice_${invoiceNo}.pdf`, blob);
+                            completed++;
+                        } else {
+                            failed++;
+                            console.error(`Failed to download invoice ${invoiceNo}`);
+                        }
+                    } catch (error) {
+                        failed++;
+                        console.error(`Error downloading invoice ${invoiceNo}:`, error);
+                    }
+
+                    // Update progress
+                    const progress = ((completed + failed) / selectedIds.length) * 100;
+                    if (progressFill) {
+                        progressFill.style.width = `${progress}%`;
+                    }
+                    if (progressText) {
+                        progressText.textContent = `Downloaded ${completed} of ${selectedIds.length} invoices...`;
+                    }
+                }
+
+                // Generate and download ZIP file
+                if (completed > 0) {
+                    if (progressText) {
+                        progressText.textContent = 'Creating ZIP file...';
+                    }
+
+                    const zipBlob = await zip.generateAsync({
+                        type: 'blob'
+                    });
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+                    saveAs(zipBlob, `Invoices_${timestamp}.zip`);
+
+                    showToast(
+                        `✅ Successfully downloaded ${completed} invoices${failed > 0 ? ` (${failed} failed)` : ''}`,
+                        failed > 0 ? 'warning' : 'success');
+                } else {
+                    showToast('❌ Failed to download any invoices', 'error');
+                }
+
+            } catch (error) {
+                console.error('Bulk download error:', error);
+                showToast('❌ Error creating ZIP file', 'error');
+            } finally {
+                if (loadingOverlay) {
+                    loadingOverlay.classList.remove('show');
+                }
+                if (progressFill) {
+                    progressFill.style.width = '0%';
+                }
+            }
+        }
+
+        // ✅ BULK EMAIL FUNCTION
+        function sendBulkEmail() {
+            const selectedIds = getSelectedIds();
             if (selectedIds.length === 0) {
                 showToast('Please select at least one invoice', 'warning');
                 return;
             }
 
-            // Collect selected rows with email
             const rowsWithEmail = [];
             const rowsWithoutEmail = [];
 
@@ -1953,7 +2032,11 @@
                 const invoiceNo = row?.dataset.invoice;
 
                 if (customerEmail) {
-                    rowsWithEmail.push({ id, email: customerEmail, invoice: invoiceNo });
+                    rowsWithEmail.push({
+                        id,
+                        email: customerEmail,
+                        invoice: invoiceNo
+                    });
                 } else {
                     rowsWithoutEmail.push(invoiceNo || id);
                 }
@@ -1968,108 +2051,109 @@
                 showToast(`${rowsWithEmail.length} emails sending, ${rowsWithoutEmail.length} skipped (no email)`, 'info');
             }
 
-            // Show loading
             const loadingOverlay = document.getElementById('loadingOverlay');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
             if (loadingOverlay) {
                 loadingOverlay.classList.add('show');
-                document.getElementById('progressText').textContent = `Sending ${rowsWithEmail.length} emails...`;
+                progressFill.style.width = '0%';
+                progressText.textContent = `Sending ${rowsWithEmail.length} emails...`;
             }
 
             let sentCount = 0;
             let failedCount = 0;
 
-            // Send emails one by one
-            const promises = rowsWithEmail.map(item => {
-                return fetch('{{ route("sales.send-invoice") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({
-                        sale_id: item.id,
-                        recipient_email: item.email,
-                        email_subject: `Invoice #${item.invoice} from {{ config('app.name') }}`,
-                        email_body: `Dear Customer,\n\nPlease find attached the invoice #${item.invoice} for your recent purchase.\n\nThank you for your business!`
+            const promises = rowsWithEmail.map((item, index) => {
+                return fetch('{{ route('sales.send-invoice') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ||
+                                '{{ csrf_token() }}',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({
+                            sale_id: item.id,
+                            recipient_email: item.email,
+                            email_subject: `Invoice #${item.invoice} from {{ config('app.name') }}`,
+                            email_body: `Dear Customer,\n\nPlease find attached the invoice #${item.invoice} for your recent purchase.\n\nThank you for your business!`
+                        })
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        sentCount++;
-                    } else {
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            sentCount++;
+                        } else {
+                            failedCount++;
+                        }
+
+                        // Update progress
+                        const progress = ((sentCount + failedCount) / rowsWithEmail.length) * 100;
+                        if (progressFill) {
+                            progressFill.style.width = `${progress}%`;
+                        }
+                        if (progressText) {
+                            progressText.textContent = `Sent ${sentCount} of ${rowsWithEmail.length} emails...`;
+                        }
+                    })
+                    .catch(() => {
                         failedCount++;
-                    }
-                })
-                .catch(() => {
-                    failedCount++;
-                });
+                        const progress = ((sentCount + failedCount) / rowsWithEmail.length) * 100;
+                        if (progressFill) {
+                            progressFill.style.width = `${progress}%`;
+                        }
+                        if (progressText) {
+                            progressText.textContent = `Sent ${sentCount} of ${rowsWithEmail.length} emails...`;
+                        }
+                    });
             });
 
             Promise.all(promises).then(() => {
                 if (loadingOverlay) {
                     loadingOverlay.classList.remove('show');
                 }
-
                 showToast(`✅ Emails sent: ${sentCount} successful, ${failedCount} failed`,
-                         failedCount > 0 ? 'warning' : 'success');
+                    failedCount > 0 ? 'warning' : 'success');
 
-                // Uncheck all checkboxes
                 document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = false);
                 document.getElementById('selectAll').checked = false;
                 updateBulkActions();
             });
         }
 
-        // ✅ TOAST FUNCTION
-        function showToast(message, type = 'success') {
-            // Create toast element if it doesn't exist
-            let toast = document.getElementById('globalToast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'globalToast';
-                toast.style.cssText = `
-                    position: fixed;
-                    bottom: 20px;
-                    right: 20px;
-                    padding: 12px 24px;
-                    border-radius: 8px;
-                    color: white;
-                    font-weight: 500;
-                    z-index: 10000;
-                    display: none;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                    animation: slideIn 0.3s ease;
-                `;
-                document.body.appendChild(toast);
+        function getSelectedIds() {
+            const selectedIds = [];
+            document.querySelectorAll('.row-checkbox:checked').forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                if (row && row.dataset.id) {
+                    selectedIds.push(row.dataset.id);
+                }
+            });
+            return selectedIds;
+        }
+
+        function updateBulkActions() {
+            const selectedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            const selectedCountElement = document.getElementById('selectedCount');
+            const bulkActions = document.getElementById('bulkActions');
+
+            if (selectedCountElement) {
+                selectedCountElement.textContent = `${selectedCount} item${selectedCount !== 1 ? 's' : ''} selected`;
             }
 
-            // Set color based on type
-            const colors = {
-                success: '#10b981',
-                error: '#ef4444',
-                warning: '#f59e0b',
-                info: '#3b82f6'
-            };
-            toast.style.background = colors[type] || colors.info;
-
-            // Set message and show
-            toast.textContent = message;
-            toast.style.display = 'block';
-
-            // Hide after 3 seconds
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
+            if (bulkActions) {
+                if (selectedCount > 0) {
+                    bulkActions.classList.add('show');
+                } else {
+                    bulkActions.classList.remove('show');
+                }
+            }
         }
 
         // ✅ MAIN INITIALIZATION
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Sales Management Dashboard Loaded');
-
             // DOM Elements
-            const loadingOverlay = document.getElementById('loadingOverlay');
             const searchInput = document.getElementById('searchInput');
             const searchClear = document.getElementById('searchClear');
             const toggleFilters = document.getElementById('toggleFilters');
@@ -2080,13 +2164,17 @@
             const applyFilters = document.getElementById('applyFilters');
             const resetFilters = document.getElementById('resetFilters');
             const selectAll = document.getElementById('selectAll');
-            const bulkActions = document.getElementById('bulkActions');
             const bulkDelete = document.getElementById('bulkDelete');
             const bulkPrint = document.getElementById('bulkPrint');
             const bulkExportBtn = document.getElementById('bulkExportBtn');
             const bulkEmailBtn = document.getElementById('bulkEmailBtn');
-            const salesTableBody = document.getElementById('salesTableBody');
+            const bulkDownloadZip = document.getElementById('bulkDownloadZip');
             const allRows = Array.from(document.querySelectorAll('#salesTableBody tr[data-id]'));
+
+            // Bulk Download ZIP button
+            if (bulkDownloadZip) {
+                bulkDownloadZip.addEventListener('click', bulkDownloadAsZip);
+            }
 
             // Initialize date inputs
             const today = new Date().toISOString().split('T')[0];
@@ -2124,7 +2212,8 @@
 
             // Close export dropdown when clicking outside
             document.addEventListener('click', function(e) {
-                if (exportBtn && exportDropdown && !exportBtn.contains(e.target) && !exportDropdown.contains(e.target)) {
+                if (exportBtn && exportDropdown && !exportBtn.contains(e.target) && !exportDropdown
+                    .contains(e.target)) {
                     exportDropdown.classList.remove('show');
                 }
             });
@@ -2189,77 +2278,69 @@
             function filterTable(searchValue) {
                 if (allRows.length === 0) return;
 
-                try {
-                    // Get filter values
-                    const startDate = document.getElementById('startDate')?.value;
-                    const endDate = document.getElementById('endDate')?.value;
-                    const status = document.getElementById('statusFilter')?.value;
-                    const customerId = document.getElementById('customerFilter')?.value;
-                    const minAmount = parseFloat(document.getElementById('minAmount')?.value) || 0;
-                    const maxAmount = parseFloat(document.getElementById('maxAmount')?.value) || Infinity;
+                const startDate = document.getElementById('startDate')?.value;
+                const endDate = document.getElementById('endDate')?.value;
+                const status = document.getElementById('statusFilter')?.value;
+                const customerId = document.getElementById('customerFilter')?.value;
+                const minAmount = parseFloat(document.getElementById('minAmount')?.value) || 0;
+                const maxAmount = parseFloat(document.getElementById('maxAmount')?.value) || Infinity;
 
-                    let visibleCount = 0;
+                let visibleCount = 0;
 
-                    allRows.forEach(row => {
-                        let showRow = true;
+                allRows.forEach(row => {
+                    let showRow = true;
 
-                        // Search filter
-                        if (searchValue) {
-                            const invoice = row.dataset.invoice?.toLowerCase() || '';
-                            const customer = row.dataset.customer?.toLowerCase() || '';
-                            const amount = row.dataset.amount || '';
+                    // Search filter
+                    if (searchValue) {
+                        const invoice = row.dataset.invoice?.toLowerCase() || '';
+                        const customer = row.dataset.customer?.toLowerCase() || '';
+                        const amount = row.dataset.amount || '';
 
-                            if (!invoice.includes(searchValue) &&
-                                !customer.includes(searchValue) &&
-                                !amount.includes(searchValue)) {
-                                showRow = false;
-                            }
-                        }
-
-                        // Date filter
-                        if (showRow && startDate && endDate && row.dataset.date) {
-                            const rowDate = new Date(row.dataset.date);
-                            const start = new Date(startDate);
-                            const end = new Date(endDate);
-                            end.setHours(23, 59, 59, 999);
-
-                            if (rowDate < start || rowDate > end) {
-                                showRow = false;
-                            }
-                        }
-
-                        // Status filter
-                        if (showRow && status && row.dataset.status !== status) {
+                        if (!invoice.includes(searchValue) &&
+                            !customer.includes(searchValue) &&
+                            !amount.includes(searchValue)) {
                             showRow = false;
                         }
+                    }
 
-                        // Customer filter
-                        if (showRow && customerId && row.dataset.customerId !== customerId) {
+                    // Date filter
+                    if (showRow && startDate && endDate && row.dataset.date) {
+                        const rowDate = new Date(row.dataset.date);
+                        const start = new Date(startDate);
+                        const end = new Date(endDate);
+                        end.setHours(23, 59, 59, 999);
+
+                        if (rowDate < start || rowDate > end) {
                             showRow = false;
                         }
+                    }
 
-                        // Amount filter
-                        if (showRow) {
-                            const amount = parseFloat(row.dataset.amount) || 0;
-                            if (minAmount > 0 && amount < minAmount) {
-                                showRow = false;
-                            }
-                            if (maxAmount < Infinity && amount > maxAmount) {
-                                showRow = false;
-                            }
+                    // Status filter
+                    if (showRow && status && row.dataset.status !== status) {
+                        showRow = false;
+                    }
+
+                    // Customer filter
+                    if (showRow && customerId && row.dataset.customerId !== customerId) {
+                        showRow = false;
+                    }
+
+                    // Amount filter
+                    if (showRow) {
+                        const amount = parseFloat(row.dataset.amount) || 0;
+                        if (minAmount > 0 && amount < minAmount) {
+                            showRow = false;
                         }
+                        if (maxAmount < Infinity && amount > maxAmount) {
+                            showRow = false;
+                        }
+                    }
 
-                        // Show/hide row
-                        row.style.display = showRow ? '' : 'none';
-                        if (showRow) visibleCount++;
-                    });
+                    row.style.display = showRow ? '' : 'none';
+                    if (showRow) visibleCount++;
+                });
 
-                    // Update visible count
-                    updateVisibleCount(visibleCount);
-
-                } catch (error) {
-                    console.error('Error filtering table:', error);
-                }
+                updateVisibleCount(visibleCount);
             }
 
             function updateVisibleCount(count) {
@@ -2281,86 +2362,49 @@
                     updateBulkActions();
                 });
 
-                // Individual checkbox changes
                 document.addEventListener('change', function(e) {
                     if (e.target.classList.contains('row-checkbox')) {
                         updateBulkActions();
-
-                        // Update select all checkbox
-                        const allCheckboxes = document.querySelectorAll('.row-checkbox');
-                        const checkedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
                         if (selectAll) {
+                            const allCheckboxes = document.querySelectorAll('.row-checkbox');
+                            const checkedCheckboxes = document.querySelectorAll('.row-checkbox:checked');
                             selectAll.checked = allCheckboxes.length === checkedCheckboxes.length;
                         }
                     }
                 });
             }
 
-            // Update bulk actions
-            function updateBulkActions() {
-                const selectedCount = document.querySelectorAll('.row-checkbox:checked').length;
-                const selectedCountElement = document.getElementById('selectedCount');
-
-                if (selectedCountElement) {
-                    selectedCountElement.textContent = `${selectedCount} items selected`;
-                }
-
-                if (bulkActions) {
-                    if (selectedCount > 0) {
-                        bulkActions.classList.add('show');
-                    } else {
-                        bulkActions.classList.remove('show');
-                    }
-                }
-            }
-
-            // Get selected IDs
-            function getSelectedIds() {
-                const selectedIds = [];
-                document.querySelectorAll('.row-checkbox:checked').forEach(checkbox => {
-                    const row = checkbox.closest('tr');
-                    if (row && row.dataset.id) {
-                        selectedIds.push(row.dataset.id);
-                    }
-                });
-                return selectedIds;
-            }
-
-            // Make getSelectedIds globally available for bulk email function
-            window.getSelectedIds = getSelectedIds;
-
             // Bulk delete
             if (bulkDelete) {
                 bulkDelete.addEventListener('click', function() {
                     const selectedIds = getSelectedIds();
                     if (selectedIds.length > 0) {
-                        if (confirm(`Are you sure you want to delete ${selectedIds.length} selected items?`)) {
-                            // Show loading overlay
+                        if (confirm(
+                            `Are you sure you want to delete ${selectedIds.length} selected items?`)) {
+                            const loadingOverlay = document.getElementById('loadingOverlay');
                             if (loadingOverlay) {
                                 loadingOverlay.classList.add('show');
-
-                                // Simulate progress
                                 let progress = 0;
                                 const interval = setInterval(() => {
                                     progress += 10;
                                     if (progress > 100) progress = 100;
-
                                     if (document.getElementById('progressFill')) {
-                                        document.getElementById('progressFill').style.width = progress + '%';
+                                        document.getElementById('progressFill').style.width =
+                                            progress + '%';
                                     }
-
                                     if (document.getElementById('progressText')) {
-                                        document.getElementById('progressText').textContent = `Deleting... ${progress}%`;
+                                        document.getElementById('progressText').textContent =
+                                            `Deleting... ${progress}%`;
                                     }
-
                                     if (progress >= 100) {
                                         clearInterval(interval);
                                         setTimeout(() => {
-                                            if (loadingOverlay) {
-                                                loadingOverlay.classList.remove('show');
-                                            }
-                                            alert(`${selectedIds.length} items deleted successfully!`);
-                                            window.location.reload();
+                                            loadingOverlay.classList.remove('show');
+                                            showToast(
+                                                `${selectedIds.length} items deleted successfully!`,
+                                                'success');
+                                            setTimeout(() => window.location.reload(),
+                                            1000);
                                         }, 500);
                                     }
                                 }, 100);
@@ -2378,6 +2422,8 @@
                         selectedIds.forEach(id => {
                             window.open(`/sales/${id}/invoice`, '_blank');
                         });
+                    } else {
+                        showToast('Please select at least one invoice', 'warning');
                     }
                 });
             }
@@ -2392,48 +2438,40 @@
                 exportDropdown.querySelectorAll('.export-option').forEach(option => {
                     option.addEventListener('click', function() {
                         const format = this.dataset.format;
-                        exportData(format);
+                        if (format) {
+                            const loadingOverlay = document.getElementById('loadingOverlay');
+                            if (loadingOverlay) {
+                                loadingOverlay.classList.add('show');
+                                let progress = 0;
+                                const interval = setInterval(() => {
+                                    progress += 10;
+                                    if (progress > 100) progress = 100;
+                                    if (document.getElementById('progressFill')) {
+                                        document.getElementById('progressFill').style
+                                            .width = progress + '%';
+                                    }
+                                    if (document.getElementById('progressText')) {
+                                        document.getElementById('progressText')
+                                            .textContent = `Exporting data... ${progress}%`;
+                                    }
+                                    if (progress >= 100) {
+                                        clearInterval(interval);
+                                        setTimeout(() => {
+                                            loadingOverlay.classList.remove('show');
+                                            showToast(
+                                                `Export as ${format.toUpperCase()} completed!`,
+                                                'success');
+                                        }, 500);
+                                    }
+                                }, 200);
+                            }
+                        }
                         exportDropdown.classList.remove('show');
                     });
                 });
             }
 
-            // Export data function
-            function exportData(format, selectedIds = null) {
-                console.log(`Exporting as ${format}`, selectedIds);
-
-                // Show loading
-                if (loadingOverlay) {
-                    loadingOverlay.classList.add('show');
-
-                    // Simulate progress
-                    let progress = 0;
-                    const interval = setInterval(() => {
-                        progress += 10;
-                        if (progress > 100) progress = 100;
-
-                        if (document.getElementById('progressFill')) {
-                            document.getElementById('progressFill').style.width = progress + '%';
-                        }
-
-                        if (document.getElementById('progressText')) {
-                            document.getElementById('progressText').textContent = `Exporting data... ${progress}%`;
-                        }
-
-                        if (progress >= 100) {
-                            clearInterval(interval);
-                            setTimeout(() => {
-                                if (loadingOverlay) {
-                                    loadingOverlay.classList.remove('show');
-                                }
-                                alert(`Exporting as ${format} completed!`);
-                            }, 500);
-                        }
-                    }, 200);
-                }
-            }
-
-            // Initialize
+            // Initialize visible count
             updateVisibleCount(allRows.length);
 
             // Auto-hide success/error messages after 5 seconds

@@ -836,11 +836,30 @@ class Sale extends Model
     /**
      * Generate unique invoice number
      */
-    public static function generateInvoiceNumber()
-    {
-        $lastId = self::max('id') ?? 0;
-        return 'INV-' . date('Y') . '-' . str_pad(($lastId + 1), 6, '0', STR_PAD_LEFT);
+    /**
+ * Generate unique invoice number
+ */
+public static function generateInvoiceNumber()
+{
+    $year = date('Y');
+    $prefix = 'INV-' . $year . '-';
+
+    // Get the latest invoice number for this year
+    $latestInvoice = self::where('invoice_no', 'LIKE', $prefix . '%')
+        ->orderBy('id', 'desc')
+        ->lockForUpdate()
+        ->first();
+
+    if ($latestInvoice) {
+        // Extract the number from the invoice_no
+        $lastNumber = (int) str_replace($prefix, '', $latestInvoice->invoice_no);
+        $newNumber = $lastNumber + 1;
+    } else {
+        $newNumber = 1;
     }
+
+    return $prefix . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+}
 
     /**
      * Get dashboard statistics
@@ -861,50 +880,74 @@ class Sale extends Model
         ];
     }
 
-    /**
-     * Boot the model
-     */
-    protected static function boot()
-    {
-        parent::boot();
+protected static function boot()
+{
+    parent::boot();
 
-        static::creating(function ($sale) {
-            if (empty($sale->invoice_no)) {
-                $sale->invoice_no = self::generateInvoiceNumber();
+    static::creating(function ($sale) {
+        if (empty($sale->invoice_no)) {
+            // Generate unique invoice number with locking to prevent duplicates
+            $year = date('Y');
+            $prefix = 'INV-' . $year . '-';
+
+            // Use a database transaction with lock to ensure uniqueness
+            $latestInvoice = self::where('invoice_no', 'LIKE', $prefix . '%')
+                ->orderBy('id', 'desc')
+                ->lockForUpdate()
+                ->first();
+
+            if ($latestInvoice) {
+                // Extract the number from the invoice_no
+                $lastNumber = (int) str_replace($prefix, '', $latestInvoice->invoice_no);
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
             }
 
-            if (empty($sale->sale_date)) {
-                $sale->sale_date = now();
-            }
+            $sale->invoice_no = $prefix . str_pad($newNumber, 6, '0', STR_PAD_LEFT);
+        }
 
-            if (empty($sale->payment_status)) {
-                $sale->payment_status = 'unpaid';
-            }
+        if (empty($sale->sale_date)) {
+            $sale->sale_date = now();
+        }
 
-            if (empty($sale->paid_amount)) {
-                $sale->paid_amount = 0;
-            }
+        if (empty($sale->payment_status)) {
+            $sale->payment_status = 'unpaid';
+        }
 
-            if (empty($sale->shipping_status) && $sale->requires_shipping) {
-                $sale->shipping_status = 'pending';
-            }
-        });
+        if (empty($sale->paid_amount)) {
+            $sale->paid_amount = 0;
+        }
 
-        static::created(function ($sale) {
-            // Log creation event
-            if (class_exists(ShipmentEvent::class)) {
+        // Set shipping status
+        if ($sale->requires_shipping && empty($sale->shipping_status)) {
+            $sale->shipping_status = 'pending';
+        } elseif (!$sale->requires_shipping) {
+            $sale->shipping_status = null;
+        }
+    });
+
+    static::created(function ($sale) {
+        // Log creation event
+        if (class_exists(\App\Events\ShipmentEvent::class)) {
+            try {
                 $sale->shipments->each(function($shipment) use ($sale) {
-                    $shipment->createEvent('sale_created', [
-                        'sale_id' => $sale->id,
-                        'invoice_no' => $sale->invoice_no
-                    ]);
+                    if (method_exists($shipment, 'createEvent')) {
+                        $shipment->createEvent('sale_created', [
+                            'sale_id' => $sale->id,
+                            'invoice_no' => $sale->invoice_no
+                        ]);
+                    }
                 });
+            } catch (\Exception $e) {
+                \Log::error('Failed to create shipment event: ' . $e->getMessage());
             }
-        });
+        }
+    });
 
-        static::updating(function ($sale) {
-            // Auto-calculate total shipping charges
-            $sale->total_shipping_charge = $sale->total_shipping_charges;
-        });
-    }
+    static::updating(function ($sale) {
+        // Auto-calculate total shipping charges
+        $sale->total_shipping_charge = $sale->total_shipping_charges;
+    });
+}
 }

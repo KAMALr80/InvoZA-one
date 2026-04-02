@@ -1578,9 +1578,10 @@
                                     title="Print Invoice">
                                     🖨️ Print
                                 </a>
-                                <a href="{{ route('sales.invoice', $sale->id) }}" class="header-btn" target="_blank"
-                                    title="Download PDF">
-                                    📥 PDF
+                                {{-- ✅ MODIFIED: Direct PDF Download Button --}}
+                                <a href="{{ route('sales.invoice', $sale->id) }}" class="header-btn"
+                                    title="Download Invoice PDF" download>
+                                    📥 Invoice Download
                                 </a>
                             </div>
                         </div>
@@ -1811,7 +1812,7 @@
                     </div>
                 @endif
 
-                {{-- ================= ✅ FIXED: ITEMS TABLE WITH PROPER MRP DISPLAY ================= --}}
+                {{-- ================= ITEMS TABLE WITH PROPER MRP DISPLAY ================= --}}
                 <div class="items-section">
                     <h3 class="section-title">🛒 Items Purchased</h3>
 
@@ -1831,17 +1832,17 @@
                             <tbody>
                                 @foreach ($sale->items as $index => $item)
                                     @php
-                                        // ✅ Original MRP from sale_items table
+                                        // Original MRP from sale_items table
                                         $originalMrp = $item->mrp ?? 0;
 
-                                        // ✅ Selling price from sale_items
+                                        // Selling price from sale_items
                                         $sellingPrice = $item->price;
 
-                                        // ✅ Check if selling price is greater than MRP
+                                        // Check if selling price is greater than MRP
                                         $isPriceIncreased = $sellingPrice > $originalMrp && $originalMrp > 0;
 
-                                        // ✅ For price increased items: MRP = Selling Price, Discount = 0
-                                        // ✅ For discounted items: MRP = Original MRP, Discount = Original MRP - Selling Price
+                                        // For price increased items: MRP = Selling Price, Discount = 0
+                                        // For discounted items: MRP = Original MRP, Discount = Original MRP - Selling Price
                                         if ($isPriceIncreased) {
                                             $displayMrp = $sellingPrice;
                                             $displayDiscount = 0;
@@ -1850,7 +1851,7 @@
                                             $displayDiscount = max(0, $originalMrp - $sellingPrice);
                                         }
 
-                                        // ✅ If MRP is 0, use selling price
+                                        // If MRP is 0, use selling price
                                         if ($originalMrp == 0) {
                                             $displayMrp = $sellingPrice;
                                             $displayDiscount = 0;
@@ -2054,7 +2055,7 @@
                                                 default => '—',
                                             };
 
-                                            // 🔥 FIND SOURCE INVOICE FOR ADVANCE_USED
+                                            // FIND SOURCE INVOICE FOR ADVANCE_USED
                                             $sourceInvoice = null;
                                             if ($payment->remarks === 'ADVANCE_USED' && $payment->source_wallet_id) {
                                                 $sourcePayment = \App\Models\Payment::where(

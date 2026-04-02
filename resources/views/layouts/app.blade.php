@@ -1056,13 +1056,7 @@
                             </a>
                         @endif
 
-                        {{-- Financial Summary --}}
-                        @if (in_array(auth()->user()->role, ['admin']))
-                            <a href="{{ route('reports.financial') }}"
-                                class="dropdown-item {{ request()->routeIs('reports.financial') ? 'active' : '' }}">
-                                <i class="fas fa-money-bill-wave"></i> Financial Summary
-                            </a>
-                        @endif
+                        
                     </ul>
                 </div>
             @endif

@@ -266,7 +266,7 @@
     <div class="table-container">
         <table>
             <thead>
-                32
+                
                     <th>Invoice #</th>
                     <th>Date</th>
                     <th class="text-right">Grand Total</th>

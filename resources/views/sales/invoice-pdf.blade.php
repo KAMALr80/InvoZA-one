@@ -321,24 +321,24 @@
             body {
                 padding: 0.2in;
             }
-            
+
             .status-badge {
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
+
             .items-table th {
                 background: #1e293b !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
+
             .grand-total {
                 background: #1e293b !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-            
+
             .due-row {
                 background: #fee2e2 !important;
                 -webkit-print-color-adjust: exact;
@@ -353,7 +353,7 @@
         $paidPayments = $sale->payments->where('status', 'paid');
         $totalPaid = $paidPayments->sum('amount');
         $balanceDue = $sale->grand_total - $totalPaid;
-        
+
         // Status flags
         $isPaid = ($sale->payment_status === 'paid' || $balanceDue <= 0);
         $isPartial = ($sale->payment_status === 'partial' || ($balanceDue > 0 && $totalPaid > 0));
@@ -498,13 +498,13 @@
             <td><strong>+ ₹ {{ number_format($sale->shipping_charge, 2) }}</strong></td>
         </tr>
         @endif
-        
+
         <!-- Grand Total Row -->
         <tr class="grand-total">
             <td><strong>GRAND TOTAL</strong></td>
             <td><strong>₹ {{ number_format($sale->grand_total, 2) }}</strong></td>
         </tr>
-        
+
         <!-- DUE AMOUNT ROW - Only shown for Partial/Unpaid Invoices -->
         @if(!$isPaid && $balanceDue > 0)
         <tr class="due-row">
@@ -512,7 +512,7 @@
             <td><strong>₹ {{ number_format($balanceDue, 2) }}</strong></td>
         </tr>
         @endif
-        
+
         <!-- PAID AMOUNT ROW - Only shown for Partial/Paid Invoices (optional) -->
         @if($totalPaid > 0 && !$isPaid)
         <tr>
@@ -537,8 +537,8 @@
                     <strong>📋 Payment History</strong><br><br>
                     @foreach ($sale->payments as $p)
                         <div class="payment-item">
-                            ₹ {{ number_format($p->amount, 2) }} | 
-                            {{ strtoupper($p->method) }} | 
+                            ₹ {{ number_format($p->amount, 2) }} |
+                            {{ strtoupper($p->method) }} |
                             <span style="color: {{ $p->status == 'paid' ? '#16a34a' : '#dc2626' }};">{{ strtoupper($p->status) }}</span>
                             @if ($p->transaction_id)
                                 | Txn: {{ $p->transaction_id }}
@@ -546,7 +546,7 @@
                             | {{ $p->created_at->format('d M Y') }}
                         </div>
                     @endforeach
-                    
+
                     @if(!$isPaid && $balanceDue > 0)
                         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #000;">
                             <strong>Balance Due:</strong> ₹ {{ number_format($balanceDue, 2) }}

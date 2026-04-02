@@ -773,7 +773,7 @@
                 <div class="table-responsive">
                     <table class="data-table" id="customersTable">
                         <thead>
-                            32
+                            
                             <th>Customer</th>
                             <th>Contact</th>
                             <th>Total Sales</th>

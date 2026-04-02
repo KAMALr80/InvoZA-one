@@ -517,11 +517,10 @@ class SalesController extends Controller
         return view('sales.create', compact('customers', 'products', 'invoice_token'));
     }
 
-  public function store(Request $request)
+public function store(Request $request)
 {
     Log::info('🚀 SALES STORE METHOD CALLED', $request->all());
 
-    // Validate the request
     $validator = Validator::make($request->all(), [
         'customer_id'        => 'required|exists:customers,id',
         'invoice_token'      => 'required|string|unique:sales,invoice_token',
@@ -545,17 +544,7 @@ class SalesController extends Controller
 
     if ($validator->fails()) {
         Log::error('❌ VALIDATION FAILED', $validator->errors()->toArray());
-        return redirect()->back()
-            ->withErrors($validator)
-            ->withInput()
-            ->with('error', 'Please fix the validation errors');
-    }
-
-    // Check for existing sale
-    $existingSale = Sale::where('invoice_token', $request->invoice_token)->first();
-    if ($existingSale) {
-        return redirect()->route('sales.index', $existingSale->id)
-            ->with('info', 'Invoice already exists');
+        return redirect()->back()->withErrors($validator)->withInput();
     }
 
     try {
@@ -572,8 +561,9 @@ class SalesController extends Controller
             // Get customer
             $customer = Customer::lockForUpdate()->findOrFail($request->customer_id);
 
-            // Generate invoice number
-            $lastId = Sale::max('id') ?? 0;
+            // ✅ FIX: Generate unique invoice number with lock
+            $lastSale = Sale::lockForUpdate()->orderBy('id', 'desc')->first();
+            $lastId = $lastSale ? $lastSale->id : 0;
             $invoiceNo = 'INV-' . date('Y') . '-' . str_pad(($lastId + 1), 6, '0', STR_PAD_LEFT);
 
             // Prepare shipping data
@@ -584,7 +574,6 @@ class SalesController extends Controller
                 $state = $request->state;
                 $pincode = $request->pincode;
 
-                // Reverse geocode if coordinates provided but city/state missing
                 if ($request->destination_latitude && $request->destination_longitude &&
                     (empty($city) || empty($state))) {
                     try {
@@ -614,7 +603,7 @@ class SalesController extends Controller
                     'destination_latitude' => $request->destination_latitude,
                     'destination_longitude' => $request->destination_longitude,
                     'place_id' => $request->place_id,
-                    'shipping_status' => $request->shipping_address ? 'pending' : null,
+                    'shipping_status' => 'pending',
                 ];
             } else {
                 $shippingData = [
@@ -648,7 +637,7 @@ class SalesController extends Controller
                 'paid_amount'    => 0
             ], $shippingData));
 
-            // Create sale items
+            // Create sale items (rest of your code...)
             foreach ($request->items['product_id'] as $i => $productId) {
                 $qty = (int) $request->items['quantity'][$i];
                 $price = (float) $request->items['price'][$i];
@@ -671,15 +660,11 @@ class SalesController extends Controller
                 $product->decrement('quantity', $qty);
             }
 
-            // Create shipment if shipping required and address provided
+            // Create shipment if needed
             if ($request->boolean('requires_shipping') && !empty($request->shipping_address)) {
                 try {
                     $shipment = $this->createShipmentFromSale($sale, $request);
                     if ($shipment) {
-                        Log::info("📦 Auto shipment created for sale", [
-                            'sale_id' => $sale->id,
-                            'shipment_id' => $shipment->id
-                        ]);
                         $sale->shipping_status = 'shipment_created';
                         $sale->save();
                     }
@@ -695,8 +680,6 @@ class SalesController extends Controller
         });
 
         // Success - redirect to invoice view
-        Log::info('Redirecting to sales.show with ID: ' . $sale->id);
-
         return redirect()->route('sales.index', $sale->id)
             ->with('success', 'Sale created successfully. Invoice #' . $sale->invoice_no);
 
@@ -1039,31 +1022,37 @@ private function createShipmentFromSale($sale, $request)
         return view('sales.print', compact('sale', 'totalPaid', 'remaining'));
     }
 
-    public function invoice(Sale $sale)
-    {
-        $sale->load(['customer', 'items.product']);
+  public function invoice(Sale $sale)
+{
+    $sale->load(['customer', 'items.product']);
 
+    // Check if intl extension is available
+    if (extension_loaded('intl')) {
         try {
             $formatter = new \NumberFormatter('en_IN', \NumberFormatter::SPELLOUT);
             $amountInWords = ucfirst($formatter->format($sale->grand_total)) . ' Rupees Only';
         } catch (\Exception $e) {
-            $amountInWords = 'Rupees ' . number_format($sale->grand_total, 2) . ' Only';
+            $amountInWords = $this->numberToWords($sale->grand_total) . ' Rupees Only';
         }
-
-        $totalPaid = $sale->payments()
-            ->where('status', 'paid')
-            ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
-            ->sum('amount');
-
-        $pdf = Pdf::loadView('sales.invoice', [
-            'sale' => $sale,
-            'amountInWords' => $amountInWords,
-            'totalPaid' => $totalPaid,
-            'remaining' => $sale->grand_total - $totalPaid
-        ]);
-
-        return $pdf->stream('Invoice-' . $sale->invoice_no . '.pdf');
+    } else {
+        // Use your custom numberToWords method as fallback
+        $amountInWords = $this->numberToWords($sale->grand_total) . ' Rupees Only';
     }
+
+    $totalPaid = $sale->payments()
+        ->where('status', 'paid')
+        ->whereIn('remarks', ['INVOICE', 'EMI_DOWN', 'ADVANCE_USED'])
+        ->sum('amount');
+
+    $pdf = Pdf::loadView('sales.invoice-pdf', [
+        'sale' => $sale,
+        'amountInWords' => $amountInWords,
+        'totalPaid' => $totalPaid,
+        'remaining' => $sale->grand_total - $totalPaid
+    ]);
+
+    return $pdf->stream('Invoice-' . $sale->invoice_no . '.pdf');
+}
 
     public function deleteImpact($id)
     {
