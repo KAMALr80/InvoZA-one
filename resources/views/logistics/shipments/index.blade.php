@@ -1613,7 +1613,7 @@
             <div class="table-responsive">
                 <table class="shipments-table">
                     <thead>
-                        32
+
                         <th><i class="fas fa-hashtag"></i> Shipment #</th>
                         <th><i class="fas fa-barcode"></i> Tracking #</th>
                         <th><i class="fas fa-file-invoice"></i> Invoice / Source</th>
@@ -1628,137 +1628,137 @@
                     </thead>
                     <tbody>
                         @php $__col = $shipments; @endphp
-@if(is_array($__col) || $__col instanceof \Countable ? count($__col) > 0 : !empty($__col))
-@foreach($__col as $shipment)
-                            <tr>
-                                <td>
-                                    <a href="{{ route('logistics.shipments.show', $shipment->id) }}"
-                                        class="shipment-link">
-                                        <i class="fas fa-box"></i> {{ $shipment->shipment_number }}
-                                    </a>
-                                </td>
-                                <td>
-                                    @if ($shipment->tracking_number)
-                                        <span
-                                            style="font-family: monospace; font-weight: 600;">{{ $shipment->tracking_number }}</span>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($shipment->sale_id && $shipment->sale)
-                                        <a href="{{ route('sales.show', $shipment->sale_id) }}" class="invoice-link"
-                                            target="_blank">
-                                            <i class="fas fa-file-invoice"></i> {{ $shipment->sale->invoice_no }}
-                                        </a>
-                                        <div style="font-size: 0.7rem; color: #10b981; margin-top: 0.25rem;">
-                                            <i class="fas fa-check-circle"></i> From Invoice
-                                        </div>
-                                    @else
-                                        <span class="badge-direct">
-                                            <i class="fas fa-plus-circle"></i> Direct Shipment
-                                        </span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <i class="fas fa-user-circle" style="color: #667eea;"></i>
-                                        <div>
-                                            <div style="font-weight: 600;">{{ $shipment->receiver_name }}</div>
-                                            <div style="font-size: 0.8rem; color: #64748b;">
-                                                {{ $shipment->receiver_phone ?? 'No phone' }}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <i class="fas fa-map-pin" style="color: #ef4444; margin-right: 0.25rem;"></i>
-                                    {{ $shipment->city }}, {{ $shipment->state }}
-                                    @if ($shipment->pincode)
-                                        <div style="font-size: 0.75rem; color: #64748b;">PIN: {{ $shipment->pincode }}
-                                        </div>
-                                    @endif
-                                    @if ($shipment->destination_latitude && $shipment->destination_longitude)
-                                        <div style="font-size: 0.7rem; color: #8b5cf6;">
-                                            <i class="fas fa-map-marker-alt"></i> GPS Available
-                                        </div>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($shipment->sale_id)
-                                        <span class="badge-from-sale">
-                                            <i class="fas fa-truck"></i> From Sale
-                                        </span>
-                                    @else
-                                        <span class="badge-direct">
-                                            <i class="fas fa-plus"></i> Direct
-                                        </span>
-                                    @endif
-                                    @if ($shipment->delivery_instructions)
-                                        <div style="font-size: 0.7rem; color: #8b5cf6; margin-top: 0.25rem;">
-                                            <i class="fas fa-info-circle"></i> Instructions provided
-                                        </div>
-                                    @endif
-                                </td>
-                                <td>
-                                    <span class="status-badge {{ $shipment->status }}">
-                                        <span class="status-dot {{ $shipment->status }}"></span>
-                                        {{ ucfirst(str_replace('_', ' ', $shipment->status)) }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @if ($shipment->actual_delivery_date)
-                                        <span style="color: #10b981;">
-                                            <i class="fas fa-check-circle"></i>
-                                            {{ $shipment->actual_delivery_date->format('d M Y') }}
-                                        </span>
-                                    @elseif($shipment->estimated_delivery_date)
-                                        <span style="color: #f59e0b;">
-                                            <i class="fas fa-calendar-alt"></i>
-                                            {{ $shipment->estimated_delivery_date->format('d M Y') }}
-                                        </span>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($shipment->deliveryAgent)
-                                        <span
-                                            style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; background: #dbeafe; border-radius: 20px; font-size: 0.85rem;">
-                                            <i class="fas fa-user-check" style="color: #2563eb;"></i>
-                                            {{ $shipment->deliveryAgent->name }}
-                                        </span>
-                                    @else
-                                        <span class="text-muted">Unassigned</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="action-group">
+                        @if (is_array($__col) || $__col instanceof \Countable ? count($__col) > 0 : !empty($__col))
+                            @foreach ($__col as $shipment)
+                                <tr>
+                                    <td>
                                         <a href="{{ route('logistics.shipments.show', $shipment->id) }}"
-                                            class="action-btn info" title="View Details">
-                                            <i class="fas fa-eye"></i>
+                                            class="shipment-link">
+                                            <i class="fas fa-box"></i> {{ $shipment->shipment_number }}
                                         </a>
-                                        @if ($shipment->status !== 'delivered')
-                                            <button type="button" class="action-btn warning"
-                                                onclick="updateStatus({{ $shipment->id }})" title="Update Status">
-                                                <i class="fas fa-truck"></i>
-                                            </button>
+                                    </td>
+                                    <td>
+                                        @if ($shipment->tracking_number)
+                                            <span
+                                                style="font-family: monospace; font-weight: 600;">{{ $shipment->tracking_number }}</span>
+                                        @else
+                                            <span class="text-muted">—</span>
                                         @endif
-                                        <button type="button" class="action-btn track"
-                                            onclick="showMapPopup('{{ $shipment->tracking_number ?? $shipment->shipment_number }}', '{{ $shipment->receiver_name }}', '{{ $shipment->city }}', {{ $shipment->id }})"
-                                            title="Track on Map">
-                                            <i class="fas fa-map-marker-alt"></i>
-                                        </button>
-                                        @if ($shipment->sale_id)
-                                            <a href="{{ route('sales.show', $shipment->sale_id) }}"
-                                                class="action-btn success" title="View Invoice" target="_blank">
-                                                <i class="fas fa-file-invoice"></i>
+                                    </td>
+                                    <td>
+                                        @if ($shipment->sale_id && $shipment->sale)
+                                            <a href="{{ route('sales.show', $shipment->sale_id) }}" class="invoice-link"
+                                                target="_blank">
+                                                <i class="fas fa-file-invoice"></i> {{ $shipment->sale->invoice_no }}
                                             </a>
+                                            <div style="font-size: 0.7rem; color: #10b981; margin-top: 0.25rem;">
+                                                <i class="fas fa-check-circle"></i> From Invoice
+                                            </div>
+                                        @else
+                                            <span class="badge-direct">
+                                                <i class="fas fa-plus-circle"></i> Direct Shipment
+                                            </span>
                                         @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-@else
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <i class="fas fa-user-circle" style="color: #667eea;"></i>
+                                            <div>
+                                                <div style="font-weight: 600;">{{ $shipment->receiver_name }}</div>
+                                                <div style="font-size: 0.8rem; color: #64748b;">
+                                                    {{ $shipment->receiver_phone ?? 'No phone' }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-map-pin" style="color: #ef4444; margin-right: 0.25rem;"></i>
+                                        {{ $shipment->city }}, {{ $shipment->state }}
+                                        @if ($shipment->pincode)
+                                            <div style="font-size: 0.75rem; color: #64748b;">PIN: {{ $shipment->pincode }}
+                                            </div>
+                                        @endif
+                                        @if ($shipment->destination_latitude && $shipment->destination_longitude)
+                                            <div style="font-size: 0.7rem; color: #8b5cf6;">
+                                                <i class="fas fa-map-marker-alt"></i> GPS Available
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($shipment->sale_id)
+                                            <span class="badge-from-sale">
+                                                <i class="fas fa-truck"></i> From Sale
+                                            </span>
+                                        @else
+                                            <span class="badge-direct">
+                                                <i class="fas fa-plus"></i> Direct
+                                            </span>
+                                        @endif
+                                        @if ($shipment->delivery_instructions)
+                                            <div style="font-size: 0.7rem; color: #8b5cf6; margin-top: 0.25rem;">
+                                                <i class="fas fa-info-circle"></i> Instructions provided
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="status-badge {{ $shipment->status }}">
+                                            <span class="status-dot {{ $shipment->status }}"></span>
+                                            {{ ucfirst(str_replace('_', ' ', $shipment->status)) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if ($shipment->actual_delivery_date)
+                                            <span style="color: #10b981;">
+                                                <i class="fas fa-check-circle"></i>
+                                                {{ $shipment->actual_delivery_date->format('d M Y') }}
+                                            </span>
+                                        @elseif($shipment->estimated_delivery_date)
+                                            <span style="color: #f59e0b;">
+                                                <i class="fas fa-calendar-alt"></i>
+                                                {{ $shipment->estimated_delivery_date->format('d M Y') }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($shipment->deliveryAgent)
+                                            <span
+                                                style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0.75rem; background: #dbeafe; border-radius: 20px; font-size: 0.85rem;">
+                                                <i class="fas fa-user-check" style="color: #2563eb;"></i>
+                                                {{ $shipment->deliveryAgent->name }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">Unassigned</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="action-group">
+                                            <a href="{{ route('logistics.shipments.show', $shipment->id) }}"
+                                                class="action-btn info" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if ($shipment->status !== 'delivered')
+                                                <button type="button" class="action-btn warning"
+                                                    onclick="updateStatus({{ $shipment->id }})" title="Update Status">
+                                                    <i class="fas fa-truck"></i>
+                                                </button>
+                                            @endif
+                                            <button type="button" class="action-btn track"
+                                                onclick="showMapPopup('{{ $shipment->tracking_number ?? $shipment->shipment_number }}', '{{ $shipment->receiver_name }}', '{{ $shipment->city }}', {{ $shipment->id }})"
+                                                title="Track on Map">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                            </button>
+                                            @if ($shipment->sale_id)
+                                                <a href="{{ route('sales.show', $shipment->sale_id) }}"
+                                                    class="action-btn success" title="View Invoice" target="_blank">
+                                                    <i class="fas fa-file-invoice"></i>
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @else
                             <tr>
                                 <td colspan="10" style="text-align: center;">
                                     <div class="empty-state">

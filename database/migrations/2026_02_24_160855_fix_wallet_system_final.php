@@ -39,7 +39,7 @@ return new class extends Migration
         // Sirf customer_wallets table mein indexes check karo
         Schema::table('customer_wallets', function (Blueprint $table) {
             // Check if indexes exist before adding
-            $indexes = \DB::select('SHOW INDEX FROM customer_wallets');
+            $indexes = DB::select('SHOW INDEX FROM customer_wallets');
             $indexNames = array_column($indexes, 'Key_name');
 
             if (!in_array('customer_wallets_type_index', $indexNames)) {

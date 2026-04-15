@@ -937,3 +937,20 @@ Route::prefix('agent')->name('agent.')->middleware(['auth'])->group(function () 
 Route::prefix('hr')->name('hr.')->middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'hrDashboard'])->name('dashboard');
 });
+
+
+Route::prefix('leaves')->name('leaves.')->group(function () {
+    Route::get('/', [LeaveController::class, 'index'])->name('index');
+    Route::get('/my', [LeaveController::class, 'myLeaves'])->name('my');
+    Route::get('/create', [LeaveController::class, 'create'])->name('create');
+
+    // Add this line for the simple apply form
+    Route::post('/apply', [LeaveController::class, 'apply'])->name('apply');  // 👈 ADD THIS LINE
+
+    Route::post('/store', [LeaveController::class, 'store'])->name('store');
+    Route::get('/{leave}', [LeaveController::class, 'show'])->name('show')->where('leave', '[0-9]+');
+    Route::post('/{leave}/cancel', [LeaveController::class, 'cancel'])->name('cancel')->where('leave', '[0-9]+');
+    Route::get('/{leave}/print', [LeaveController::class, 'printLeave'])->name('print')->where('leave', '[0-9]+');
+    Route::get('/{leave}/pdf', [LeaveController::class, 'pdf'])->name('pdf')->where('leave', '[0-9]+');
+    Route::get('/{leave}/download', [LeaveController::class, 'download'])->name('download')->where('leave', '[0-9]+');
+});

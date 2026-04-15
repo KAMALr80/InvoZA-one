@@ -727,7 +727,7 @@
 
     <!-- FOOTER -->
     <div class="footer">
-        <span>© 2025 ERP System — </span>
+        <span>© 2026 ERP System — </span>
         <a href="#">Secure Registration</a>
         <span> · Role based access</span>
     </div>

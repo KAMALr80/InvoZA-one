@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>ERP Nexus · Reset Password</title>
+    <title>BrainBean ERP · Reset Password</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap"
         rel="stylesheet">
@@ -463,7 +463,7 @@
                     <div class="logo-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
-                    <h1>ERP Nexus</h1>
+                    <h1>BrainBean ERP</h1>
                 </div>
                 <p>Enterprise Resource Planning</p>
             </div>

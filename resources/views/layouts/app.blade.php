@@ -857,7 +857,7 @@
         {{-- Logo --}}
         <div class="sidebar-logo">
             <div class="logo-icon">⚡</div>
-            <h2 class="logo-text">INVOZA One</h2>
+            <h2 class="logo-text">BrainBean ERP</h2>
             <div class="logo-subtitle">Business Intelligence System</div>
         </div>
 
@@ -1056,7 +1056,7 @@
                             </a>
                         @endif
 
-                        
+
                     </ul>
                 </div>
             @endif
@@ -1221,7 +1221,7 @@
 
         {{-- Footer --}}
         <div class="sidebar-footer">
-            INVOZA One v1.0 • {{ date('Y') }}
+            BrainBean ERP v1.2 • {{ date('Y') }}
         </div>
     </div>
 
