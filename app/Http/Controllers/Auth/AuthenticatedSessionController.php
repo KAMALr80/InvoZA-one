@@ -16,9 +16,17 @@ use Carbon\Carbon;
 
 use App\Helpers\GeoHelper;
 use App\Models\User;
+use App\Services\TwoFactorService;
 
 class AuthenticatedSessionController extends Controller
 {
+    protected $twoFactorService;
+
+    public function __construct(TwoFactorService $twoFactorService)
+    {
+        $this->twoFactorService = $twoFactorService;
+    }
+
     /**
      * Show login page
      */
@@ -80,15 +88,51 @@ class AuthenticatedSessionController extends Controller
         $user->login_attempts = 0;
         $user->save();
 
-        // Direct login without OTP
-        return $this->directLogin($user, $request);
+        // Check if 2FA is enabled
+        if ($user->two_factor_enabled) {
+            return $this->requireTwoFactorVerification($user, $request);
+        }
+
+        // Direct login without 2FA
+        return $this->completeLogin($user, $request);
     }
 
     /**
-     * Direct login with role-based redirect
+     * Require 2FA verification before completing login
      */
-    private function directLogin(User $user, Request $request): RedirectResponse
+    private function requireTwoFactorVerification(User $user, Request $request): RedirectResponse
     {
+        // Store user ID and remember preference in session for 2FA verification
+        Session::put('2fa:user:id', $user->id);
+        Session::put('2fa:remember', $request->boolean('remember'));
+        Session::put('2fa:login:attempt', now()->timestamp);
+
+        Log::info('2FA verification required', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => $request->ip()
+        ]);
+
+        // Redirect to 2FA verification page
+        return redirect()->route('2fa.verify');
+    }
+
+    /**
+     * Complete login after successful 2FA verification (called from TwoFactorController)
+     */
+    public function completeLoginAfter2FA(User $user, Request $request, $remember = false): RedirectResponse
+    {
+        return $this->completeLogin($user, $request, $remember);
+    }
+
+    /**
+     * Complete the login process (actual authentication)
+     */
+    private function completeLogin(User $user, Request $request, $remember = null): RedirectResponse
+    {
+        // Use passed remember value or get from request
+        $rememberFlag = $remember ?? $request->boolean('remember');
+
         // Update login tracking
         $user->last_login_at = now();
         $user->last_login_ip = $request->ip();
@@ -96,15 +140,22 @@ class AuthenticatedSessionController extends Controller
         $user->save();
 
         // Login the user
-        Auth::login($user, $request->boolean('remember'));
+        Auth::login($user, $rememberFlag);
         $request->session()->regenerate();
 
         Log::info('Login successful', [
             'user_id' => $user->id,
             'email' => $user->email,
             'role' => $user->role,
-            'ip' => $request->ip()
+            'ip' => $request->ip(),
+            'two_factor_used' => Session::has('2fa:verified') ? true : false
         ]);
+
+        // Clear 2FA session data if present
+        Session::forget('2fa:user:id');
+        Session::forget('2fa:remember');
+        Session::forget('2fa:login:attempt');
+        Session::forget('2fa:verified');
 
         // Check password age (optional)
         if ($user->password_updated_at && $user->password_updated_at->diffInDays(now()) > 90) {

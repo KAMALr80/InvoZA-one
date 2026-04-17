@@ -945,3 +945,45 @@ Route::prefix('leaves')->name('leaves.')->group(function () {
 
 Route::post('/employee/{id}/send-email', [EmployeeController::class, 'sendEmail'])
     ->name('employee.send.email');
+
+
+
+use App\Http\Controllers\Auth\TwoFactorController;
+
+// ==================== PROFILE ROUTES ====================
+Route::middleware(['auth'])->group(function () {
+    // Profile Management
+      Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+ Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.index');
+ Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+ 
+    // Password Management
+    Route::get('/profile/change-password', [ProfileController::class, 'showChangePassword'])->name('profile.change-password');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+
+    // Security & 2FA
+    Route::get('/profile/security', [ProfileController::class, 'showSecurity'])->name('profile.security');
+
+    // Activity Log
+    Route::get('/profile/activity', [ProfileController::class, 'activityLog'])->name('profile.activity');
+});
+
+// ==================== TWO FACTOR AUTHENTICATION ROUTES ====================
+Route::middleware(['auth'])->group(function () {
+    // 2FA Setup & Management
+    Route::get('/2fa/setup', [TwoFactorController::class, 'showSetup'])->name('2fa.setup');
+    Route::post('/2fa/enable', [TwoFactorController::class, 'enable'])->name('2fa.enable');
+    Route::post('/2fa/disable', [TwoFactorController::class, 'disable'])->name('2fa.disable');
+    Route::get('/2fa/recovery/generate', [TwoFactorController::class, 'generateRecoveryCodes'])->name('2fa.recovery.generate');
+});
+
+// 2FA Verification Routes (no auth middleware - these are accessed before login)
+Route::middleware(['web'])->group(function () {
+    Route::get('/2fa/verify', [TwoFactorController::class, 'showVerify'])->name('2fa.verify');
+    Route::post('/2fa/verify', [TwoFactorController::class, 'verify'])->name('2fa.verify.post');
+    Route::get('/2fa/recovery', [TwoFactorController::class, 'showRecovery'])->name('2fa.recovery');
+    Route::post('/2fa/recovery', [TwoFactorController::class, 'verifyRecovery'])->name('2fa.recovery.verify');
+});

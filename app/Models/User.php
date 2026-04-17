@@ -18,6 +18,10 @@ class User extends Authenticatable
         'password',
         'role',
         'status',
+          'two_factor_enabled',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+    'two_factor_confirmed_at',
 
         // ✅ NEW FIELDS
         'agent_id',
@@ -45,7 +49,10 @@ class User extends Authenticatable
         'login_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
+    'two_factor_enabled' => 'boolean',
+    'two_factor_confirmed_at' => 'datetime',
+    'last_login_at' => 'datetime'
     ];
 
     /* ==================== EXISTING RELATIONSHIPS ==================== */

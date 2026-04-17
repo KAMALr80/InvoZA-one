@@ -884,6 +884,29 @@
                 Dashboard
             </a>
 
+
+            {{-- Profile Dropdown --}}
+            <div class="nav-item">
+                <button class="nav-link" onclick="toggleDropdown('profileDropdown')" id="profileBtn">
+                    <span class="nav-icon">👤</span>
+                    <span>My Account</span>
+                    <span class="dropdown-icon" id="profileIcon">▼</span>
+                </button>
+                <ul class="dropdown-menu" id="profileDropdown">
+                    <a href="{{ route('profile.index') }}" class="dropdown-item">
+                        <i class="fas fa-user"></i> My Profile
+                    </a>
+                    <a href="{{ route('profile.security') }}" class="dropdown-item">
+                        <i class="fas fa-shield-alt"></i> Security
+                    </a>
+                    <a href="{{ route('profile.change-password') }}" class="dropdown-item">
+                        <i class="fas fa-key"></i> Change Password
+                    </a>
+                    <a href="{{ route('profile.activity') }}" class="dropdown-item">
+                        <i class="fas fa-history"></i> Activity Log
+                    </a>
+                </ul>
+            </div>
             {{-- ========== LOGISTICS DROPDOWN ========== --}}
             @if (in_array(auth()->user()->role, ['admin', 'logistics', 'staff']))
                 <div class="nav-item">
