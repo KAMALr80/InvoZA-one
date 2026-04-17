@@ -36,10 +36,10 @@ RUN docker-php-ext-install -j$(nproc) \
 
 RUN docker-php-ext-enable gd
 
-# Redis (optional)
+# ==================== REDIS (OPTIONAL) ====================
 RUN pecl install redis && docker-php-ext-enable redis || true
 
-# ==================== APACHE CONFIGURATION ====================
+# ==================== APACHE CONFIG ====================
 COPY public/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 RUN a2enmod rewrite \
@@ -53,10 +53,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # ==================== WORKDIR ====================
 WORKDIR /var/www/html
 
-# ==================== COPY APPLICATION ====================
+# ==================== COPY APP ====================
 COPY . .
 
-# ==================== COMPOSER INSTALL ====================
+# ==================== INSTALL DEPENDENCIES ====================
 RUN composer install --optimize-autoloader --no-interaction
 
 # ==================== PERMISSIONS ====================
@@ -76,8 +76,8 @@ RUN echo "upload_max_filesize = 100M" > /usr/local/etc/php/conf.d/uploads.ini \
 # ==================== STORAGE LINK ====================
 RUN php artisan storage:link || true
 
-# ==================== IMPORTANT ====================
-# Build time par sirf config clear karo (NO cache:clear here)
+# ==================== SAFE BUILD STEP ====================
+# Only config clear (NO cache clear here)
 RUN php artisan config:clear || true
 
 # ==================== EXPOSE ====================
@@ -88,9 +88,9 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD curl -f http://localhost/ || exit 1
 
 # ==================== START COMMAND ====================
-# Runtime par env load + cache + migrate
-CMD php artisan config:clear && \
-    php artisan cache:clear && \
+# IMPORTANT: cache:clear REMOVE kiya gaya (yehi crash ka reason tha)
+CMD export CACHE_DRIVER=file && \
+    php artisan config:clear && \
     php artisan config:cache && \
     php artisan migrate --force && \
     apache2-foreground
