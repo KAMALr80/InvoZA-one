@@ -76,10 +76,9 @@ RUN echo "upload_max_filesize = 100M" > /usr/local/etc/php/conf.d/uploads.ini \
 # ==================== STORAGE LINK ====================
 RUN php artisan storage:link || true
 
-# ==================== CACHE CLEAR (IMPORTANT) ====================
-# Build time par config cache nahi karna
-RUN php artisan config:clear || true \
-    && php artisan cache:clear || true
+# ==================== IMPORTANT ====================
+# Build time par sirf config clear karo (NO cache:clear here)
+RUN php artisan config:clear || true
 
 # ==================== EXPOSE ====================
 EXPOSE 80
@@ -89,7 +88,7 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD curl -f http://localhost/ || exit 1
 
 # ==================== START COMMAND ====================
-# Runtime par correct env load + migrate + start apache
+# Runtime par env load + cache + migrate
 CMD php artisan config:clear && \
     php artisan cache:clear && \
     php artisan config:cache && \
