@@ -33,9 +33,7 @@ use App\Http\Controllers\CustomerWalletController;
 
 // Auth
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\Auth\RegisterOtpController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
@@ -126,16 +124,6 @@ Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 // Registration Routes
 Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
 Route::post('/register', [RegisteredUserController::class, 'store']);
-
-// Registration OTP Routes
-Route::get('/register-otp', [RegisterOtpController::class, 'show'])->name('register.otp');
-Route::post('/register-otp/verify', [RegisterOtpController::class, 'verify'])->name('register.otp.verify');
-Route::post('/register-otp/resend', [RegisterOtpController::class, 'resend'])->name('register.otp.resend');
-
-// Login OTP Routes
-Route::get('/otp-verify', [OtpController::class, 'show'])->name('otp.verify');
-Route::post('/otp-verify', [OtpController::class, 'verify'])->name('otp.verify.post');
-Route::post('/otp-resend', [OtpController::class, 'resend'])->name('otp.resend');
 
 // Password Reset Routes
 Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
@@ -954,3 +942,6 @@ Route::prefix('leaves')->name('leaves.')->group(function () {
     Route::get('/{leave}/pdf', [LeaveController::class, 'pdf'])->name('pdf')->where('leave', '[0-9]+');
     Route::get('/{leave}/download', [LeaveController::class, 'download'])->name('download')->where('leave', '[0-9]+');
 });
+
+Route::post('/employee/{id}/send-email', [EmployeeController::class, 'sendEmail'])
+    ->name('employee.send.email');

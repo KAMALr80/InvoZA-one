@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\URL;
+use App\Services\AttendanceService;
+use App\Services\LeaveService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,15 @@ class AppServiceProvider extends ServiceProvider
                 return new Filesystem();
             });
         }
+
+        // ================= REGISTER SERVICES =================
+        $this->app->singleton(AttendanceService::class, function ($app) {
+            return new AttendanceService();
+        });
+
+        $this->app->singleton(LeaveService::class, function ($app) {
+            return new LeaveService();
+        });
     }
 
     /**

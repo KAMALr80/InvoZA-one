@@ -60,114 +60,122 @@ class AttendanceController extends Controller
         ));
     }
 
-    public function checkIn()
-    {
-        $employee = Employee::where('user_id', Auth::id())->firstOrFail();
-        $now = now();
+   public function checkIn()
+{
+    $employee = Employee::where('user_id', Auth::id())->firstOrFail();
+    $now = now();
 
-        $officeStart = Carbon::createFromTime(15, 0);  // 03:00 PM
-        $lateTime    = Carbon::createFromTime(15, 15); // 03:15 PM
+    $officeStart = Carbon::createFromTime(15, 0);   // 3:00 PM
+    $lateTime = Carbon::createFromTime(15, 15);      // 3:15 PM
+    $status = 'Present';
+    $remarks = 'On time - Checked in at ' . $now->format('h:i A');
 
-        $status  = 'Present';
-        $remarks = 'On Time';
-
-        if ($now->gt($lateTime)) {
-            $status  = 'Late';
-            $remarks = 'Late Check-in at ' . $now->format('h:i A');
-        }
-
-        // Create or update attendance
-        $attendance = Attendance::updateOrCreate(
-            [
-                'employee_id'     => $employee->id,
-                'attendance_date' => today(),
-            ],
-            [
-                'check_in' => $now->format('H:i:s'),
-                'status'   => $status,
-                'remarks'  => $remarks,
-                'marked_by' => Auth::id(),
-                'is_auto_marked' => false
-            ]
-        );
-
-        // Log the check-in
-        Log::info('Employee checked in', [
-            'employee_id' => $employee->id,
-            'time' => $now->format('H:i:s'),
-            'status' => $status
-        ]);
-
-        return back()->with(
-            'success',
-            "✅ Check-in successful at {$now->format('h:i A')} ({$status})"
-        );
+    if ($now->gt($lateTime)) {
+        $status = 'Late';
+        $remarks = 'Late check-in at ' . $now->format('h:i A');
     }
 
-    public function checkOut()
-    {
-        $employee = Employee::where('user_id', Auth::id())->firstOrFail();
-
-        $attendance = Attendance::where('employee_id', $employee->id)
-            ->where('attendance_date', today())
-            ->firstOrFail();
-
-        if (!$attendance->check_in) {
-            return back()->with('error', '❌ Check-in not found. Please check-in first.');
-        }
-
-        if ($attendance->check_out) {
-            return back()->with('error', '❌ You have already checked out for today.');
-        }
-
-        $checkIn  = Carbon::parse($attendance->check_in);
-        $checkOut = now();
-
-        $totalSeconds = $checkIn->diffInSeconds($checkOut);
-
-        $hours   = floor($totalSeconds / 3600);
-        $minutes = floor(($totalSeconds % 3600) / 60);
-        $seconds = $totalSeconds % 60;
-
-        $workingHours = sprintf('%02d:%02d:%02d', $hours, $minutes, $seconds);
-
-        // ✅ FINAL STATUS LOGIC
-        $status  = $attendance->status; // Present / Late
-        $remarks = $attendance->remarks;
-
-        // Update status based on working hours
-        if ($hours < 4) {
-            $status  = 'Half Day';
-            $remarks = 'Worked less than 4 hours (' . $workingHours . ')';
-        } elseif ($hours >= 4 && $status == 'Late') {
-            // Keep Late status if already late
-            $remarks = 'Late but completed full day (' . $workingHours . ')';
-        } else {
-            $remarks = 'Completed full day (' . $workingHours . ')';
-        }
-
-        $attendance->update([
-            'check_out'     => $checkOut->format('H:i:s'),
-            'working_hours' => $workingHours,
-            'status'        => $status,
-            'remarks'       => $remarks,
-        ]);
-
-        // Log the check-out
-        Log::info('Employee checked out', [
+    $attendance = Attendance::updateOrCreate(
+        [
             'employee_id' => $employee->id,
-            'check_in' => $attendance->check_in,
-            'check_out' => $checkOut->format('H:i:s'),
-            'working_hours' => $workingHours,
-            'final_status' => $status
-        ]);
+            'attendance_date' => today(),
+        ],
+        [
+            'check_in' => $now->format('H:i:s'),
+            'status' => $status,
+            'remarks' => $remarks,
+            'marked_by' => Auth::id(),
+            'is_auto_marked' => false
+        ]
+    );
 
-        return back()->with(
-            'success',
-            '✅ Check-out successful at ' . $checkOut->format('h:i A') .
-            ' (Worked: ' . $workingHours . ')'
-        );
+    Log::info('Employee checked in', [
+        'employee_id' => $employee->id,
+        'time' => $now->format('H:i:s'),
+        'status' => $status
+    ]);
+
+    $message = $status === 'Late'
+        ? "⚠️ Late check-in at {$now->format('h:i A')} (After 3:15 PM)"
+        : "✅ Check-in successful at {$now->format('h:i A')}";
+
+    return back()->with('success', $message);
+}
+
+   public function checkOut()
+{
+    $employee = Employee::where('user_id', Auth::id())->firstOrFail();
+
+    $attendance = Attendance::where('employee_id', $employee->id)
+        ->where('attendance_date', today())
+        ->firstOrFail();
+
+    if (!$attendance->check_in) {
+        return back()->with('error', '❌ Please check-in first.');
     }
+
+    if ($attendance->check_out) {
+        return back()->with('error', '❌ Already checked out.');
+    }
+
+    $checkIn = Carbon::parse($attendance->check_in);
+    $checkOut = now();
+
+    // Handle midnight checkout (after 12 AM)
+    if ($checkOut->lt($checkIn)) {
+        $checkOut->addDay();
+    }
+
+    // Calculate total working time
+    $totalSeconds = $checkIn->diffInSeconds($checkOut);
+    $totalMinutes = floor($totalSeconds / 60);
+
+    // Subtract break time (1 hour = 60 minutes)
+    $netMinutes = max(0, $totalMinutes - 60);
+    $netHours = floor($netMinutes / 60);
+    $netRemainingMinutes = $netMinutes % 60;
+    $netWorkingHours = sprintf('%02d:%02d:00', $netHours, $netRemainingMinutes);
+
+    // Total working hours (with break)
+    $totalHours = floor($totalSeconds / 3600);
+    $totalMinutesRemaining = floor(($totalSeconds % 3600) / 60);
+    $totalWorkingHours = sprintf('%02d:%02d:%02d', $totalHours, $totalMinutesRemaining, $totalSeconds % 60);
+
+    // Determine final status
+    $status = $attendance->status;
+    $remarks = "Checked out at {$checkOut->format('h:i A')}. Net worked: {$netHours}h {$netRemainingMinutes}m";
+
+    if ($netHours < 4) {
+        $status = 'Half Day';
+        $remarks = "Worked less than 4 hours ({$netHours}h {$netRemainingMinutes}m)";
+    } elseif ($status == 'Late' && $netHours >= 9) {
+        $remarks = "Late but completed full day. Net worked: {$netHours}h {$netRemainingMinutes}m";
+    } elseif ($netHours >= 9) {
+        $remarks = "Completed full day ({$netHours}h {$netRemainingMinutes}m)";
+    }
+
+    $attendance->update([
+        'check_out' => $checkOut->format('H:i:s'),
+        'working_hours' => $totalWorkingHours,
+        'net_working_hours' => $netWorkingHours,
+        'status' => $status,
+        'remarks' => $remarks,
+    ]);
+
+    Log::info('Employee checked out', [
+        'employee_id' => $employee->id,
+        'check_in' => $attendance->check_in,
+        'check_out' => $checkOut->format('H:i:s'),
+        'net_working_hours' => $netWorkingHours,
+        'status' => $status
+    ]);
+
+    $message = "✅ Check-out successful at {$checkOut->format('h:i A')}<br>
+                📊 Total Worked: {$netHours}h {$netRemainingMinutes}m (after 1h break)<br>
+                🎯 Status: {$status}";
+
+    return back()->with('success', $message);
+}
 
     /* ================= ADMIN / HR ================= */
 
@@ -301,77 +309,102 @@ class AttendanceController extends Controller
     /**
      * Submit Bulk Attendance
      */
-    public function bulkAttendance(Request $request)
-    {
-        // Check if user is admin or hr
-        if (!Auth::check() || (Auth::user()->role !== 'admin' && Auth::user()->role !== 'hr')) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+ /**
+ * Submit Bulk Attendance with proper working hours calculation
+ */
+public function bulkAttendance(Request $request)
+{
+    if (!Auth::check() || (Auth::user()->role !== 'admin' && Auth::user()->role !== 'hr')) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
 
-        $validated = $request->validate([
-            'attendances' => 'required|array',
-            'attendances.*.employee_id' => 'required|exists:employees,id',
-            'attendances.*.status' => 'required|in:present,absent,late,half_day,leave',
-            'attendances.*.remarks' => 'nullable|string|max:255',
-            'attendance_date' => 'required|date'
-        ]);
+    $validated = $request->validate([
+        'attendances' => 'required|array',
+        'attendances.*.employee_id' => 'required|exists:employees,id',
+        'attendances.*.status' => 'required|in:present,absent,late,leave',
+        'attendances.*.check_in' => 'nullable|date_format:H:i',
+        'attendances.*.remarks' => 'nullable|string|max:255',
+        'attendance_date' => 'required|date'
+    ]);
 
-        DB::beginTransaction();
-        try {
-            $markedCount = 0;
-            $today = $validated['attendance_date'];
+    DB::beginTransaction();
+    try {
+        $markedCount = 0;
+        $attendanceDate = $validated['attendance_date'];
 
-            foreach ($validated['attendances'] as $attendanceData) {
-                $status = ucfirst($attendanceData['status']);
+        foreach ($validated['attendances'] as $attendanceData) {
+            $status = ucfirst($attendanceData['status']);
+            $checkIn = $attendanceData['check_in'] ?? null;
 
-                // For present/late status, set check-in time
-                $checkIn = null;
-                if (in_array($attendanceData['status'], ['present', 'late'])) {
-                    $checkIn = now()->format('H:i:s');
-                }
-
-                $attendance = Attendance::updateOrCreate(
-                    [
-                        'employee_id' => $attendanceData['employee_id'],
-                        'attendance_date' => $today
-                    ],
-                    [
-                        'status' => $status,
-                        'remarks' => $attendanceData['remarks'] ?? null,
-                        'check_in' => $checkIn,
-                        'marked_by' => Auth::id(),
-                        'is_auto_marked' => false
-                    ]
-                );
-
-                $markedCount++;
+            // Auto-calculate check-in time for present/late
+            if (in_array($attendanceData['status'], ['present', 'late']) && !$checkIn) {
+                $checkIn = now()->format('H:i');
             }
 
-            DB::commit();
+            // Determine status if check-in time provided
+            if ($checkIn && $attendanceData['status'] !== 'leave') {
+                $lateTime = Carbon::createFromTime(15, 15); // 3:15 PM
+                $checkInTime = Carbon::createFromTimeString($checkIn);
 
-            // Log the bulk attendance
-            Log::info('Bulk attendance marked', [
-                'marked_by' => Auth::id(),
-                'date' => $today,
-                'count' => $markedCount
-            ]);
+                if ($checkInTime->gt($lateTime)) {
+                    $status = 'Late';
+                } else {
+                    $status = 'Present';
+                }
+            }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Attendance marked successfully for ' . $markedCount . ' employees',
-                'count' => $markedCount,
-                'redirect' => route('attendance.manage')
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Bulk attendance error: ' . $e->getMessage());
+            // For absent or leave, clear check-in/out times
+            if (in_array($attendanceData['status'], ['absent', 'leave'])) {
+                $checkIn = null;
+            }
 
-            return response()->json([
-                'error' => 'Failed to mark attendance',
-                'message' => $e->getMessage()
-            ], 500);
+            $attendance = Attendance::updateOrCreate(
+                [
+                    'employee_id' => $attendanceData['employee_id'],
+                    'attendance_date' => $attendanceDate
+                ],
+                [
+                    'status' => $status,
+                    'check_in' => $checkIn,
+                    'remarks' => $attendanceData['remarks'] ?? null,
+                    'marked_by' => Auth::id(),
+                    'is_auto_marked' => false
+                ]
+            );
+
+            // Calculate working hours if check-in exists
+            if ($attendance->check_in && $attendance->check_out) {
+                $attendance->working_hours = $attendance->calculateWorkingHours();
+                $attendance->save();
+            }
+
+            $markedCount++;
         }
+
+        DB::commit();
+
+        Log::info('Bulk attendance marked', [
+            'marked_by' => Auth::id(),
+            'date' => $attendanceDate,
+            'count' => $markedCount
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Attendance marked successfully for {$markedCount} employees",
+            'count' => $markedCount
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Bulk attendance error: ' . $e->getMessage());
+
+        return response()->json([
+            'error' => 'Failed to mark attendance',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * Auto Mark Absent for employees who didn't check-in

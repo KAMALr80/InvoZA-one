@@ -685,10 +685,6 @@
                 <div class="signup-link">
                     Don't have an account? <a href="{{ route('register') }}">Create account</a>
                 </div>
-
-                <!-- Hidden geo fields -->
-                <input type="hidden" name="lat" id="lat">
-                <input type="hidden" name="lng" id="lng">
             </form>
         </div>
 
@@ -740,22 +736,6 @@
     <div class="cursor-trail" id="cursorTrail"></div>
 
     <script>
-        // ==================== GEOLOCATION ====================
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function(pos) {
-                    document.getElementById('lat').value = pos.coords.latitude;
-                    document.getElementById('lng').value = pos.coords.longitude;
-                },
-                function() {
-                    console.log('Location access denied');
-                }, {
-                    enableHighAccuracy: true,
-                    timeout: 10000
-                }
-            );
-        }
-
         // ==================== MOUSE ARROW GAME ====================
         let clickCount = 0;
         const clickCountSpan = document.getElementById('clickCount');

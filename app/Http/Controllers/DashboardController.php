@@ -127,13 +127,16 @@ class DashboardController extends Controller
                 'percentage' => $totalEmployees > 0 ? round(($markedCount/$totalEmployees)*100) : 0
             ];
 
+            /* ===== EMPLOYEES ON LEAVE NEXT 2 DAYS ===== */
+            $employeesOnLeaveNext2Days = $this->getEmployeesOnLeaveNext2Days();
+
             Log::info('Recent Activities Count: ' . count($recentActivities));
 
             return view('dashboard.admin', compact(
                 'totalProducts', 'totalRevenue', 'todaySales', 'totalTransactions', 'averageSale',
                 'totalEmployees', 'presentToday', 'absentToday', 'lateToday', 'halfDayToday', 'notMarkedToday',
                 'lowStockProducts', 'recentActivities', 'aiPrediction', 'pastLabels', 'pastData',
-                'futureLabels', 'futureData', 'attendanceData'
+                'futureLabels', 'futureData', 'attendanceData', 'employeesOnLeaveNext2Days'
             ));
         }
 
@@ -231,6 +234,9 @@ class DashboardController extends Controller
     $pendingLeaves = Leave::where('status', 'pending')->count();
     $onLeaveToday = $this->getOnLeaveTodaySimple();
 
+    // Get employees on leave in next 2 days
+    $employeesOnLeaveNext2Days = $this->getEmployeesOnLeaveNext2Days();
+
     $todayAttendance = Attendance::whereDate('attendance_date', today())
         ->with('employee')
         ->orderBy('created_at', 'desc')
@@ -314,7 +320,7 @@ class DashboardController extends Controller
         'employeesWithoutAttendance', 'recentEmployees', 'recentLeaves', 'departmentStats',
         'attendanceTrend', 'attendancePercentage', 'activeEmployees', 'inactiveEmployees',
         'attendanceIssues', 'monthlyLeaves', 'attendanceData', 'recentActivities',
-        'upcomingHolidays', 'currentMonthHolidays' // Add these
+        'upcomingHolidays', 'currentMonthHolidays', 'employeesOnLeaveNext2Days' // Add these
     ));
 
 
@@ -764,6 +770,59 @@ class DashboardController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in getOnLeaveTodaySimple: ' . $e->getMessage());
             return 0;
+        }
+    }
+
+    /**
+     * Get employees on leave in next 2 days (tomorrow and day after)
+     */
+    private function getEmployeesOnLeaveNext2Days()
+    {
+        try {
+            if (!Schema::hasTable('leaves') || !Schema::hasTable('employees')) {
+                return [];
+            }
+
+            $today = today();
+            $tomorrow = $today->copy()->addDay();
+            $dayAfter = $today->copy()->addDays(2);
+
+            // Get approved leaves for next 2 days
+            $upcomingLeaves = Leave::with('employee')
+                ->where('status', 'Approved')
+                ->where(function($query) use ($today, $dayAfter) {
+                    $query->whereBetween(DB::raw('DATE(from_date)'), [$today->toDateString(), $dayAfter->toDateString()])
+                          ->orWhereBetween(DB::raw('DATE(to_date)'), [$today->toDateString(), $dayAfter->toDateString()])
+                          ->orWhere(function($q) use ($today, $dayAfter) {
+                              $q->whereDate('from_date', '<=', $today)
+                                ->whereDate('to_date', '>=', $dayAfter);
+                          });
+                })
+                ->get()
+                ->map(function($leave) {
+                    return [
+                        'id' => $leave->id,
+                        'employee_id' => $leave->employee_id,
+                        'employee_name' => $leave->employee?->name ?? 'Unknown Employee',
+                        'employee_code' => $leave->employee?->employee_code ?? '-',
+                        'department' => $leave->employee?->department ?? 'Not Assigned',
+                        'leave_type' => $leave->leave_type ?? 'Leave',
+                        'from_date' => Carbon::parse($leave->from_date)->format('d M, Y'),
+                        'to_date' => Carbon::parse($leave->to_date)->format('d M, Y'),
+                        'from_date_raw' => Carbon::parse($leave->from_date),
+                        'to_date_raw' => Carbon::parse($leave->to_date),
+                        'total_days' => $leave->total_days ?? 1,
+                        'leave_type_label' => ucfirst(str_replace('_', ' ', $leave->leave_type ?? 'Leave')),
+                    ];
+                })
+                ->sortBy('from_date_raw')
+                ->values();
+
+            return $upcomingLeaves;
+
+        } catch (\Exception $e) {
+            Log::error('Error in getEmployeesOnLeaveNext2Days: ' . $e->getMessage());
+            return [];
         }
     }
 

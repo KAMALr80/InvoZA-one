@@ -28,7 +28,7 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle login request with location-based OTP and role-based redirect
+     * Handle login request - Simple email/password authentication
      */
     public function store(Request $request): RedirectResponse
     {
@@ -36,8 +36,6 @@ class AuthenticatedSessionController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required',
-            'lat' => 'nullable|numeric',
-            'lng' => 'nullable|numeric',
         ]);
 
         /* ================= STEP 1: Find user ================= */
@@ -82,122 +80,26 @@ class AuthenticatedSessionController extends Controller
         $user->login_attempts = 0;
         $user->save();
 
-        /* ================= STEP 5: CHECK IF USER IS ADMIN - NO OTP REQUIRED ================= */
-        if ($user->role === 'admin') {
-            Log::info('Admin login - bypassing OTP', [
-                'user_id' => $user->id,
-                'email' => $user->email
-            ]);
-            return $this->directLogin($user, $request);
-        }
-
-        /* ================= STEP 6: Process location data for non-admin users ================= */
-        $userLat = $request->lat;
-        $userLng = $request->lng;
-
-        $officeLat = env('OFFICE_LAT', '22.524768');
-        $officeLng = env('OFFICE_LNG', '72.955568');
-        $allowedRadius = (float) env('ALLOWED_RADIUS_KM', 1);
-
-        /* ================= STEP 7: Location-based decision for non-admin users ================= */
-
-        // CASE A: Location OFF/DENIED → EMAIL OTP REQUIRED
-        if (!$userLat || !$userLng) {
-            return $this->sendLoginOtp(
-                $user,
-                '📍 Location access required. OTP sent to your email for security verification.'
-            );
-        }
-
-        // Calculate distance from office
-        $distance = GeoHelper::distanceKm(
-            (float) $officeLat,
-            (float) $officeLng,
-            (float) $userLat,
-            (float) $userLng
-        );
-
-        // Log location for audit
-        $this->logLoginLocation($user, $userLat, $userLng, $distance);
-
-        // CASE B: Outside office radius → EMAIL OTP REQUIRED
-        if ($distance > $allowedRadius) {
-            return $this->sendLoginOtp(
-                $user,
-                "📍 You are " . number_format($distance, 2) . "km from office (max allowed: {$allowedRadius}km). OTP sent for verification."
-            );
-        }
-
-        // CASE C: Inside office radius → DIRECT LOGIN
+        // Direct login without OTP
         return $this->directLogin($user, $request);
     }
 
     /**
-     * Send login OTP via email
-     */
-    private function sendLoginOtp(User $user, string $message): RedirectResponse
-    {
-        // Check cooldown (60 seconds)
-        if ($user->otp_last_sent_at && !$this->canResendOtp($user)) {
-            $waitTime = $this->getResendWaitSeconds($user);
-            return back()->withErrors([
-                'email' => "Please wait {$waitTime} seconds before requesting another OTP.",
-            ]);
-        }
-
-        // Generate secure 6-digit OTP
-        $otp = sprintf("%06d", random_int(0, 999999));
-
-        // Save OTP using your existing columns
-        $user->login_otp = $otp;
-        $user->otp_expires_at = now()->addMinutes(5);
-        $user->otp_last_sent_at = now();
-        $user->otp_attempts = 0; // Reset OTP attempts
-        $user->save();
-
-        // Store in session for verification
-        Session::put('otp_user_id', $user->id);
-        Session::put('otp_purpose', 'login');
-        Session::put('otp_email', $user->email);
-        Session::put('otp_sent_at', now()->timestamp);
-        Session::put('otp_expires_at', now()->addMinutes(5)->timestamp);
-
-        // Send OTP via email
-        $this->sendOtpEmail($user, $otp, 'Login');
-
-        Log::info('Login OTP sent', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'role' => $user->role,
-            'ip' => request()->ip()
-        ]);
-
-        return redirect()->route('otp.verify')->with('status', $message);
-    }
-
-    /**
-     * Direct login without OTP - WITH ROLE-BASED REDIRECT
+     * Direct login with role-based redirect
      */
     private function directLogin(User $user, Request $request): RedirectResponse
     {
-        // Update login tracking using your existing columns
+        // Update login tracking
         $user->last_login_at = now();
         $user->last_login_ip = $request->ip();
         $user->login_attempts = 0;
-
-        // Clear any OTP data
-        $user->login_otp = null;
-        $user->otp_expires_at = null;
         $user->save();
 
         // Login the user
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 
-        // Clear OTP session
-        Session::forget(['otp_user_id', 'otp_purpose', 'otp_sent_at', 'otp_email', 'otp_expires_at']);
-
-        Log::info('Direct login successful', [
+        Log::info('Login successful', [
             'user_id' => $user->id,
             'email' => $user->email,
             'role' => $user->role,
@@ -306,97 +208,6 @@ class AuthenticatedSessionController extends Controller
         }
 
         return false;
-    }
-
-    /**
-     * Check if user can resend OTP (60-second cooldown)
-     */
-    private function canResendOtp(User $user): bool
-    {
-        if (!$user->otp_last_sent_at) {
-            return true;
-        }
-
-        return Carbon::parse($user->otp_last_sent_at)->diffInSeconds(now()) >= 60;
-    }
-
-    /**
-     * Get remaining seconds for resend cooldown
-     */
-    private function getResendWaitSeconds(User $user): int
-    {
-        if (!$user->otp_last_sent_at) {
-            return 0;
-        }
-
-        $elapsed = Carbon::parse($user->otp_last_sent_at)->diffInSeconds(now());
-        return max(0, 60 - $elapsed);
-    }
-
-    /**
-     * Send OTP email
-     */
-    private function sendOtpEmail(User $user, string $otp, string $purpose): void
-    {
-        try {
-            Mail::send('emails.otp', [
-                'otp' => $otp,
-                'purpose' => $purpose,
-                'name' => $user->name,
-                'email' => $user->email,
-                'year' => date('Y')
-            ], function ($message) use ($user, $purpose) {
-                $message->to($user->email, $user->name)
-                        ->subject("🔐 ERP {$purpose} OTP Verification");
-            });
-        } catch (\Exception $e) {
-            Log::error('Failed to send OTP email', [
-                'user' => $user->email,
-                'error' => $e->getMessage()
-            ]);
-
-            // Fallback to raw email
-            $this->sendRawOtpEmail($user, $otp, $purpose);
-        }
-    }
-
-    /**
-     * Send raw OTP email as fallback
-     */
-    private function sendRawOtpEmail(User $user, string $otp, string $purpose): void
-    {
-        try {
-            Mail::raw(
-                "Hello {$user->name},\n\n" .
-                "Your ERP {$purpose} OTP is: {$otp}\n\n" .
-                "This OTP is valid for 5 minutes.\n" .
-                "If you did not request this, please ignore this email.\n\n" .
-                "© " . date('Y') . " ERP System",
-                function ($message) use ($user, $purpose) {
-                    $message->to($user->email)
-                            ->subject("ERP {$purpose} OTP");
-                }
-            );
-        } catch (\Exception $e) {
-            Log::error('Fallback email failed', ['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Log login location
-     */
-    private function logLoginLocation(User $user, float $lat, float $lng, float $distance): void
-    {
-        Log::info('Login location', [
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'role' => $user->role,
-            'latitude' => $lat,
-            'longitude' => $lng,
-            'distance_from_office' => number_format($distance, 2) . 'km',
-            'ip' => request()->ip(),
-            'time' => now()->toDateTimeString()
-        ]);
     }
 
     /**

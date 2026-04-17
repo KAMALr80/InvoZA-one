@@ -673,6 +673,21 @@ public function inventoryReport(Request $request)
         ],
     ]);
 }
+/**
+ * Export Inventory Report to PDF (for backward compatibility)
+ */
+public function exportInventoryPDF(Request $request)
+{
+    return $this->exportInventoryReportPDF($request);
+}
+
+/**
+ * Export Inventory Report to CSV (for backward compatibility)
+ */
+public function exportInventoryCSV(Request $request)
+{
+    return $this->exportInventoryReportCSV($request);
+}
 
 // Keep the existing export methods as they are
 public function exportInventoryReportCSV(Request $request)
@@ -1218,6 +1233,7 @@ private function getStatusBreakdown($startDate, $endDate)
 
 public function employees(Request $request)
 {
+  
     return $this->employeeReport($request);
 }
 public function employeeReport(Request $request)
@@ -1279,6 +1295,18 @@ public function employeeReport(Request $request)
     ]);
 }
 
+public function exportEmployeesPDF(Request $request)
+{
+    return $this->exportEmployeeReportPDF($request);
+}
+
+/**
+ * Export Employee Report to CSV (for backward compatibility)
+ */
+public function exportEmployeesCSV(Request $request)
+{
+    return $this->exportEmployeeReportCSV($request);
+}
 /**
  * Export Employee Report to CSV
  */

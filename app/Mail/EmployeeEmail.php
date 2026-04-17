@@ -13,27 +13,25 @@ class EmployeeEmail extends Mailable
     public $subject;
     public $body;
     public $sender;
+    public $employee;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct($subject, $body, $sender = null)
+    public function __construct($subject, $body, $sender, $employee)
     {
         $this->subject = $subject;
         $this->body = $body;
         $this->sender = $sender;
+        $this->employee = $employee;
     }
 
-    /**
-     * Build the message.
-     */
     public function build()
     {
-        return $this->subject($this->subject)
+        return $this->to($this->employee->email, $this->employee->name)
+                    ->subject($this->subject)
                     ->view('emails.employee')
                     ->with([
                         'body' => $this->body,
                         'sender' => $this->sender,
+                        'employee' => $this->employee,
                     ]);
     }
 }

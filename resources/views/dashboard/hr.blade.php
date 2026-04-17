@@ -998,6 +998,75 @@
             </div>
         </div>
 
+        <!-- Employees on Leave in Next 2 Days -->
+        <div class="card" style="margin-bottom:30px;">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span>🏖️</span> Employees on Leave - Next 2 Days
+                </h2>
+            </div>
+
+            @if (count($employeesOnLeaveNext2Days) > 0)
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Department</th>
+                                <th>Leave Type</th>
+                                <th>From Date</th>
+                                <th>To Date</th>
+                                <th>Days</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($employeesOnLeaveNext2Days as $leave)
+                                <tr>
+                                    <td>
+                                        <div class="employee-cell">
+                                            <div class="employee-avatar"
+                                                style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);">
+                                                {{ strtoupper(substr($leave['employee_name'], 0, 1)) }}
+                                            </div>
+                                            <div>
+                                                <div class="employee-name">{{ $leave['employee_name'] }}</div>
+                                                <div class="employee-email" style="font-size: 12px; color: #6b7280;">
+                                                    {{ $leave['employee_code'] }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-department">
+                                            {{ $leave['department'] ?? 'Not Assigned' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge"
+                                            style="background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;">
+                                            {{ $leave['leave_type_label'] }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $leave['from_date'] }}</td>
+                                    <td>{{ $leave['to_date'] }}</td>
+                                    <td>
+                                        <span style="font-weight: 600; color: var(--primary);">
+                                            {{ $leave['total_days'] }} day{{ $leave['total_days'] > 1 ? 's' : '' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <div class="empty-state">
+                    <div class="empty-icon">✅</div>
+                    <p class="empty-title">No upcoming leaves in next 2 days</p>
+                    <p class="empty-text">All employees are available for the next 2 days</p>
+                </div>
+            @endif
+        </div>
+
         <!-- Third Row: Department Stats -->
         <div class="card" style="margin-bottom:30px;">
             <h2 class="card-title" style="margin-bottom:20px;">

@@ -27,11 +27,6 @@ class User extends Authenticatable
         'login_count',
         'fcm_token',
 
-        // OTP Fields
-        'otp',
-        'otp_expires_at',
-        'otp_verified_at',
-
         // Security
         'email_verified_at',
         'remember_token'
@@ -39,15 +34,12 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password',
-        'remember_token',
-        'otp'
+        'remember_token'
     ];
 
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'otp_expires_at' => 'datetime',
-        'otp_verified_at' => 'datetime',
         'last_login_at' => 'datetime',
         'is_online' => 'boolean',
         'login_count' => 'integer',
@@ -433,49 +425,6 @@ class User extends Authenticatable
         $this->save();
 
         return $this;
-    }
-
-    /**
-     * Generate OTP for login
-     */
-    public function generateOtp($length = 6)
-    {
-        $otp = '';
-        for ($i = 0; $i < $length; $i++) {
-            $otp .= random_int(0, 9);
-        }
-
-        $this->otp = $otp;
-        $this->otp_expires_at = now()->addMinutes(10);
-        $this->otp_verified_at = null;
-        $this->save();
-
-        return $otp;
-    }
-
-    /**
-     * Verify OTP
-     */
-    public function verifyOtp($otp)
-    {
-        if (!$this->otp || !$this->otp_expires_at) {
-            return false;
-        }
-
-        if ($this->otp_expires_at->isPast()) {
-            return false;
-        }
-
-        if ($this->otp !== $otp) {
-            return false;
-        }
-
-        $this->otp_verified_at = now();
-        $this->otp = null;
-        $this->otp_expires_at = null;
-        $this->save();
-
-        return true;
     }
 
     /**

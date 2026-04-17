@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Employee Report</title>
+    <title>Inventory Report</title>
 
     <style>
         @page {
@@ -130,14 +130,12 @@
                 </td>
 
                 <td class="center">
-                    <div class="title">EMPLOYEE REPORT</div>
+                    <div class="title">INVENTORY REPORT</div>
                 </td>
 
                 <td class="right meta">
                     Date: {{ $generated_date }}<br>
-                    Period:
-                    {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} -
-                    {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}
+                    Total Products: {{ $products->count() }}
                 </td>
             </tr>
         </table>
@@ -157,54 +155,64 @@
 
             <thead>
                 <tr>
-                    <th width="5%">SR</th>
-                    <th width="12%">Code</th>
-                    <th width="18%">Name</th>
-                    <th width="20%">Email</th>
-                    <th width="15%">Department</th>
-                    <th width="10%">Role</th>
-                    <th width="10%">Joining</th>
-                    <th width="10%">Status</th>
+                    <th width="15%">Code</th>
+                    <th width="30%">Product</th>
+                    <th width="15%">Category</th>
+                    <th width="10%" class="text-right">Qty</th>
+                    <th width="15%" class="text-right">Price</th>
+                    <th width="15%" class="text-right">Value</th>
                 </tr>
             </thead>
 
             <tbody>
-                @foreach ($employees as $index => $employee)
+                @forelse($products as $product)
+                    @php
+                        $stockValue = $product->price * $product->quantity;
+                    @endphp
+
                     <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-
-                        <td>{{ $employee->employee_code }}</td>
-
-                        <td><strong>{{ $employee->name }}</strong></td>
-
-                        <td>{{ $employee->email }}</td>
-
-                        <td>{{ $employee->department ?? 'N/A' }}</td>
-
-                        <td>{{ $employee->user ? ucfirst($employee->user->role) : 'Staff' }}</td>
+                        <td>{{ $product->product_code }}</td>
 
                         <td>
-                            {{ $employee->joining_date ? \Carbon\Carbon::parse($employee->joining_date)->format('d M Y') : 'N/A' }}
+                            {{ $product->name }}<br>
+                            <small>{{ $product->description ?? '' }}</small>
                         </td>
 
-                        <td>
-                            {{ $employee->status == 1 ? 'Active' : 'Inactive' }}
-                        </td>
+                        <td>{{ $product->category ?? 'N/A' }}</td>
+
+                        <td class="text-right">{{ number_format($product->quantity) }}</td>
+
+                        <td class="text-right">₹{{ number_format($product->price, 2) }}</td>
+
+                        <td class="text-right">₹{{ number_format($stockValue, 2) }}</td>
                     </tr>
-                @endforeach
+
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center">No Data Found</td>
+                    </tr>
+                @endforelse
             </tbody>
 
             <tfoot>
                 <tr class="total-row">
-                    <td colspan="6">SUMMARY</td>
-                    <td colspan="2">
-                        Total: {{ $employees->count() }} |
-                        Active: {{ $stats['active_employees'] ?? 0 }} |
-                        Inactive: {{ $stats['total_employees'] - ($stats['active_employees'] ?? 0) }}
-                    </td>
+                    <td colspan="3">TOTAL</td>
+                    <td class="text-right">{{ number_format($stats['total_quantity']) }}</td>
+                    <td></td>
+                    <td class="text-right">₹{{ number_format($stats['total_value'], 2) }}</td>
                 </tr>
             </tfoot>
 
+        </table>
+
+        <!-- STOCK SUMMARY -->
+        <table style="margin-top:10px;">
+            <tr style="border-top:1px solid #000;">
+                <td style="border:none;"><strong>Stock Summary:</strong></td>
+                <td style="border:none;">Low: {{ $stats['low_stock_count'] }}</td>
+                <td style="border:none;">Normal: {{ $stats['normal_stock_count'] }}</td>
+                <td style="border:none;">High: {{ $stats['high_stock_count'] }}</td>
+            </tr>
         </table>
 
     </div>
